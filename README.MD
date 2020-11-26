@@ -1,4 +1,4 @@
-#### Rholang (RChain) token  (v3)
+### Rholang (RChain) token  (v3)
 
 Fungibles and non-fungibles tokens on the RChain blockchain. Includes buy/sell capabilities by default, metadata that can be associated to a token type (ex: pizza), or a specific set of tokens (pizza n°1021).
 
@@ -6,7 +6,7 @@ This repo includes a CLI so you can very quickly start playing with rchain-token
 
 ![Woods](https://images.pexels.com/photos/640809/pexels-photo-640809.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=300)
 
-#### Using CLI
+### Using CLI
 
 First rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
 
@@ -72,7 +72,7 @@ node cli update-token-data --registry-uri 6yt475hd3qdmxuwnzktidtr4wsxsa6be4eo --
 
 Missing in CLI: playing with token data and bag data, changing price of a bag of tokens
 
-#### Using SDK
+### Using SDK
 
 The SDK files are in `./src`, if you have rchain-token (`fabcotech/rchain-token`) as a dependency of your project, you should be able to use them very easily.
 
@@ -92,11 +92,11 @@ const rholangTerm = mainTerm(
 
 Missing in CLI: changing price of a bag of tokens
 
-#### Compile rholang -> javascript (src/)
+### Compile rholang -> javascript (src/)
 
 _Generate all javascript source code in `src/` from rholang with `node generateJavascripts.js`
 
-#### Token representation on chain
+### Token representation on chain
 
 3 channels contains every data that is needed :
 
@@ -105,7 +105,7 @@ _Generate all javascript source code in `src/` from rholang with `node generateJ
 - `bagsData` : map containing the data associated with each bag (a bag is a token ownership), it can be anything, depending on the usecase (JSON, images, files etc...), example: `{ "color": "red" }`. The owner of a bag _is the only person who can_ change the data associated to the bag.
 - `mainCh` : map that contains data about this contract : `registryUri`, unique `nonce` that is changed each time an admin action is performed, `publicKey` of the owner (person who can lock and create tokens), `locked` boolean.
 
-#### Methods exposed
+### Methods exposed
 
 Through the `entry` channel that is exposed to the registry, any user can interact with this contract, you can just check the other `.rho` files of this repository to see what's possible .
 
@@ -119,7 +119,7 @@ Through the `entry` channel that is exposed to the registry, any user can intera
 - `READ_TOKENS` : reads the value in `tokens` and returns it, see `read_tokens.rho`.
 - `READ_TOKENS_DATA` : reads the value in `tokensData` and returns it, see `read_tokens_data.rho`.
 
-#### TODO
+### TODO
 
 - Exchange capabilities
 
