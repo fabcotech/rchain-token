@@ -4,7 +4,7 @@ Fungibles and non-fungibles tokens on the RChain blockchain. Includes buy/sell c
 
 This repo includes a CLI so you can very quickly start playing with rchain-token contract, and SDK that you can integrate in any javascript application.
 
-![Woods](https://images.pexels.com/photos/640809/pexels-photo-640809.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=300)
+![RChain token](https://i.ibb.co/qrnCwVp/rchaintoken.png)
 
 ### Using CLI
 
