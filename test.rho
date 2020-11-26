@@ -1,0 +1,33 @@
+new x,
+  stdout(`rho:io:stdout`)
+in {
+  for (@y <- x) {
+    match y {
+      {
+            "signature": String,
+            "newNonce": String,
+            "bagNonce": String,
+            "quantity": Int,
+            "publicKey": String,
+            "price": Nil \/ Int,
+            "n": Nil \/ String,
+            "data": _
+      } => {
+        stdout!("match1")
+      }
+      _ => {
+        stdout!("match2")
+      }
+    }
+  } |
+  x!({ 
+            "signature": "a",
+            "newNonce": "a",
+            "bagNonce": "a",
+            "quantity": 12,
+            "publicKey": "a",
+            "price": 12,
+            "n": Nil,
+            "data": "yo"
+   })
+}

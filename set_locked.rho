@@ -1,0 +1,36 @@
+new basket,
+  entryCh,
+  returnCh,
+  lookup(`rho:registry:lookup`),
+  stdout(`rho:io:stdout`)
+in {
+
+  lookup!(`rho:id:REGISTRY_URI`, *entryCh) |
+
+  for(entry <- entryCh) {
+    entry!(
+      {
+        "type": "SET_LOCKED",
+        "payload": {
+          // signature of the current nonce, with the private key of the owner (generateSignatureForNonce.js)
+          "signature": "SIGNATURE",
+          // new nonce, must be different and random (generateNonce.js)
+          "newNonce": "NEW_NONCE",
+          //you cannot unlock, this value must always be true
+          "locked": true
+        }
+      },
+      *returnCh
+    )
+  } |
+
+  for (resp <- returnCh) {
+    match *resp {
+      String => { stdout!(*resp) }
+      true => { stdout!("success, tokens locked") }
+    }
+  } |
+
+  basket!({ "status": "completed" })
+
+}

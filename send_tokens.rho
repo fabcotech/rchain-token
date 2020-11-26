@@ -1,0 +1,44 @@
+new basket,
+  entryCh,
+  returnCh,
+  lookup(`rho:registry:lookup`),
+  stdout(`rho:io:stdout`)
+in {
+
+  lookup!(`rho:id:REGISTRY_URI`, *entryCh) |
+
+  for(entry <- entryCh) {
+    entry!(
+      {
+        "type": "SEND_TOKENS",
+        "payload": {
+          // signature of the current nonce, with the private key of the owner (generateSignatureForNonce.js)
+          "signature": "SIGNATURE",
+          // new nonce, must be different and random (generateNonce.js)
+          "bagNonce": "BAG_NONCE",
+          // new nonce for the new bag
+          "bagNonce2": "BAG_NONCE_2",
+          // bag ID (ex: "0")
+          "bagId": "BAG_ID",
+          // quantity of tokens to send
+          "quantity": QUANTITY,
+          // publicKey this send those tokens to (can be the same just split a bag)
+          "publicKey": "PUBLIC_KEY",
+          // data (optional) to be attached to the new bag (in bagsData)
+          "data": BAG_DATA
+        }
+      },
+      *returnCh
+    )
+  } |
+
+  for (resp <- returnCh) {
+    match *resp {
+      String => { stdout!(*resp) }
+      true => { stdout!("success, tokens sent") }
+    }
+  } |
+
+  basket!({ "status": "completed" })
+
+}

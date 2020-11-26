@@ -1,0 +1,140 @@
+
+// control REV Vault from smart contract
+// https://rchain.atlassian.net/browse/RCHAIN-3260
+// https://github.com/rchain/rchain/blob/dev/casper/src/main/resources/MultiSigRevVault.rho
+
+new deployResult, // (`rho:rchain:deployId`),
+  StakingPool,
+  RevAddress(`rho:rev:address`),
+  regInsert(`rho:registry:insertArbitrary`),
+  registryLookup(`rho:registry:lookup`),
+  stdout(`rho:io:stdout`),
+  RevVaultPurseCh,
+  AuthKeyCh,
+  ListOpsCh,
+  receiverCh
+in {
+
+  registryLookup!(`rho:rchain:revVault`, *RevVaultPurseCh) |
+  for(
+    @(_, *RevVaultPurse) <- RevVaultPurseCh
+  ) {
+    new unf, purseRevAddrCh, purseAuthKeyCh, v1Ch in {
+      RevAddress!("fromUnforgeable", *unf, *purseRevAddrCh) |
+      RevVaultPurse!("unforgeableAuthKey", *unf, *purseAuthKeyCh) |
+      for (@purseAuthKey <- purseAuthKeyCh; @purseRevAddr <- purseRevAddrCh) {
+        stdout!({"new purse rev addr": purseRevAddr, "purse authKey": purseAuthKey}) |
+
+
+        RevVaultPurse!("findOrCreate", purseRevAddr, *v1Ch) |
+
+        for (@(true, *vault) <- v1Ch) {
+
+          new
+            RevVaultCh
+          in {
+
+            registryLookup!(`rho:rchain:revVault`, *RevVaultCh) |
+            for (@(_, RevVault) <- RevVaultCh) {
+
+              stdout!(("3.transfer_funds.rho")) |
+
+              // REPLACE THE REV ADDRESSES HERE vvv
+              match (
+                "1111Fw75V1rzXzk6djeTs85peRVBHS84eM3vvM4RmezjGAuv5gxax",
+                purseRevAddr,
+                1000000
+              ) {
+                (from, to, amount) => {
+
+                  new vaultCh, revVaultkeyCh, deployerId(`rho:rchain:deployerId`) in {
+                    @RevVault!("findOrCreate", from, *vaultCh) |
+                    @RevVault!("deployerAuthKey", *deployerId, *revVaultkeyCh) |
+                    for (@(true, vault) <- vaultCh; key <- revVaultkeyCh) {
+
+                      stdout!(("Beginning transfer of ", amount, "REV from", from, "to", to)) |
+
+                      new resultCh in {
+                        @vault!("transfer", to, amount, *key, *resultCh) |
+                        for (@result <- resultCh) {
+
+                          stdout!(("Finished transfer of ", amount, "REV to", to, "result was:", result)) |
+                          match result {
+                            (true, Nil) => {
+                              stdout!("yes") |
+                              receiverCh!({
+                                "purseRevAddr": purseRevAddr,
+                                "purseAuthKey": purseAuthKey
+                              })
+                            }
+                            _ => {
+                              stdout!(result) |
+                              stdout!("no")
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+
+
+
+
+
+        }
+
+      }
+    }
+  } |
+
+
+
+  for (@payload <- receiverCh) {
+    stdout!(payload) |
+
+    new RevVaultCh in {
+      registryLookup!(`rho:rchain:revVault`, *RevVaultCh) |
+
+      for (@(_, RevVault) <- RevVaultCh) {
+        match (
+          payload.get("purseRevAddr"),
+          "1111Fw75V1rzXzk6djeTs85peRVBHS84eM3vvM4RmezjGAuv5gxax",
+          1000000
+        ) {
+          (from, to, amount) => {
+
+            new vaultCh in {
+              @RevVault!("findOrCreate", from, *vaultCh) |
+              for (@(true, vault) <- vaultCh) {
+
+                stdout!(("RECEIVE Beginning transfer of ", amount, "REV from", from, "to", to)) |
+
+                new resultCh in {
+                  @vault!("transfer", to, amount, payload.get("purseAuthKey"), *resultCh) |
+                  for (@result <- resultCh) {
+
+                    stdout!(("RECEIVE Finished transfer of ", amount, "REV to", to, "result was:", result)) |
+                    match result {
+                      (true, Nil) => {
+                        stdout!("yes")
+                      }
+                      _ => {
+                        stdout!(result) |
+                        stdout!("no")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

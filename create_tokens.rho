@@ -1,0 +1,47 @@
+new basket,
+  entryCh,
+  returnCh,
+  lookup(`rho:registry:lookup`),
+  stdout(`rho:io:stdout`)
+in {
+
+  lookup!(`rho:id:REGISTRY_URI`, *entryCh) |
+
+  for(entry <- entryCh) {
+    entry!(
+      {
+        "type": "CREATE_TOKENS",
+        "payload": {
+          // signature of the current nonce, with the private key of the owner (generateSignatureForNonce.js)
+          "signature": "SIGNATURE",
+          // new nonce, must be different and random (generateNonce.js)
+          "newNonce": "NEW_NONCE",
+          // new nonce for the bag, must be random (generateNonce.js)
+          "bagNonce": "BAG_NONCE",
+          // per token price, can be Nil if the token is not for sale
+          "price": PRICE,
+          // The token you create can be a new one ("n" : Nil)
+          // or it can be linked to an existing token data (ex: "n": "0")
+          "n": TOKEN_ID,
+          // quantity of tokens to create
+          "quantity": QUANTITY,
+          // publicKey this set of tokens (depending on quantity) will belong to
+          "publicKey": "PUBLIC_KEY", // used only if new token
+          // data is used only if new token ("n" : Nil)
+          "data": DATA
+        }
+      },
+      *returnCh
+    )
+  } |
+
+  for (resp <- returnCh) {
+    match *resp {
+      String => { stdout!(*resp) }
+      true => { stdout!("success, token created") }
+    }
+  } |
+
+  basket!({ "status": "completed" })
+
+}
