@@ -1,5 +1,6 @@
 const rchainToolkit = require('rchain-toolkit');
 const uuidv4 = require("uuid/v4");
+const fs = require('fs');
 
 const {
   mainTerm,
@@ -13,6 +14,10 @@ const {
 } = require('./utils');
 
 module.exports.deploy = async () => {
+  if (typeof process.env.REGISTRY_URI === "string") {
+    console.log('Please remove REGISTRY_URI=* line in .env file');
+    process.exit();
+  }
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY);
   const newNonce = uuidv4().replace(/-/g, "");
   const timestamp = new Date().getTime();
@@ -98,6 +103,10 @@ module.exports.deploy = async () => {
     process.exit();
   }
   const data = rchainToolkit.utils.rhoValToJs(JSON.parse(dataAtNameResponse).exprs[0].expr);
+  let envText = fs.readFileSync('./.env', 'utf8');
+  envText += `\nREGISTRY_URI=${data.registryUri.replace('rho:id:', '')}`;
+  fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
+  log(`✓ updated .env file with REGISTRY_URI=${data.registryUri.replace('rho:id:', '')}`);
   console.log(logData(data));
 }

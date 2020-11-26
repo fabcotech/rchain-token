@@ -6,6 +6,7 @@ const { createTokens } = require('./cli/createTokens');
 const { lock } = require('./cli/lock');
 const { updateBagData } = require('./cli/updateBagData');
 const { updateTokenData } = require('./cli/updateTokenData');
+const { viewData } = require('./cli/viewData');
 
 const {
   log,
@@ -77,6 +78,12 @@ const main = async () => {
   const updateTokenDataArg = process.argv.findIndex((arg) => arg === 'update-token-data') !== -1;
   if (updateTokenDataArg) {
     updateTokenData();
+    return;
+  }
+
+  const viewDataArg = process.argv.findIndex((arg) => arg === 'view-data') !== -1;
+  if (viewDataArg) {
+    viewData();
     return;
   }
 

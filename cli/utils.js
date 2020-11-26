@@ -172,8 +172,11 @@ module.exports.getRegistryUri = () => {
   if (!registryUri) {
     registryUri = getProcessArgv('-r');
   }
-  if(typeof registryUri !== "string") {
-    console.log('Missing arguments --registry-uri or -r');
+  if (typeof registryUri !== "string") {
+    registryUri = process.env.REGISTRY_URI;
+  }
+  if(typeof registryUri !== "string" || registryUri.length === 0) {
+    console.log('Missing arguments --registry-uri, or -r, or REGISTRY_URI=* in .env file');
     process.exit();
   }
   return registryUri;
