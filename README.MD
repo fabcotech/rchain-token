@@ -1,4 +1,4 @@
-### Rholang (RChain) token  (v3)
+### Rholang (RChain) token  (v4)
 
 Fungibles and non-fungibles tokens on the RChain blockchain. Includes buy/sell capabilities by default, metadata that can be associated to a token type (ex: pizza), or a specific set of tokens (pizza n°1021).
 
@@ -23,58 +23,58 @@ After having first deployed you can see the registry URI, this is the identifier
 
 ```
 # Check contract's public key, nonce, locked true/false, and bags
-node cli view --registry-uri 6yt4...
+node cli view --registry-uri 6yt4
 ```
 
 ```
 # Check a specific bags in a contract
-node cli view --registry-uri 6yt4... --bag 0
+node cli view --registry-uri 6yt4 --bag 0
 ```
 
 ```
 # Check the data associated with a bag
-node cli view-data --registry-uri 6yt4... --bag 12
+node cli view-data --registry-uri 6yt4 --bag 12
 # Check the data associated with a token
-node cli view-data --registry-uri 6yt4... --token 3
+node cli view-data --registry-uri 6yt4 --token 3
 ```
 
 **Tokens/bags operations**
 
 ```
 # Lock contract, no token will ever be created in this contract anymore
-node cli lock --registry-uri 6yt4... --contract-nonce daec...
+node cli lock --registry-uri 6yt4 --contract-nonce daec
 ```
 
 ```
 # Create tokens
 # If --token is not given, a new token id will be created
 # If --price is not given, the tokens won't be for sale
-node cli create-tokens --registry-uri 6yt4... --contract-nonce daec... --price 100 --quantity 30  --token 0
+node cli create-tokens --registry-uri 6yt4 --contract-nonce daec --price 10 --quantity 3  --token 0
 ```
 
 ```
 # Purchase tokens from a bag
 # If --price is not given, the tokens won't be for sale
-node cli purchase-tokens --registry-uri 6yt4...  --price 100 --bag 0 --quantity 3
+node cli purchase-tokens --registry-uri 6yt4  --price 100 --bag 0 --quantity 3
 ```
 
 ```
 # Send tokens, which is equal to splitting a bag into two bags
 # --nonce is the bag nonce, not the contract nonce
-node cli send-tokens --registry-uri 6yt4... --nonce 1f4c... --bag 0 --quantity 7 --public-key aaa
+node cli send-tokens --registry-uri 6yt4 --nonce 1f4c --bag 0 --quantity 7 --public-key aaa
 ```
 
 **Data operations**
 
 ```
 # Update data associated with a token
-node cli update-token-data --registry-uri 6yt4... --file ./README.MD --contract-nonce daec... --token 0
+node cli update-token-data --registry-uri 6yt4 --file ./README.MD --contract-nonce daec --token 0
 ```
 
 ```
 # Update data associated with a bag
 # --nonce is the bag nonce, not the contract nonce
-node cli update-token-data --registry-uri 6yt4... --file ./README.MD --nonce 1f4c... --bag 0
+node cli update-token-data --registry-uri 6yt4 --file ./README.MD --nonce 1f4c --bag 0
 ```
 
 Missing in CLI: playing with token data and bag data, changing price of a bag of tokens

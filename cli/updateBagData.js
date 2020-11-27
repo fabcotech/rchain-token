@@ -22,7 +22,16 @@ module.exports.updateBagData = async () => {
   log('✓ found file ' + getProcessArgv('--file'));
   const bagId = getBagId();
   const newNonce = uuidv4().replace(/-/g, "");
-  const signature = generateSignature(getNonce(), process.env.PRIVATE_KEY);
+
+  const payload = {
+    nonce: getNonce(),
+    newNonce: newNonce,
+    bagId: bagId,
+    data: data ? encodeURI(data) : undefined
+  };
+
+  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = updateBagDataTerm(
     registryUri,
     newNonce,

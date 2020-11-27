@@ -49,51 +49,43 @@ in {
   */
   tokensData!({/*DEFAULT_TOKENS_DATA*/}) |
 
-  for (@(payload, returnCh) <= verifySignatureAndUpdateNonceCh) {
-    stdout!("verifySignatureAndUpdateNonceCh") |
+  for (@(payload, signature, returnCh) <= verifySignatureAndUpdateNonceCh) {
     new hashCh, verifySignatureCh in {
-      match payload {
-        { "newNonce": String, "signature": String} => {
-          for (@current <<- mainCh) {
-            blake2b256!(
-              current.get("nonce").toUtf8Bytes(),
-              *hashCh
-            ) |
-            for (@hash <- hashCh) {
-              secpVerify!(
-                hash,
-                payload.get("signature").hexToBytes(),
-                current.get("publicKey").hexToBytes(),
-                *verifySignatureCh
-              )
-            } |
-            for (@result <- verifySignatureCh) {
-              match result {
-                true => {
-                  @returnCh!(true) |
-                  for (@c <- mainCh) {
-                    mainCh!(c.set("nonce", payload.get("newNonce")))
-                  }
-                }
-                false => {
-                  @returnCh!("error: Invalid signature, could not perform operation")
-                }
+      for (@current <<- mainCh) {
+        blake2b256!(
+          payload.set("nonce", current.get("nonce")).toByteArray(),
+          *hashCh
+        ) |
+        for (@hash <- hashCh) {
+          secpVerify!(
+            hash,
+            signature.hexToBytes(),
+            current.get("publicKey").hexToBytes(),
+            *verifySignatureCh
+          )
+        } |
+        for (@result <- verifySignatureCh) {
+          match result {
+            true => {
+              @returnCh!(true) |
+              for (@c <- mainCh) {
+                mainCh!(c.set("nonce", payload.get("newNonce")))
               }
             }
+            false => {
+              @returnCh!("error: Invalid signature, could not perform operation")
+            }
           }
-        }
-        _ => {
-          @returnCh!("error: invalid payload, structure should be { 'newNonce': String, 'signature': String }")
         }
       }
     }
   } |
 
-  for (@(publicKey, signature, nonce, returnCh) <= justVerifySignatureCh) {
+  for (@(publicKey, signature, payload, nonce, returnCh) <= justVerifySignatureCh) {
     stdout!("justVerifySignatureCh") |
     new hashCh, verifySignatureCh in {
       blake2b256!(
-        nonce.toUtf8Bytes(),
+        payload.set("nonce", nonce).toByteArray(),
         *hashCh
       ) |
       for (@hash <- hashCh) {
@@ -110,7 +102,7 @@ in {
     }
   } |
 
-  contract setLockedCh(payload, return) = {
+  contract setLockedCh(payload, signature, return) = {
     stdout!("setLockedCh") |
 
     for (@current <<- mainCh) {
@@ -121,10 +113,8 @@ in {
         false => {
           new verifyCh in {
             verifySignatureAndUpdateNonceCh!((
-              {
-                "newNonce": *payload.get("newNonce"),
-                "signature": *payload.get("signature"),
-              },
+              *payload,
+              *signature,
               *verifyCh
             )) |
             for (@verified <- verifyCh) {
@@ -146,7 +136,7 @@ in {
     }
   } |
 
-  contract updateTokenDataCh(payload, return) = {
+  contract updateTokenDataCh(payload, signature, return) = {
     stdout!("updateTokenDataCh") |
 
     for (@current <<- mainCh) {
@@ -157,10 +147,8 @@ in {
         false => {
           new verifyCh in {
             verifySignatureAndUpdateNonceCh!((
-              {
-                "newNonce": *payload.get("newNonce"),
-                "signature": *payload.get("signature"),
-              },
+              *payload,
+              *signature,
               *verifyCh
             )) |
             for (@verified <- verifyCh) {
@@ -184,7 +172,7 @@ in {
     }
   } |
 
-  contract updateBagDataCh(payload, return) = {
+  contract updateBagDataCh(payload, signature, return) = {
     stdout!("updateBagDataCh") |
     for (@currentBags <<- bags) {
       match currentBags.get(*payload.get("bagId")) {
@@ -192,14 +180,15 @@ in {
           return!("error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist")
         }
         bag => {
-          new verifyCh in {
+          new justVerifySignatureReturnCh in {
             justVerifySignatureCh!((
               bag.get("publicKey"),
-              *payload.get("signature"),
+              *signature,
+              *payload,
               bag.get("nonce"),
-              *verifyCh
+              *justVerifySignatureReturnCh
             )) |
-            for (@verified <- verifyCh) {
+            for (@verified <- justVerifySignatureReturnCh) {
               match verified {
                 true => {
                   for (@currentBagsData <- bagsData) {
@@ -221,7 +210,7 @@ in {
   } |
 
   // add a token (1 or more)
-  contract createCh(payload, return) = {
+  contract createCh(payload, signature, return) = {
     stdout!("createCh") |
 
     for (@current <<- mainCh) {
@@ -233,10 +222,8 @@ in {
           for (@currentBags <<- bags) {
             new verifyCh in {
               verifySignatureAndUpdateNonceCh!((
-                {
-                  "newNonce": *payload.get("newNonce"),
-                  "signature": *payload.get("signature"),
-                },
+                *payload,
+                *signature,
                 *verifyCh
               )) |
               for (@verified <- verifyCh) {
@@ -381,7 +368,7 @@ in {
     }
   } |
 
-  contract sendCh(payload, return) = {
+  contract sendCh(payload, signature, return) = {
     stdout!("sendCh") |
     for (@currentBags <<- bags) {
       match currentBags.get(*payload.get("bagId")) {
@@ -394,11 +381,12 @@ in {
               new justVerifySignatureReturnCh in {
                 justVerifySignatureCh!((
                   bag.get("publicKey"),
-                  *payload.get("signature"),
+                  *signature,
+                  *payload,
                   bag.get("nonce"),
-                  *justVerifySignatureCh
+                  *justVerifySignatureReturnCh
                 )) |
-                for (@r <- justVerifySignatureCh) {
+                for (@r <- justVerifySignatureReturnCh) {
                   stdout!(r) |
                   match r {
                     true => {
@@ -415,21 +403,21 @@ in {
                           } |
                           for (_ <- bags) {
                             bags!(
-                              // New bag ID for new token ownership
+                              // New bag ID for new bag
                               currentBags.set(bagId, {
                                 "quantity": *payload.get("quantity"),
                                 "publicKey": *payload.get("publicKey"),
-                                "nonce": *payload.get("bagNonce"),
+                                "nonce": *payload.get("bagNonce2"),
                                 "n": bag.get("n"),
                                 "price": Nil,
-                              // Udate quantity in seller token ownership
+                              // Udate quantity in seller bag
                               }).set(
                                 *payload.get("bagId"),
                                 bag.set(
                                   "quantity", bag.get("quantity") - *payload.get("quantity")
                                 ).set(
                                   "nonce",
-                                  *payload.get("bagNonce2")
+                                  *payload.get("bagNonce")
                                 )
                               )
                             )
@@ -480,38 +468,45 @@ in {
       // Admin capabilities (require a signature of the nonce)
       "SET_LOCKED" => {
         match *action.get("payload") {
-          { "locked": true, "signature": String, "newNonce": String } => {
-            setLockedCh!(*action.get("payload"), *return)
+          { "newNonce": String } => {
+            setLockedCh!(
+              *action.get("payload"),
+              *action.get("signature"),
+              *return
+            )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'signature': String, 'newNonce': String, 'locked': Boolean }")
+            return!("error: invalid payload, structure should be { 'newNonce': String, 'locked': Boolean }")
           }
         }
       }
       "UPDATE_TOKEN_DATA" => {
         match *action.get("payload") {
-          { "signature": String, "newNonce": String, "n": String, "data": _ } => {
-            updateTokenDataCh!(*action.get("payload"), *return)
+          { "newNonce": String, "n": String, "data": _ } => {
+            updateTokenDataCh!(*action.get("payload"), *action.get("signature"), *return)
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'signature': String, 'newNonce': String, 'n': String, 'data': _ }")
+            return!("error: invalid payload, structure should be { 'newNonce': String, 'n': String, 'data': _ }")
           }
         }
       }
       "UPDATE_BAG_DATA" => {
         match *action.get("payload") {
-          { "signature": String, "newNonce": String, "bagId": String, "data": _ } => {
-            updateBagDataCh!(*action.get("payload"), *return)
+          { "newNonce": String, "bagId": String, "data": _ } => {
+            updateBagDataCh!(
+              *action.get("payload"),
+              *action.get("signature"),
+              *return
+            )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'signature': String, 'newNonce': String, 'bagId': String, 'data': _ }")
+            return!("error: invalid payload, structure should be { 'newNonce': String, 'bagId': String, 'data': _ }")
           }
         }
       }
       "CREATE_TOKENS" => {
         match *action.get("payload") {
           {
-            "signature": String,
             "newNonce": String,
             "bagNonce": String,
             "quantity": Int,
@@ -520,10 +515,14 @@ in {
             "n": Nil \/ String,
             "data": _
           } => {
-            createCh!(*action.get("payload"), *return)
+            createCh!(
+              *action.get("payload"),
+              *action.get("signature"),
+              *return
+            )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'signature': String, 'newNonce': String, 'bagNonce': String, 'quantity': Int, 'n': Nil or String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
+            return!("error: invalid payload, structure should be { 'newNonce': String, 'bagNonce': String, 'quantity': Int, 'n': Nil or String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
           }
         }
       }
@@ -540,11 +539,15 @@ in {
       }
       "SEND_TOKENS" => {
         match *action.get("payload") {
-          { "quantity": Int, "bagId": String, "publicKey": String, "signature": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
-            sendCh!(*action.get("payload"), *return)
+          { "quantity": Int, "bagId": String, "publicKey": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
+            sendCh!(
+              *action.get("payload"),
+              *action.get("signature"),
+              *return
+            )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': Int, 'publicKey': String, 'signature': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
+            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
           }
         }
       }

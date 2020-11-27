@@ -18,9 +18,9 @@ in {
     entry!(
       {
         "type": "UPDATE_TOKEN_DATA",
+        // signature of the payload + contract nonce in it, with the private key of the owner (generateSignatureForNonce.js)
+        "signature": "${signature}",
         "payload": {
-          // signature of the current nonce, with the private key of the owner (generateSignatureForNonce.js)
-          "signature": "${signature}",
           // new nonce, must be different and random (generateNonce.js)
           "newNonce": "${newNonce}",
           // token ID you want to attach data to

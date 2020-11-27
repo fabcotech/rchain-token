@@ -39,6 +39,12 @@ const main = async () => {
     return;
   }
 
+  const viewDataArg = process.argv.findIndex((arg) => arg === 'view-data') !== -1;
+  if (viewDataArg) {
+    viewData();
+    return;
+  }
+
   const deployArg = process.argv.findIndex((arg) => arg === 'deploy') !== -1;
   if (deployArg) {
     deploy();
@@ -78,12 +84,6 @@ const main = async () => {
   const updateTokenDataArg = process.argv.findIndex((arg) => arg === 'update-token-data') !== -1;
   if (updateTokenDataArg) {
     updateTokenData();
-    return;
-  }
-
-  const viewDataArg = process.argv.findIndex((arg) => arg === 'view-data') !== -1;
-  if (viewDataArg) {
-    viewData();
     return;
   }
 

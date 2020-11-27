@@ -21,7 +21,8 @@ module.exports.createTokens = async () => {
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
   const contractNonce = getContractNonce();
-  const tokenId = getTokenId();
+  let tokenId = getTokenId();
+  tokenId = typeof tokenId === 'string' ? tokenId : undefined;
   const quantity = getQuantity();
   const price = getProcessArgv('--price') ?
     parseInt(getProcessArgv('--price'), 10) :
@@ -29,19 +30,31 @@ module.exports.createTokens = async () => {
   const newNonce = uuidv4().replace(/-/g, "");
   const bagNonce = uuidv4().replace(/-/g, "");
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY);
-  const signature = generateSignature(contractNonce, process.env.PRIVATE_KEY);
+  const payload = {
+    nonce: contractNonce,
+    bagNonce: bagNonce,
+    publicKey: publicKey,
+    data: undefined,
+    n: tokenId,
+    newNonce: newNonce,
+    price: price,
+    quantity: quantity,
+  }
+
+  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = createTokensTerm(
     registryUri,
     signature,
     newNonce,
     bagNonce,
     publicKey,
-    tokenId || undefined,
+    tokenId,
     price,
     quantity,
-    ""
-    );
-    
+    undefined
+  );
+
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rchainToolkit.utils.getDeployOptions(

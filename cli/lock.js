@@ -18,7 +18,13 @@ module.exports.lock = async () => {
   const registryUri = getRegistryUri();
   const contractNonce = getContractNonce();
   const newNonce = uuidv4().replace(/-/g, "");
-  const signature = generateSignature(contractNonce, process.env.PRIVATE_KEY);
+  const payload = {
+    nonce: contractNonce,
+    newNonce: newNonce,
+  }
+
+  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = setLockedTerm(
     registryUri,
     newNonce,

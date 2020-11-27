@@ -24,7 +24,19 @@ module.exports.sendTokens = async () => {
   const bagNonce = uuidv4().replace(/-/g, "");
   const bagNonce2 = uuidv4().replace(/-/g, "");
   const timestamp = new Date().getTime();
-  const signature = generateSignature(getNonce(), process.env.PRIVATE_KEY);
+
+  const payload = {
+    nonce: getNonce(),
+    bagNonce: bagNonce,
+    bagNonce2: bagNonce2,
+    bagId: bagId,
+    quantity: quantity,
+    publicKey: publicKey,
+    data: undefined,
+  };
+
+  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = sendTokensTerm(
     registryUri,
     signature,
@@ -33,7 +45,7 @@ module.exports.sendTokens = async () => {
     quantity,
     publicKey,
     bagId,
-    ""
+    undefined
   );
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

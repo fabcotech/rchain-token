@@ -9,9 +9,7 @@ const {
 } = require('./utils');
 
 module.exports.view = async () => {
-  const bagId = getProcessArgv('--bag') ?
-    parseInt(getProcessArgv('--bag'), 10) :
-    undefined;
+  const bagId = getProcessArgv('--bag');
   const registryUri = getRegistryUri();
   const term1 = `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
     lookup!(\`rho:id:${registryUri}\`, *entryCh) |

@@ -34,9 +34,8 @@ module.exports.prepareDeploy = async (httpUrlReadOnly, publicKey, timestamp) => 
       }
     );
   } catch (err) {
-    log("Unable to prepare deploy");
     console.log(err);
-    process.exit();
+    throw new Error("Unable to prepare deploy");
   }
 
   return prepareDeployResponse;
@@ -53,7 +52,7 @@ module.exports.validAfterBlockNumber = async (httpUrlReadOnly) => {
   } catch (err) {
     log("Unable to get last finalized block", "error");
     console.log(err);
-    process.exit();
+    throw new Error()
   }
   return validAfterBlockNumberResponse;
 }
@@ -100,8 +99,7 @@ module.exports.getTokenId = () => {
 module.exports.getNonce = () => {
   const nonce = getProcessArgv('--nonce');
   if(typeof nonce !== "string") {
-    console.log('Missing arguments --nonce');
-    process.exit();
+    throw new Error('Missing arguments --nonce');
   }
   return nonce;
 }
@@ -109,8 +107,7 @@ module.exports.getNonce = () => {
 module.exports.getContractNonce = () => {
   const nonce = getProcessArgv('--contract-nonce');
   if(typeof nonce !== "string") {
-    console.log('Missing arguments --contract-nonce');
-    process.exit();
+    throw new Error('Missing arguments --contract-nonce');
   }
   return nonce;
 }
@@ -120,8 +117,7 @@ module.exports.getPrice = () => {
     parseInt(getProcessArgv('--price'), 10) :
     undefined;
   if(typeof price !== "number" || isNaN(price)) {
-    console.log('Missing arguments --price');
-    process.exit();
+    throw new Error('Missing arguments --price');
   }
   return price;
 }
@@ -131,8 +127,7 @@ module.exports.getQuantity = () => {
     parseInt(getProcessArgv('--quantity'), 10) :
     undefined;
   if(typeof quantity !== "number" || isNaN(quantity)) {
-    console.log('Missing arguments --quantity');
-    process.exit();
+    throw new Error('Missing arguments --quantity');
   }
   return quantity;
 }
@@ -140,19 +135,15 @@ module.exports.getQuantity = () => {
 module.exports.getPublicKey = () => {
   const publicKey = getProcessArgv('--public-key');
   if(typeof publicKey !== "string") {
-    console.log('Missing arguments --public-key');
-    process.exit();
+    throw new Error('Missing arguments --public-key');
   }
   return publicKey;
 }
 
 module.exports.getBagId = () => {
-  const bagId = getProcessArgv('--bag') ?
-    parseInt(getProcessArgv('--bag'), 10) :
-    undefined;
-  if(typeof bagId !== "number" || isNaN(bagId)) {
-    console.log('Missing arguments --bag');
-    process.exit();
+  const bagId = getProcessArgv('--bag');
+  if(!bagId) {
+    throw new Error('Missing arguments --bag');
   }
   return bagId;
 }
@@ -160,8 +151,7 @@ module.exports.getBagId = () => {
 module.exports.getFile = () => {
   const path = getProcessArgv('--file');
   if(typeof path !== "string" || !fs.existsSync(path)) {
-    console.log('Missing arguments --file, or file does not exist');
-    process.exit();
+    throw new Error('Missing arguments --file, or file does not exist');
   }
   const data = fs.readFileSync(path, 'utf8');
   return data;
@@ -176,8 +166,7 @@ module.exports.getRegistryUri = () => {
     registryUri = process.env.REGISTRY_URI;
   }
   if(typeof registryUri !== "string" || registryUri.length === 0) {
-    console.log('Missing arguments --registry-uri, or -r, or REGISTRY_URI=* in .env file');
-    process.exit();
+    throw new Error('Missing arguments --registry-uri, or -r, or REGISTRY_URI=* in .env file');
   }
   return registryUri;
 }

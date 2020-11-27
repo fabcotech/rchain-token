@@ -20,11 +20,20 @@ module.exports.updateTokenData = async () => {
   log('Make sure the private key provided is the one of the contract owner (initial deploy)');
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
+  const contractNonce = getContractNonce();
   const data = getFile();
   log('✓ found file ' + getProcessArgv('--file'));
   const tokenId = getTokenId();
   const newNonce = uuidv4().replace(/-/g, "");
-  const signature = generateSignature(getContractNonce(), process.env.PRIVATE_KEY);
+  const payload = {
+    nonce: contractNonce,
+    newNonce: newNonce,
+    n: tokenId,
+    data: data ? encodeURI(data) : undefined
+  }
+
+  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = updateTokenDataTerm(
     registryUri,
     newNonce,

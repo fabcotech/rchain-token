@@ -22,9 +22,9 @@ in {
     entry!(
       {
         "type": "CREATE_TOKENS",
+        // signature of the payload + contract nonce in it, with the private key of the owner (generateSignatureForNonce.js)
+        "signature": "${signature}",
         "payload": {
-          // signature of the current nonce, with the private key of the owner (generateSignatureForNonce.js)
-          "signature": "${signature}",
           // new nonce, must be different and random (generateNonce.js)
           "newNonce": "${newNonce}",
           // new nonce for the bag, must be random (generateNonce.js)
