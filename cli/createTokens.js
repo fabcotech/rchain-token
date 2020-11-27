@@ -21,8 +21,10 @@ module.exports.createTokens = async () => {
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
   const contractNonce = getContractNonce();
-  let tokenId = getTokenId();
-  tokenId = typeof tokenId === 'string' ? tokenId : undefined;
+  const tokenId = getTokenId();
+  if (!tokenId) {
+    throw new Error("Please provide a token ID with --token option")
+  }
   const quantity = getQuantity();
   const price = getProcessArgv('--price') ?
     parseInt(getProcessArgv('--price'), 10) :

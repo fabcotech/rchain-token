@@ -233,40 +233,30 @@ in {
                     match "\${n}" %% { "n": currentBags.size() } {
                       bagId => {
                         new nCh in {
-
-                          match *payload.get("n") {
-                            // token n already exists
-                            String => { nCh!(*payload.get("n")) }
-                            // token n does not exist, bag ID will be used as n
-                            _ => { nCh!(bagId) }
+                          for (_ <- bags) {
+                            bags!(
+                              currentBags.set(bagId, {
+                                "quantity": *payload.get("quantity"),
+                                "publicKey": *payload.get("publicKey"),
+                                "nonce": *payload.get("bagNonce"),
+                                "n": *payload.get("n"),
+                                "price": *payload.get("price"),
+                              })
+                            ) 
                           } |
 
-                          for (@n <- nCh) {
-                            for (_ <- bags) {
-                              bags!(
-                                currentBags.set(bagId, {
-                                  "quantity": *payload.get("quantity"),
-                                  "publicKey": *payload.get("publicKey"),
-                                  "nonce": *payload.get("bagNonce"),
-                                  "n": n,
-                                  "price": *payload.get("price"),
-                                })
-                              ) 
-                            } |
-
-                            match *payload.get("data") {
-                              Nil => {}
-                              data => {
-                                for (@currentTokensData <- tokensData) {
-                                  tokensData!(
-                                    currentTokensData.set(n, data)
-                                  )
-                                }
+                          match *payload.get("data") {
+                            Nil => {}
+                            data => {
+                              for (@currentTokensData <- tokensData) {
+                                tokensData!(
+                                  currentTokensData.set(*payload.get("n"), data)
+                                )
                               }
-                            } |
+                            }
+                          } |
 
-                            return!(true)
-                          }
+                          return!(true)
                         }
                       }
                     }
@@ -513,7 +503,7 @@ in {
             "quantity": Int,
             "publicKey": String,
             "price": Nil \\/ Int,
-            "n": Nil \\/ String,
+            "n": String,
             "data": _
           } => {
             createCh!(
@@ -523,7 +513,7 @@ in {
             )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'newNonce': String, 'bagNonce': String, 'quantity': Int, 'n': Nil or String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
+            return!("error: invalid payload, structure should be { 'newNonce': String, 'bagNonce': String, 'quantity': Int, 'n': String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
           }
         }
       }
