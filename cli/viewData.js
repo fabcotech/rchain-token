@@ -46,8 +46,10 @@ module.exports.viewData = async () => {
       fileName = `./bag-${bagId}-data.txt`;
     }
     console.log(`✓ retrieved data associated with ${tokenId ? 'token' : 'bag'} ${tokenId || bagId} :`);
-    console.log(data.slice(0, 20) + '...');
-    fs.writeFileSync(fileName, data);
+    if (typeof data === "string") {
+      console.log(data.slice(0, 20) + '...');
+    }
+    fs.writeFileSync(fileName, data, 'utf8');
     console.log(`✓ wrote ${fileName} file`);
   });
 }
