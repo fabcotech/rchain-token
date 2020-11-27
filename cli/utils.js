@@ -148,6 +148,14 @@ module.exports.getBagId = () => {
   return bagId;
 }
 
+module.exports.getNewBagId = () => {
+  const bagId = getProcessArgv('--new-bag');
+  if(!bagId) {
+    throw new Error('Missing arguments --new-bag');
+  }
+  return bagId;
+}
+
 module.exports.getFile = () => {
   const path = getProcessArgv('--file');
   if(typeof path !== "string" || !fs.existsSync(path)) {

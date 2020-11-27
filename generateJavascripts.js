@@ -22,6 +22,7 @@ const replaceEverything = (a) => {
       .replace("PRICE", '${payload.price || "Nil"}')
       .replace("QUANTITY", "${payload.quantity}")
       .replace("PUBLIC_KEY", "${payload.publicKey}")
+      .replace("NEW_BAG_ID", "${payload.newBagId}")
       .replace("BAG_ID", "${payload.bagId}")
       .replace("TOKEN_ID", "${payload.tokenId}")
       // some function name end with BAG_DATA

@@ -18,6 +18,8 @@ in {
           "newNonce": "NEW_NONCE",
           // new nonce for the bag, must be random (generateNonce.js)
           "bagNonce": "BAG_NONCE",
+          // new bag ID (index, home, contact, document etc.)
+          "newBagId": "NEW_BAG_ID",
           // per token price, can be Nil if the token is not for sale
           "price": PRICE,
           // The token you create can be a new one ("n" : Nil)

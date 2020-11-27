@@ -6,8 +6,8 @@ export default {
   input: 'src/index.js',
   output: {
     format: 'umd',
-    name: 'RChainToken',
-    file: 'dist/rchain-token.js',
+    name: 'RChainTokenFiles',
+    file: 'dist/rchain-token-files@4.0.0.js',
   },
   plugins: [resolve(), commonjs(), json()],
 };

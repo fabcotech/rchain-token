@@ -14,6 +14,7 @@ new
   bagDataCh,
   returnCh,
   bagIdCh,
+  newBagIdCh,
   registryUriCh,
   revAddressCh,
   registryLookup(\`rho:registry:lookup\`),
@@ -28,6 +29,8 @@ in {
   registryUriCh!!(\`rho:id:${registryUri}\`) |
   // Unique ID of the token you want to purchase
   bagIdCh!!("${payload.bagId}") |
+  // new bag ID (index, home, contact, document etc.)
+  newBagIdCh!!("${payload.newBagId}") |
   // Per token price, make sure it is accurate
   priceCh!!(${payload.price || "Nil"}) |
   // Bag data: Any
@@ -59,6 +62,7 @@ in {
           @publicKey <- publicKeyCh;
           @nonce <- nonceCh;
           @bagId <- bagIdCh;
+          @newBagId <- newBagIdCh;
           @registryUri <- registryUriCh;
           @price <- priceCh;
           @bagData <- bagDataCh;
@@ -109,6 +113,7 @@ in {
                                     "payload": {
                                       "quantity": quantity,
                                       "bagId": bagId,
+                                      "newBagId": newBagId,
                                       "data": bagData,
                                       "nonce": nonce,
                                       "publicKey": publicKey,

@@ -23,8 +23,10 @@ in {
           "bagNonce": "${payload.bagNonce}",
           // new nonce for the new bag
           "bagNonce2": "${payload.bagNonce2}",
-          // bag ID (ex: "0")
+          // bag ID to send tokens from (ex: "0")
           "bagId": "${payload.bagId}",
+          // new bag ID (index, home, contact, document etc.)
+          "newBagId": "${payload.newBagId}",
           // quantity of tokens to send
           "quantity": ${payload.quantity},
           // publicKey this send those tokens to (can be the same just split a bag)

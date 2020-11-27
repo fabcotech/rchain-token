@@ -10,6 +10,7 @@ const {
   getContractNonce,
   getQuantity,
   getRegistryUri,
+  getNewBagId,
   generateSignature,
   getTokenId,
   log,
@@ -26,6 +27,7 @@ module.exports.createTokens = async () => {
     throw new Error("Please provide a token ID with --token option")
   }
   const quantity = getQuantity();
+  const newBagId = getNewBagId();
   const price = getProcessArgv('--price') ?
     parseInt(getProcessArgv('--price'), 10) :
     undefined;
@@ -37,6 +39,7 @@ module.exports.createTokens = async () => {
     bagNonce: bagNonce,
     publicKey: publicKey,
     data: undefined,
+    newBagId: newBagId,
     n: tokenId,
     newNonce: newNonce,
     price: price,

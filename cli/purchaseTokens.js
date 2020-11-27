@@ -11,6 +11,7 @@ const {
   getRegistryUri,
   getPrice,
   getPublicKey,
+  getNewBagId,
   log,
   validAfterBlockNumber,
 } = require('./utils');
@@ -19,6 +20,7 @@ module.exports.purchaseTokens = async () => {
   const registryUri = getRegistryUri();
   const publicKey = getPublicKey();
   const bagId = getBagId();
+  const newBagId = getNewBagId();
   const quantity = getQuantity();
   const price = getPrice();
   const bagNonce = uuidv4().replace(/-/g, "");
@@ -27,6 +29,7 @@ module.exports.purchaseTokens = async () => {
     registryUri,
     {
       publicKey: publicKey,
+      newBagId: newBagId,
       bagId: bagId,
       quantity: quantity,
       price: price,

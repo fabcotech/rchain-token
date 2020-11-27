@@ -23,6 +23,8 @@ in {
           "newNonce": "${payload.newNonce}",
           // new nonce for the bag, must be random (generateNonce.js)
           "bagNonce": "${payload.bagNonce}",
+          // new bag ID (index, home, contact, document etc.)
+          "newBagId": "${payload.newBagId}",
           // per token price, can be Nil if the token is not for sale
           "price": ${payload.price || "Nil"},
           // The token you create can be a new one ("n" : Nil)

@@ -18,8 +18,10 @@ in {
           "bagNonce": "BAG_NONCE",
           // new nonce for the new bag
           "bagNonce2": "BAG_NONCE_2",
-          // bag ID (ex: "0")
+          // bag ID to send tokens from (ex: "0")
           "bagId": "BAG_ID",
+          // new bag ID (index, home, contact, document etc.)
+          "newBagId": "NEW_BAG_ID",
           // quantity of tokens to send
           "quantity": QUANTITY,
           // publicKey this send those tokens to (can be the same just split a bag)

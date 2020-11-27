@@ -11,6 +11,7 @@ const {
   getRegistryUri,
   getNonce,
   generateSignature,
+  getNewBagId,
   getPublicKey,
   log,
   validAfterBlockNumber,
@@ -21,6 +22,7 @@ module.exports.sendTokens = async () => {
   const quantity = getQuantity();
   const publicKey = getPublicKey();
   const bagId = getBagId();
+  const newBagId = getNewBagId();
   const bagNonce = uuidv4().replace(/-/g, "");
   const bagNonce2 = uuidv4().replace(/-/g, "");
   const timestamp = new Date().getTime();
