@@ -25,13 +25,16 @@ in {
 
   for (resp <- returnCh) {
     match *resp {
-      String => { stdout!(*resp) }
-      true => { stdout!("success, tokens locked") }
+      true => {
+        basket!({ "status": "completed" }) |
+        stdout!("completed, contract locked")
+      }
+      _ => {
+        basket!({ "status": "failed", "message": *resp }) |
+        stdout!(("failed", *resp))
+      }
     }
-  } |
-
-  basket!({ "status": "completed" })
-
+  }
 }
 `;
 };

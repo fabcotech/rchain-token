@@ -10,6 +10,7 @@ module.exports.purchaseTokensTerm = (
 ) => {
   return `
 new
+  basket,
   revVaultPurseCh,
   priceCh,
   quantityCh,
@@ -124,15 +125,21 @@ in {
                                 ) |
                                 for (resp <- returnCh) {
                                   match *resp {
-                                    String => { stdout!(*resp) }
-                                    true => { stdout!("success, purchase successful") }
+                                    true => {
+                                      basket!({ "status": "completed" }) |
+                                      stdout!("completed, tokens purchased")
+                                    }
+                                    _ => {
+                                      basket!({ "status": "failed", "message": *resp }) |
+                                      stdout!(("failed", *resp))
+                                    }
                                   }
                                 }
                               }
                             }
                             _ => {
-                              stdout!(result) |
-                              stdout!("no")
+                              basket!({ "status": "failed", "message": result }) |
+                              stdout!(("failed", result))
                             }
                           }
                         }

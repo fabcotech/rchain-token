@@ -9,8 +9,8 @@ module.exports.sendTokensTerm = (
   data    
 ) => {
   return `new basket,
-  entryCh,
   returnCh,
+  entryCh,
   lookup(\`rho:registry:lookup\`),
   stdout(\`rho:io:stdout\`)
 in {
@@ -44,13 +44,16 @@ in {
 
   for (resp <- returnCh) {
     match *resp {
-      String => { stdout!(*resp) }
-      true => { stdout!("success, tokens sent") }
+      true => {
+        basket!({ "status": "completed" }) |
+        stdout!("completed, tokens send")
+      }
+      _ => {
+        basket!({ "status": "failed", "message": *resp }) |
+        stdout!(("failed", *resp))
+      }
     }
-  } |
-
-  basket!({ "status": "completed" })
-
+  }
 }
 `;
 };

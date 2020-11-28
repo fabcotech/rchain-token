@@ -10,8 +10,8 @@ module.exports.createTokensTerm = (
   data
 ) => {
   return `new basket,
-  entryCh,
   returnCh,
+  entryCh,
   lookup(\`rho:registry:lookup\`),
   stdout(\`rho:io:stdout\`)
 in {
@@ -48,13 +48,16 @@ in {
 
   for (resp <- returnCh) {
     match *resp {
-      String => { stdout!(*resp) }
-      true => { stdout!("success, token created") }
+      true => {
+        basket!({ "status": "completed" }) |
+        stdout!("completed, tokens created")
+      }
+      _ => {
+        basket!({ "status": "failed", "message": *resp }) |
+        stdout!(("failed", *resp))
+      }
     }
-  } |
-
-  basket!({ "status": "completed" })
-
+  }
 }
 `;
 };

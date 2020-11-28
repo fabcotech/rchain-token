@@ -35,13 +35,16 @@ in {
 
   for (resp <- returnCh) {
     match *resp {
-      String => { stdout!(*resp) }
-      true => { stdout!("success, bag data updated") }
+      true => {
+        basket!({ "status": "completed" }) |
+        stdout!("completed, data updated")
+      }
+      _ => {
+        basket!({ "status": "failed", "message": *resp }) |
+        stdout!(("failed", *resp))
+      }
     }
-  } |
-
-  basket!({ "status": "completed" })
-
+  }
 }
 `;
 };
