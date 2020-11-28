@@ -8,14 +8,14 @@
     "type": "git",
     "url": "git+https://github.com/fabcotech/rchain-token.git"
   },
-  "author": "",
+  "author": "FABCO",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/fabcotech/rchain-token/issues"
   },
   "homepage": "https://github.com/fabcotech/rchain-token#readme",
   "dependencies": {
-    "rchain-toolkit": "file:../rchain-toolkit/",
+    "rchain-toolkit": "0.2.7",
     "uuid": "3.4.0",
     "dotenv": "6.2.0",
     "blakejs": "^1.1.0"

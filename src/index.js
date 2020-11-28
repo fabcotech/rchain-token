@@ -7,6 +7,8 @@ const { updateTokenDataTerm } = require("./updateTokenDataTerm");
 const { updateBagDataTerm } = require("./updateBagDataTerm");
 const { readBagOrTokenDataTerm } = require("./readBagOrTokenDataTerm");
 const { readBagsOrTokensDataTerm } = require("./readBagsOrTokensDataTerm");
+const { read } = require("./read");
+const { readBagsTerm } = require("./readBagsTerm");
 
 module.exports = {
   mainTerm,
@@ -18,4 +20,6 @@ module.exports = {
   updateBagDataTerm,
   readBagOrTokenDataTerm,
   readBagsOrTokensDataTerm,
+  read,
+  readBagsTerm,
 };

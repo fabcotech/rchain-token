@@ -3,6 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 const {
+  read,
+  readBagsTerm,
+} = require('../src');
+const {
   getProcessArgv,
   getRegistryUri,
   logData,
@@ -11,28 +15,8 @@ const {
 module.exports.view = async () => {
   const bagId = getProcessArgv('--bag');
   const registryUri = getRegistryUri();
-  const term1 = `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    lookup!(\`rho:id:${registryUri}\`, *entryCh) |
-    for(entry <- entryCh) {
-      new x in {
-        entry!({ "type": "READ" }, *x) |
-        for (y <- x) {
-          return!(*y)
-        }
-      }
-    }
-  }`;
-  const term2 = `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    lookup!(\`rho:id:${registryUri}\`, *entryCh) |
-    for(entry <- entryCh) {
-      new x in {
-        entry!({ "type": "READ_BAGS" }, *x) |
-        for (y <- x) {
-          return!(*y)
-        }
-      }
-    }
-  }`;
+  const term1 = read(registryUri);
+  const term2 = readBagsTerm(registryUri);
   Promise.all(
     [rchainToolkit.http.exploreDeploy(
       process.env.READ_ONLY_HOST,
