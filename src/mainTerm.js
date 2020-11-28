@@ -232,32 +232,30 @@ in {
                   true => {
                     match "\${n}" %% { "n": currentBags.size() } {
                       bagId => {
-                        new nCh in {
-                          for (_ <- bags) {
-                            bags!(
-                              currentBags.set(bagId, {
-                                "quantity": *payload.get("quantity"),
-                                "publicKey": *payload.get("publicKey"),
-                                "nonce": *payload.get("bagNonce"),
-                                "n": *payload.get("n"),
-                                "price": *payload.get("price"),
-                              })
-                            )
-                          } |
+                        for (_ <- bags) {
+                          bags!(
+                            currentBags.set(bagId, {
+                              "quantity": *payload.get("quantity"),
+                              "publicKey": *payload.get("publicKey"),
+                              "nonce": *payload.get("bagNonce"),
+                              "n": *payload.get("n"),
+                              "price": *payload.get("price"),
+                            })
+                          )
+                        } |
 
-                          match *payload.get("data") {
-                            Nil => {}
-                            data => {
-                              for (@currentTokensData <- tokensData) {
-                                tokensData!(
-                                  currentTokensData.set(*payload.get("n"), data)
-                                )
-                              }
+                        match *payload.get("data") {
+                          Nil => {}
+                          data => {
+                            for (@currentBagsData <- bagsData) {
+                              bagsData!(
+                                currentBagsData.set(bagId, data)
+                              )
                             }
-                          } |
+                          }
+                        } |
 
-                          return!(true)
-                        }
+                        return!(true)
                       }
                     }
                   }

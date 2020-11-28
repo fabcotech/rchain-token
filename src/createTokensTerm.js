@@ -38,7 +38,7 @@ in {
           "quantity": ${quantity},
           // publicKey this set of tokens (depending on quantity) will belong to
           "publicKey": "${publicKey}", // used only if new token
-          // data is used only if new token ("n" : Nil)
+          // data you will associated to the new bag (NOT TOKEN DATA)
           "data": ${data ? '"' + encodeURI(data) + '"' : "Nil"}
         }
       },
