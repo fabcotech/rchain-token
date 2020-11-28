@@ -2,40 +2,38 @@ const rchainToolkit = require('rchain-toolkit');
 const uuidv4 = require("uuid/v4");
 
 const {
-  sendTokensTerm,
+  purchaseTokensTerm,
 } = require('../src/');
 
 const {
   getBagId,
   getQuantity,
   getRegistryUri,
-  getNonce,
-  generateSignature,
+  getPrice,
   getPublicKey,
   log,
   validAfterBlockNumber,
 } = require('./utils');
 
-module.exports.sendTokens = async () => {
+module.exports.purchaseTokens = async () => {
   const registryUri = getRegistryUri();
-  const quantity = getQuantity();
   const publicKey = getPublicKey();
   const bagId = getBagId();
+  const quantity = getQuantity();
+  const price = getPrice();
   const bagNonce = uuidv4().replace(/-/g, "");
-  const bagNonce2 = uuidv4().replace(/-/g, "");
-  const timestamp = new Date().getTime();
-  const signature = generateSignature(getNonce(), process.env.PRIVATE_KEY);
-  const term = sendTokensTerm(
+
+  const term = purchaseTokensTerm(
     registryUri,
-    signature,
-    bagNonce,
-    bagNonce2,
+    bagId,
+    price,
+    undefined,
     quantity,
     publicKey,
-    bagId,
-    ""
+    bagNonce
   );
 
+  const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
     "secp256k1",

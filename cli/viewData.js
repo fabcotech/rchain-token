@@ -7,6 +7,7 @@ const {
   getRegistryUri,
   logData,
 } = require('./utils');
+const { readBagOrTokenDataTerm } = require('../src');
 
 module.exports.viewData = async () => {
   const bagId = getProcessArgv('--bag');
@@ -30,16 +31,17 @@ module.exports.viewData = async () => {
     }
   }`;
 
+  console.log(readBagOrTokenDataTerm(registryUri, tokenId ? "tokens" : "bags", tokenId || bagId))
   rchainToolkit.http.exploreDeploy(
     process.env.READ_ONLY_HOST,
     {
-      term: term1
+      term: readBagOrTokenDataTerm(registryUri, tokenId ? "tokens" : "bags", tokenId || bagId)
     }
   ).then(results => {
     let data = rchainToolkit.utils.rhoValToJs(
       JSON.parse(results).expr[0]
     );
-    data = decodeURI(data[tokenId || bagId]);
+    data = decodeURI(data);
 
     let fileName = `./token-${tokenId}-data.txt`;
     if (bagId) {

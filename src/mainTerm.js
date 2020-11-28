@@ -242,7 +242,7 @@ in {
                                 "n": *payload.get("n"),
                                 "price": *payload.get("price"),
                               })
-                            ) 
+                            )
                           } |
 
                           match *payload.get("data") {
@@ -378,7 +378,6 @@ in {
                   *justVerifySignatureReturnCh
                 )) |
                 for (@r <- justVerifySignatureReturnCh) {
-                  stdout!(r) |
                   match r {
                     true => {
                       match "\${bagId}" %% { "bagId": currentBags.size() } {
