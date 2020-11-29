@@ -15,6 +15,8 @@ Aliases: You can use `-r` option instead of `--registry-uri`, you can also add a
 ```
 # Deploy a new empty rchain-token contract
 node cli deploy
+# With default bags and/or data, see bags.example.json file
+node cli deploy --bags-file ./bags.json
 ```
 
 After having first deployed you can see the registry URI, this is the identifier of the rchain-token contract on the blockchain.

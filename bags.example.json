@@ -1,0 +1,41 @@
+{
+  "heya": {
+    "n": "0",
+    "nonce": "abbcbabd",
+    "publicKey": "04b50dbf4e03cf9abe39238086ca74f53a9ec9f1b68efc6376cb0cd88dd263ea7b987c5a0f3c655252abdfac247d8eb76b3c93f95bbc61467a0dc78c8d32a5bbb7",
+    "price": null,
+    "quantity": 1,
+    "data": {
+      "address": "aaaaaaa",
+      "badges": {
+        "dappy": "BS great !"
+      },
+      "servers": [{
+        "host": "abc",
+        "cert": "---cert---",
+        "ip": "12.13.14.15",
+        "primary": true
+      }]
+    }
+  },
+  "heyou": {
+    "n": "0",
+    "nonce": "abbcbabd",
+    "address": "blabli",
+    "publicKey": "04b50dbf4e03cf9abe39238086ca74f53a9ec9f1b68efc6376cb0cd88dd263ea7b987c5a0f3c655252abdfac247d8eb76b3c93f95bbc61467a0dc78c8d32a5bbb7",
+    "price": null,
+    "quantity": 1,
+    "data": {
+      "address": "aaaaaaa",
+      "badges": {
+        "dappy": "BS great !"
+      },
+      "servers": [{
+        "host": "abc",
+        "cert": "---cert---",
+        "ip": "12.13.14.15",
+        "primary": true
+      }]
+    }
+  }
+}

@@ -11,6 +11,7 @@ const {
   validAfterBlockNumber,
   prepareDeploy,
   logData,
+  getBagsFile,
 } = require('./utils');
 
 module.exports.deploy = async () => {
@@ -27,7 +28,32 @@ module.exports.deploy = async () => {
     publicKey,
     timestamp
   );
-  const term = mainTerm(newNonce, publicKey);
+  const bagsFile = getBagsFile() ? fs.readFileSync(getBagsFile(), 'utf8') : '';
+  const defaultBagsData = {};
+  const defaultBags = {};
+  if (bagsFile) {
+    const bags = JSON.parse(bagsFile);
+    Object.keys(bags).forEach(bagId => {
+      defaultBagsData[bagId] = { ...bags[bagId].data };
+      delete bags[bagId].data;
+      defaultBags[bagId] = bags[bagId]
+    })
+    log(Object.keys(defaultBags).length + ' bags found in json file');
+    log(Object.keys(defaultBagsData).length + ' bags data found in json file');
+  }
+
+  const defaultBagsAsString = JSON.stringify(defaultBags)
+    .replace(new RegExp(": null", 'g'), ": Nil")
+    .replace(new RegExp(":null", 'g'), ": Nil");
+
+  const defaultBagsDataAsString = JSON.stringify(defaultBagsData)
+    .replace(new RegExp(":null", 'g'), ": Nil")
+    .replace(new RegExp(": null", 'g'), ": Nil");
+
+  const term = mainTerm(newNonce, publicKey)
+    .replace('{/*DEFAULT_BAGS*/}', defaultBagsAsString)
+    .replace('{/*DEFAULT_BAGS_DATA*/}', defaultBagsDataAsString);
+
   log('✓ prepare deploy');
 
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
