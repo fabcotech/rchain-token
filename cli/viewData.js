@@ -1,11 +1,9 @@
 const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
-const path = require('path');
 
 const {
   getProcessArgv,
   getRegistryUri,
-  logData,
 } = require('./utils');
 const { readBagOrTokenDataTerm } = require('../src');
 
@@ -19,19 +17,6 @@ module.exports.viewData = async () => {
   }
 
   const registryUri = getRegistryUri();
-  const term1 = `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    lookup!(\`rho:id:${registryUri}\`, *entryCh) |
-    for(entry <- entryCh) {
-      new x in {
-        entry!({ "type": "${tokenId ? "READ_TOKENS_DATA" : "READ_BAGS_DATA"}" }, *x) |
-        for (y <- x) {
-          return!(*y)
-        }
-      }
-    }
-  }`;
-
-  console.log(readBagOrTokenDataTerm(registryUri, tokenId ? "tokens" : "bags", tokenId || bagId))
   rchainToolkit.http.exploreDeploy(
     process.env.READ_ONLY_HOST,
     {
