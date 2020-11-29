@@ -25,12 +25,14 @@ module.exports.purchaseTokens = async () => {
 
   const term = purchaseTokensTerm(
     registryUri,
-    bagId,
-    price,
-    undefined,
-    quantity,
-    publicKey,
-    bagNonce
+    {
+      publicKey: publicKey,
+      bagId: bagId,
+      quantity: quantity,
+      price: price,
+      bagNonce: bagNonce,
+      data: undefined,
+    }
   );
 
   const timestamp = new Date().getTime();

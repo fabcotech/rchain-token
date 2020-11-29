@@ -1,12 +1,7 @@
 
 module.exports.purchaseTokensTerm = (
   registryUri,
-  bagId,
-  price,
-  data,
-  quantity,
-  publicKey,
-  bagNonce
+  payload
 ) => {
   return `
 new
@@ -32,17 +27,17 @@ in {
   // Registry URI of the contract
   registryUriCh!!(\`rho:id:${registryUri}\`) |
   // Unique ID of the token you want to purchase
-  bagIdCh!!("${bagId}") |
+  bagIdCh!!("${payload.bagId}") |
   // Per token price, make sure it is accurate
-  priceCh!!(${price || "Nil"}) |
+  priceCh!!(${payload.price || "Nil"}) |
   // Bag data: Any
-  bagDataCh!!(${data ? '"' + encodeURI(data) + '"' : "Nil"}) |
+  bagDataCh!!(${payload.data ? '"' + payload.data + '"' : "Nil"}) |
   // Quantity you want to purchase, make sure enough are available
-  quantityCh!!(${quantity}) |
+  quantityCh!!(${payload.quantity}) |
   // Your public key
-  publicKeyCh!!("${publicKey}") |
+  publicKeyCh!!("${payload.publicKey}") |
   // A unique nonce to be changed on each operation
-  nonceCh!!("${bagNonce}") |
+  nonceCh!!("${payload.bagNonce}") |
 
   registryLookup!(\`rho:rchain:revVault\`, *revVaultPurseCh) |
 

@@ -36,10 +36,8 @@ module.exports.updateTokenData = async () => {
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = updateTokenDataTerm(
     registryUri,
-    newNonce,
+    payload,
     signature,
-    tokenId,
-    data
   );
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

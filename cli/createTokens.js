@@ -47,14 +47,8 @@ module.exports.createTokens = async () => {
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = createTokensTerm(
     registryUri,
+    payload,
     signature,
-    newNonce,
-    bagNonce,
-    publicKey,
-    tokenId,
-    price,
-    quantity,
-    undefined
   );
 
   const timestamp = new Date().getTime();

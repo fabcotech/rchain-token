@@ -27,7 +27,7 @@ module.exports.lock = async () => {
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = setLockedTerm(
     registryUri,
-    newNonce,
+    payload,
     signature
   );
       

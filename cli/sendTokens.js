@@ -39,13 +39,8 @@ module.exports.sendTokens = async () => {
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = sendTokensTerm(
     registryUri,
+    payload,
     signature,
-    bagNonce,
-    bagNonce2,
-    quantity,
-    publicKey,
-    bagId,
-    undefined
   );
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

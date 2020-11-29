@@ -1,4 +1,4 @@
-module.exports.setLockedTerm = (registryUri, newNonce, signature) => {
+module.exports.setLockedTerm = (registryUri, payload, signature) => {
   return `new basket,
   entryCh,
   returnCh,
@@ -16,7 +16,7 @@ in {
         "signature": "${signature}",
         "payload": {
           // new nonce, must be different and random (generateNonce.js)
-          "newNonce": "${newNonce}",
+          "newNonce": "${payload.newNonce}",
         }
       },
       *returnCh

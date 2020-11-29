@@ -34,10 +34,8 @@ module.exports.updateBagData = async () => {
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = updateBagDataTerm(
     registryUri,
-    newNonce,
+    payload,
     signature,
-    bagId,
-    data
   );
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

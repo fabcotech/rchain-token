@@ -14,41 +14,35 @@ const replaceEverything = (a) => {
       .replace("SIGNATURE", "${signature}")
       .replace(
         "TOKEN_ID",
-        '${typeof n == "string" ? \'"\' + n + \'"\' : "Nil"}'
+        '${typeof payload.n == "string" ? \'"\' + payload.n + \'"\' : "Nil"}'
       )
-      .replace("NEW_NONCE", "${newNonce}")
-      .replace("BAG_NONCE", "${bagNonce}")
-      .replace("BAG_NONCE_2", "${bagNonce2}")
-      .replace("PRICE", '${price || "Nil"}')
-      .replace("QUANTITY", "${quantity}")
-      .replace("PUBLIC_KEY", "${publicKey}")
-      .replace("BAG_ID", "${bagId}")
-      .replace("TOKEN_ID", "${tokenId}")
+      .replace("NEW_NONCE", "${payload.newNonce}")
+      .replace("BAG_NONCE", "${payload.bagNonce}")
+      .replace("BAG_NONCE_2", "${payload.bagNonce2}")
+      .replace("PRICE", '${payload.price || "Nil"}')
+      .replace("QUANTITY", "${payload.quantity}")
+      .replace("PUBLIC_KEY", "${payload.publicKey}")
+      .replace("BAG_ID", "${payload.bagId}")
+      .replace("TOKEN_ID", "${payload.tokenId}")
       // some function name end with BAG_DATA
       .replace(
         ": BAG_DATA",
-        ": ${data ? '\"' + encodeURI(data) + '\"' : \"Nil\"}"
+        ": ${payload.data ? '\"' + payload.data + '\"' : \"Nil\"}"
       )
       .replace(
         "(BAG_DATA)",
-        "(${data ? '\"' + encodeURI(data) + '\"' : \"Nil\"})"
+        "(${payload.data ? '\"' + payload.data + '\"' : \"Nil\"})"
       )
       // some function name end with _DATA
-      .replace(": DATA", ": ${data ? '\"' + encodeURI(data) + '\"' : \"Nil\"}")
+      .replace(": DATA", ": ${payload.data ? '\"' + payload.data + '\"' : \"Nil\"}")
   );
 };
 fs.writeFileSync(
   "./src/createTokensTerm.js",
   `module.exports.createTokensTerm = (
   registryUri,
+  payload,
   signature,
-  newNonce,
-  bagNonce,
-  publicKey,
-  n,
-  price,
-  quantity,
-  data
 ) => {
   return \`${replaceEverything(createTokensFile)}\`;
 };`
@@ -63,12 +57,7 @@ fs.writeFileSync(
   `
 module.exports.purchaseTokensTerm = (
   registryUri,
-  bagId,
-  price,
-  data,
-  quantity,
-  publicKey,
-  bagNonce
+  payload
 ) => {
   return \`${replaceEverything(purchaseTokensFile)}\`;
 };
@@ -79,7 +68,7 @@ const setLockedFile = fs.readFileSync("./set_locked.rho").toString("utf8");
 
 fs.writeFileSync(
   "./src/setLockedTerm.js",
-  `module.exports.setLockedTerm = (registryUri, newNonce, signature) => {
+  `module.exports.setLockedTerm = (registryUri, payload, signature) => {
   return \`${replaceEverything(setLockedFile)}\`;
 };`
 );
@@ -92,10 +81,8 @@ fs.writeFileSync(
   "./src/updateTokenDataTerm.js",
   `module.exports.updateTokenDataTerm = (
   registryUri,
-  newNonce,
-  signature,
-  n,
-  data    
+  payload,
+  signature, 
 ) => {
   return \`${replaceEverything(updateTokenDataFile)}\`;
 };`
@@ -109,10 +96,8 @@ fs.writeFileSync(
   "./src/updateBagDataTerm.js",
   `module.exports.updateBagDataTerm = (
   registryUri,
-  newNonce,
+  payload,
   signature,
-  bagId,
-  data
 ) => {
   return \`${replaceEverything(updateBagDataFile)}\`;
 };`
@@ -124,13 +109,8 @@ fs.writeFileSync(
   "./src/sendTokensTerm.js",
   `module.exports.sendTokensTerm = (
   registryUri,
-  signature,
-  bagNonce,
-  bagNonce2,
-  quantity,
-  publicKey,
-  bagId,
-  data    
+  payload,
+  signature, 
 ) => {
   return \`${replaceEverything(sendTokensFile)}\`;
 };`

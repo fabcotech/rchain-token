@@ -1,12 +1,7 @@
 module.exports.sendTokensTerm = (
   registryUri,
-  signature,
-  bagNonce,
-  bagNonce2,
-  quantity,
-  publicKey,
-  bagId,
-  data    
+  payload,
+  signature, 
 ) => {
   return `new basket,
   returnCh,
@@ -25,17 +20,17 @@ in {
         "signature": "${signature}",
         "payload": {
           // new nonce, must be different and random (generateNonce.js)
-          "bagNonce": "${bagNonce}",
+          "bagNonce": "${payload.bagNonce}",
           // new nonce for the new bag
-          "bagNonce2": "${bagNonce2}",
+          "bagNonce2": "${payload.bagNonce2}",
           // bag ID (ex: "0")
-          "bagId": "${bagId}",
+          "bagId": "${payload.bagId}",
           // quantity of tokens to send
-          "quantity": ${quantity},
+          "quantity": ${payload.quantity},
           // publicKey this send those tokens to (can be the same just split a bag)
-          "publicKey": "${publicKey}",
+          "publicKey": "${payload.publicKey}",
           // data (optional) to be attached to the new bag (in bagsData)
-          "data": ${data ? '"' + encodeURI(data) + '"' : "Nil"}
+          "data": ${payload.data ? '"' + payload.data + '"' : "Nil"}
         }
       },
       *returnCh

@@ -1,9 +1,7 @@
 module.exports.updateTokenDataTerm = (
   registryUri,
-  newNonce,
-  signature,
-  n,
-  data    
+  payload,
+  signature, 
 ) => {
   return `new basket,
   entryCh,
@@ -22,11 +20,11 @@ in {
         "signature": "${signature}",
         "payload": {
           // new nonce, must be different and random (generateNonce.js)
-          "newNonce": "${newNonce}",
+          "newNonce": "${payload.newNonce}",
           // token ID you want to attach data to
-          "n": ${typeof n == "string" ? '"' + n + '"' : "Nil"},
+          "n": ${typeof payload.n == "string" ? '"' + payload.n + '"' : "Nil"},
           // data is used only if new token ("n" : Nil)
-          "data": ${data ? '"' + encodeURI(data) + '"' : "Nil"}
+          "data": ${payload.data ? '"' + payload.data + '"' : "Nil"}
         }
       },
       *returnCh

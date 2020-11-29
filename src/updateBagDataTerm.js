@@ -1,9 +1,7 @@
 module.exports.updateBagDataTerm = (
   registryUri,
-  newNonce,
+  payload,
   signature,
-  bagId,
-  data
 ) => {
   return `new basket,
   entryCh,
@@ -22,11 +20,11 @@ in {
         "signature": "${signature}",
         "payload": {
           // new nonce, must be different and random (generateNonce.js)
-          "newNonce": "${newNonce}",
+          "newNonce": "${payload.newNonce}",
           // bag ID you want to attach data to
-          "bagId": "${bagId}",
+          "bagId": "${payload.bagId}",
           // data is used only if new token ("n" : Nil)
-          "data": ${data ? '"' + encodeURI(data) + '"' : "Nil"}
+          "data": ${payload.data ? '"' + payload.data + '"' : "Nil"}
         }
       },
       *returnCh
