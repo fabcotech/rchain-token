@@ -17,6 +17,8 @@ module.exports.view = async () => {
   const registryUri = getRegistryUri();
   const term1 = read(registryUri);
   const term2 = readBagsTerm(registryUri);
+  const publicKey = process.env.PRIVATE_KEY ? rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY) : 'é';
+
   Promise.all(
     [rchainToolkit.http.exploreDeploy(
       process.env.READ_ONLY_HOST,
@@ -70,9 +72,13 @@ module.exports.view = async () => {
       s+= bags[bagId].quantity;
       s = s.padEnd(46, ' ');
       s+= bags[bagId].price || 'not for sale';
-      console.log(s)
+      if (bags[bagId].publicKey === publicKey) {
+        console.log('\x1b[32m', s);
+      } else {
+        console.log('\x1b[0m', s)
+      }
     });
     fs.writeFileSync(path.join(`./bags-${registryUri}.json`), JSON.stringify(bags, null, 2));
-    console.log(`\n✓ wrote bags-${registryUri}.json file`);
+    console.log('\x1b[0m', `\n✓ wrote bags-${registryUri}.json file`);
   });
 }
