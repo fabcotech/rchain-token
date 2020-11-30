@@ -561,15 +561,17 @@ in {
       // Anyone capabilities
       "PURCHASE_TOKENS" => {
         match *action.get("payload") {
-          { "quantity": Int, "bagId": String, "newBagId": String, "publicKey": String, "nonce": String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
+          { "quantity": 1, "bagId": String, "newBagId": String, "publicKey": String, "nonce": String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
             purchaseCh!(*action.get("payload"), *return)
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
+            return!("error: invalid payload, structure should be { 'quantity': 1, 'bagId': String, 'newBagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
           }
         }
       }
       "SEND_TOKENS" => {
+        return!("error: SEND_TOKENS is blocked")
+        /*
         match *action.get("payload") {
           { "quantity": Int, "bagId": String, "newBagId": String, "publicKey": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
             sendCh!(
@@ -582,6 +584,7 @@ in {
             return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': String, 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
           }
         }
+        */
       }
       _ => {
         return!("error: unknown action")
