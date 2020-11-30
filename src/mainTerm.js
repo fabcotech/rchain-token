@@ -598,14 +598,14 @@ in {
       "locked": false,
       "publicKey": "${publicKey}",
       "nonce": "${newNonce}",
-      "version": "0.3"
+      "version": "4.0.0"
     }) |
     stdout!({
       "registryUri": *entryUri,
       "locked": false,
       "publicKey": "${publicKey}",
       "nonce": "${newNonce}",
-      "version": "0.3"
+      "version": "4.0.0"
     })
 
     /*OUTPUT_CHANNEL*/
