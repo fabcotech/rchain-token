@@ -1,4 +1,6 @@
-### Rholang (RChain) token  (v4)
+### Rholang (RChain) token (v4)
+
+**This is the #files branch/fork** of the standard rchain-token **[master](https://github.com/fabcotech/rchain-token)** branch. This one is tweeked to allow indexing bags by file name, `bagId` can be a string like `mydocument`, instead of `0`, `1`, `2` etc.
 
 Fungibles and non-fungibles tokens on the RChain blockchain. Includes buy/sell capabilities by default, metadata that can be associated to a token type (ex: pizza), or a specific set of tokens (pizza n°1021).
 
