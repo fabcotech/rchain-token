@@ -229,16 +229,16 @@ in {
               for (@verified <- verifyCh) {
                 match verified {
                   true => {
-                    new bagIdCh in {
-                      match *payload.get("newBagId") {
-                        String => { bagIdCh!(*payload.get("newBagId")) }
-                        _ => { bagIdCh!("${n}" %% { "n": currentBags.size() }) }
+                    new newBagIdCh in {
+                      match currentBags.get(*payload.get("newBagId")) {
+                        Nil => { newBagIdCh!(*payload.get("newBagId")) }
+                        _ => { return!("error: bagId, already exists") }
                       } |
 
-                      for (@bagId <- bagIdCh) {
+                      for (@newBagId <- newBagIdCh) {
                         for (_ <- bags) {
                           bags!(
-                            currentBags.set(bagId, {
+                            currentBags.set(newBagId, {
                               "quantity": *payload.get("quantity"),
                               "publicKey": *payload.get("publicKey"),
                               "nonce": *payload.get("bagNonce"),
@@ -253,7 +253,7 @@ in {
                           data => {
                             for (@currentBagsData <- bagsData) {
                               bagsData!(
-                                currentBagsData.set(bagId, data)
+                                currentBagsData.set(newBagId, data)
                               )
                             }
                           }
@@ -310,9 +310,9 @@ in {
                             for (@result <- resultCh) {
                               match result {
                                 (true, Nil) => {
-                                  match *payload.get("newBagId") {
-                                    String => { newBagIdCh!(*payload.get("newBagId")) }
-                                    _ => { newBagIdCh!("${n}" %% { "n": currentBags.size() }) }
+                                  match currentBags.get(*payload.get("newBagId")) {
+                                    Nil => { newBagIdCh!(*payload.get("newBagId")) }
+                                    _ => { return!("error: bagId, already exists") }
                                   } |
                                   for (@newBagId <- newBagIdCh) {
                                     match *payload.get("data") {
@@ -321,41 +321,41 @@ in {
                                         for (@currentBagsData <- bagsData) {
                                           bagsData!(currentBagsData.set(newBagId, data))
                                         }
-                                      } |
-                                      for (_ <- bags) {
-                                        match bag.get("quantity") - *payload.get("quantity") == 0 {
-                                          true => {
-                                            // todo, should we delete bag data for *payload.get("bagId") here ?
-                                            bags!(
-                                              currentBags.set(newBagId, {
-                                                "quantity": *payload.get("quantity"),
-                                                "publicKey": *payload.get("publicKey"),
-                                                "nonce": *payload.get("nonce"),
-                                                "n": bag.get("n"),
-                                                "price": Nil,
-                                              })
-                                              // Delete seller bag
-                                              .delete(*payload.get("bagId"))
-                                            ) 
-                                          }
-                                          false => {
-                                            bags!(
-                                              currentBags.set(newBagId, {
-                                                "quantity": *payload.get("quantity"),
-                                                "publicKey": *payload.get("publicKey"),
-                                                "nonce": *payload.get("nonce"),
-                                                "n": bag.get("n"),
-                                                "price": Nil,
-                                              // Udate quantity in seller token ownership
-                                              }).set(
-                                                *payload.get("bagId"),
-                                                bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
-                                              )
-                                            )
-                                          }
-                                        } |
-                                        return!(true)
                                       }
+                                    } |
+                                    for (_ <- bags) {
+                                      match bag.get("quantity") - *payload.get("quantity") == 0 {
+                                        true => {
+                                          // todo, should we delete bag data for *payload.get("bagId") here ?
+                                          bags!(
+                                            currentBags.set(newBagId, {
+                                              "quantity": *payload.get("quantity"),
+                                              "publicKey": *payload.get("publicKey"),
+                                              "nonce": *payload.get("nonce"),
+                                              "n": bag.get("n"),
+                                              "price": Nil,
+                                            })
+                                            // Delete seller bag
+                                            .delete(*payload.get("bagId"))
+                                          ) 
+                                        }
+                                        false => {
+                                          bags!(
+                                            currentBags.set(newBagId, {
+                                              "quantity": *payload.get("quantity"),
+                                              "publicKey": *payload.get("publicKey"),
+                                              "nonce": *payload.get("nonce"),
+                                              "n": bag.get("n"),
+                                              "price": Nil,
+                                            // Udate quantity in seller token ownership
+                                            }).set(
+                                              *payload.get("bagId"),
+                                              bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
+                                            )
+                                          )
+                                        }
+                                      } |
+                                      return!(true)
                                     }
                                   }
                                 }
@@ -389,7 +389,7 @@ in {
         bag => {
           match bag.get("quantity") - *payload.get("quantity") >= 0 {
             true => {
-              new justVerifySignatureReturnCh, bagIdCh in {
+              new justVerifySignatureReturnCh, newBagIdCh in {
                 justVerifySignatureCh!((
                   bag.get("publicKey"),
                   *signature,
@@ -400,59 +400,59 @@ in {
                 for (@r <- justVerifySignatureReturnCh) {
                   match r {
                     true => {
-                      match *payload.get("newBagId") {
-                        String => { bagIdCh!(*payload.get("newBagId")) }
-                        _ => { bagIdCh!("${n}" %% { "n": currentBags.size() }) }
+                      match currentBags.get(*payload.get("newBagId")) {
+                        Nil => { newBagIdCh!(*payload.get("newBagId")) }
+                        _ => { return!("error: bagId, already exists") }
                       } |
 
-                      for (@bagId <- bagIdCh) {
+                      for (@newBagId <- newBagIdCh) {
                         // Add bag data if found in payload
                         match *payload.get("data") {
                           Nil => {}
                           data => {
                             for (@currentBagsData <- bagsData) {
-                              bagsData!(currentBagsData.set(bagId, data))
+                              bagsData!(currentBagsData.set(newBagId, data))
                             }
-                          } |
-                          for (_ <- bags) {
-                            match bag.get("quantity") - *payload.get("quantity") == 0 {
-                              true => {
-                                bags!(
-                                  // todo, should we delete bag data for *payload.get("bagId") here ?
-                                  currentBags.set(bagId, {
-                                    "quantity": *payload.get("quantity"),
-                                    "publicKey": *payload.get("publicKey"),
-                                    "nonce": *payload.get("bagNonce2"),
-                                    "n": bag.get("n"),
-                                    "price": Nil,
-                                  // Delete issuer bag
-                                  }).delete(*payload.get("bagId"))
-                                )
-                              }
-                              false => {
-                                bags!(
-                                  // New bag ID for new bag
-                                  currentBags.set(bagId, {
-                                    "quantity": *payload.get("quantity"),
-                                    "publicKey": *payload.get("publicKey"),
-                                    "nonce": *payload.get("bagNonce2"),
-                                    "n": bag.get("n"),
-                                    "price": Nil,
-                                  // Udate quantity in seller bag
-                                  }).set(
-                                    *payload.get("bagId"),
-                                    bag.set(
-                                      "quantity", bag.get("quantity") - *payload.get("quantity")
-                                    ).set(
-                                      "nonce",
-                                      *payload.get("bagNonce")
-                                    )
+                          }
+                        } |
+                        for (_ <- bags) {
+                          match bag.get("quantity") - *payload.get("quantity") == 0 {
+                            true => {
+                              bags!(
+                                // todo, should we delete bag data for *payload.get("bagId") here ?
+                                currentBags.set(newBagId, {
+                                  "quantity": *payload.get("quantity"),
+                                  "publicKey": *payload.get("publicKey"),
+                                  "nonce": *payload.get("bagNonce2"),
+                                  "n": bag.get("n"),
+                                  "price": Nil,
+                                // Delete issuer bag
+                                }).delete(*payload.get("bagId"))
+                              )
+                            }
+                            false => {
+                              bags!(
+                                // New bag ID for new bag
+                                currentBags.set(newBagId, {
+                                  "quantity": *payload.get("quantity"),
+                                  "publicKey": *payload.get("publicKey"),
+                                  "nonce": *payload.get("bagNonce2"),
+                                  "n": bag.get("n"),
+                                  "price": Nil,
+                                // Udate quantity in seller bag
+                                }).set(
+                                  *payload.get("bagId"),
+                                  bag.set(
+                                    "quantity", bag.get("quantity") - *payload.get("quantity")
+                                  ).set(
+                                    "nonce",
+                                    *payload.get("bagNonce")
                                   )
                                 )
-                              }
-                            } |
-                            return!(true)
-                          }
+                              )
+                            }
+                          } |
+                          return!(true)
                         }
                       }
                     }
@@ -541,7 +541,7 @@ in {
             "bagNonce": String,
             "quantity": Int,
             "publicKey": String,
-            "newBagId": Nil \/ String,
+            "newBagId": String,
             "price": Nil \/ Int,
             "n": String,
             "data": _
@@ -553,24 +553,24 @@ in {
             )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'newNonce': String, 'newBagId': Nil or String, 'bagNonce': String, 'quantity': Int, 'n': String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
+            return!("error: invalid payload, structure should be { 'newNonce': String, 'newBagId': String, 'bagNonce': String, 'quantity': Int, 'n': String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
           }
         }
       }
       // Anyone capabilities
       "PURCHASE_TOKENS" => {
         match *action.get("payload") {
-          { "quantity": Int, "bagId": String, "newBagId": Nil \/ String, "publicKey": String, "nonce": String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
+          { "quantity": Int, "bagId": String, "newBagId": String, "publicKey": String, "nonce": String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
             purchaseCh!(*action.get("payload"), *return)
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': Nil or String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
+            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
           }
         }
       }
       "SEND_TOKENS" => {
         match *action.get("payload") {
-          { "quantity": Int, "bagId": String, "newBagId": Nil \/ String, "publicKey": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
+          { "quantity": Int, "bagId": String, "newBagId": String, "publicKey": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
             sendCh!(
               *action.get("payload"),
               *action.get("signature"),
@@ -578,7 +578,7 @@ in {
             )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': Nil or String, 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
+            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': String, 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
           }
         }
       }
