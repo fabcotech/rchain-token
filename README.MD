@@ -130,6 +130,14 @@ Through the `entry` channel that is exposed to the registry, any user can intera
 - `READ_TOKENS` : reads the value in `tokens` and returns it, see `read_tokens.rho`.
 - `READ_TOKENS_DATA` : reads the value in `tokensData` and returns it, see `read_tokens_data.rho`.
 
+### Compile for browser and dappy browser
+
+Change version in `src/index.js` and in `rollup.config.js`.
+
+```
+npm run build:browser
+```
+
 ### TODO
 
 - Exchange capabilities
