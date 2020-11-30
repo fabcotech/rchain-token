@@ -45,7 +45,8 @@ fs.writeFileSync(
   signature,
 ) => {
   return \`${replaceEverything(createTokensFile)}\`;
-};`
+};
+`
 );
 
 const purchaseTokensFile = fs
@@ -85,7 +86,8 @@ fs.writeFileSync(
   signature, 
 ) => {
   return \`${replaceEverything(updateTokenDataFile)}\`;
-};`
+};
+`
 );
 
 const updateBagDataFile = fs
@@ -100,7 +102,8 @@ fs.writeFileSync(
   signature,
 ) => {
   return \`${replaceEverything(updateBagDataFile)}\`;
-};`
+};
+`
 );
 
 const sendTokensFile = fs.readFileSync("./send_tokens.rho").toString("utf8");
@@ -113,7 +116,8 @@ fs.writeFileSync(
   signature, 
 ) => {
   return \`${replaceEverything(sendTokensFile)}\`;
-};`
+};
+`
 );
 
 const mainTerm = fs.readFileSync("./main.rho").toString("utf8");
@@ -127,5 +131,6 @@ fs.writeFileSync(
       .replace(/\$\{/g, "\\${")
       .replace(/NEW_NONCE/g, "${newNonce}")
       .replace(/PUBLIC_KEY/g, "${publicKey}")}\`;
-};`
+};
+`
 );

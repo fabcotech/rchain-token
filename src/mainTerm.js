@@ -318,20 +318,37 @@ in {
                                         }
                                       } |
                                       for (_ <- bags) {
-                                        bags!(
-                                          // New bag ID for new token ownership
-                                          currentBags.set(bagId, {
-                                            "quantity": *payload.get("quantity"),
-                                            "publicKey": *payload.get("publicKey"),
-                                            "nonce": *payload.get("nonce"),
-                                            "n": bag.get("n"),
-                                            "price": Nil,
-                                          // Udate quantity in seller token ownership
-                                          }).set(
-                                            *payload.get("bagId"),
-                                            bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
-                                          )
-                                        ) |
+                                        match bag.get("quantity") - *payload.get("quantity") == 0 {
+                                          true => {
+                                            // todo, should we delete bag data for *payload.get("bagId") here ?
+                                            bags!(
+                                              currentBags.set(bagId, {
+                                                "quantity": *payload.get("quantity"),
+                                                "publicKey": *payload.get("publicKey"),
+                                                "nonce": *payload.get("nonce"),
+                                                "n": bag.get("n"),
+                                                "price": Nil,
+                                              })
+                                              // Delete seller bag
+                                              .delete(*payload.get("bagId"))
+                                            ) 
+                                          }
+                                          false => {
+                                            bags!(
+                                              currentBags.set(bagId, {
+                                                "quantity": *payload.get("quantity"),
+                                                "publicKey": *payload.get("publicKey"),
+                                                "nonce": *payload.get("nonce"),
+                                                "n": bag.get("n"),
+                                                "price": Nil,
+                                              // Udate quantity in seller token ownership
+                                              }).set(
+                                                *payload.get("bagId"),
+                                                bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
+                                              )
+                                            )
+                                          }
+                                        } |
                                         return!(true)
                                       }
                                     }
