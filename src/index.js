@@ -10,7 +10,7 @@ const { readBagsOrTokensDataTerm } = require("./readBagsOrTokensDataTerm");
 const { read } = require("./read");
 const { readBagsTerm } = require("./readBagsTerm");
 
-module.exports.default = {
+module.exports = {
   version: '4.0.0',
   mainTerm,
   createTokensTerm,
