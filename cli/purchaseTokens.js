@@ -6,19 +6,18 @@ const {
 } = require('../src/');
 
 const {
-  getBagId,
+  getFromBagId,
   getQuantity,
   getRegistryUri,
   getPrice,
-  getPublicKey,
   log,
   validAfterBlockNumber,
 } = require('./utils');
 
 module.exports.purchaseTokens = async () => {
   const registryUri = getRegistryUri();
-  const publicKey = getPublicKey();
-  const bagId = getBagId();
+  const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY);
+  const bagId = getFromBagId();
   const quantity = getQuantity();
   const price = getPrice();
   const bagNonce = uuidv4().replace(/-/g, "");

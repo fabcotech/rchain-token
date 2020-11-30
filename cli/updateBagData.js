@@ -6,7 +6,6 @@ const {
 } = require('../src/');
 
 const {
-  getBagId,
   getFile,
   getRegistryUri,
   getNonce,
@@ -20,7 +19,10 @@ module.exports.updateBagData = async () => {
   const registryUri = getRegistryUri();
   const data = getFile();
   log('✓ found file ' + getProcessArgv('--file'));
-  const bagId = getBagId();
+  const bagId = getProcessArgv('--bag');
+  if(!bagId) {
+    throw new Error('Missing arguments --bag');
+  }
   const newNonce = uuidv4().replace(/-/g, "");
 
   const payload = {

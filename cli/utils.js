@@ -144,10 +144,10 @@ module.exports.getPublicKey = () => {
   return publicKey;
 }
 
-module.exports.getBagId = () => {
-  const bagId = getProcessArgv('--bag');
+module.exports.getFromBagId = () => {
+  const bagId = getProcessArgv('--from-bag');
   if(!bagId) {
-    throw new Error('Missing arguments --bag');
+    throw new Error('Missing arguments --from-bag');
   }
   return bagId;
 }
