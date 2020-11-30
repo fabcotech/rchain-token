@@ -6,7 +6,7 @@ const {
 } = require('../src/');
 
 const {
-  getBagId,
+  getFromBagId,
   getQuantity,
   getRegistryUri,
   getNonce,
@@ -21,8 +21,8 @@ module.exports.sendTokens = async () => {
   const registryUri = getRegistryUri();
   const quantity = getQuantity();
   const publicKey = getPublicKey();
-  const bagId = getBagId();
   const newBagId = getNewBagId();
+  const bagId = getFromBagId();
   const bagNonce = uuidv4().replace(/-/g, "");
   const bagNonce2 = uuidv4().replace(/-/g, "");
   const timestamp = new Date().getTime();
@@ -32,6 +32,7 @@ module.exports.sendTokens = async () => {
     bagNonce: bagNonce,
     bagNonce2: bagNonce2,
     bagId: bagId,
+    newBagId: newBagId,
     quantity: quantity,
     publicKey: publicKey,
     data: undefined,

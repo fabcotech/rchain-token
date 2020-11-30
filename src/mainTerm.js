@@ -414,30 +414,47 @@ in {
                             for (@currentBagsData <- bagsData) {
                               bagsData!(currentBagsData.set(bagId, data))
                             }
+                          } |
+                          for (_ <- bags) {
+                            match bag.get("quantity") - *payload.get("quantity") == 0 {
+                              true => {
+                                bags!(
+                                  // todo, should we delete bag data for *payload.get("bagId") here ?
+                                  currentBags.set(bagId, {
+                                    "quantity": *payload.get("quantity"),
+                                    "publicKey": *payload.get("publicKey"),
+                                    "nonce": *payload.get("bagNonce2"),
+                                    "n": bag.get("n"),
+                                    "price": Nil,
+                                  // Delete issuer bag
+                                  }).delete(*payload.get("bagId"))
+                                )
+                              }
+                              false => {
+                                bags!(
+                                  // New bag ID for new bag
+                                  currentBags.set(bagId, {
+                                    "quantity": *payload.get("quantity"),
+                                    "publicKey": *payload.get("publicKey"),
+                                    "nonce": *payload.get("bagNonce2"),
+                                    "n": bag.get("n"),
+                                    "price": Nil,
+                                  // Udate quantity in seller bag
+                                  }).set(
+                                    *payload.get("bagId"),
+                                    bag.set(
+                                      "quantity", bag.get("quantity") - *payload.get("quantity")
+                                    ).set(
+                                      "nonce",
+                                      *payload.get("bagNonce")
+                                    )
+                                  )
+                                )
+                              }
+                            } |
+                            return!(true)
                           }
-                        } |
-                        for (_ <- bags) {
-                          bags!(
-                            // New bag ID for new bag
-                            currentBags.set(bagId, {
-                              "quantity": *payload.get("quantity"),
-                              "publicKey": *payload.get("publicKey"),
-                              "nonce": *payload.get("bagNonce2"),
-                              "n": bag.get("n"),
-                              "price": Nil,
-                            // Udate quantity in seller bag
-                            }).set(
-                              *payload.get("bagId"),
-                              bag.set(
-                                "quantity", bag.get("quantity") - *payload.get("quantity")
-                              ).set(
-                                "nonce",
-                                *payload.get("bagNonce")
-                              )
-                            )
-                          )
-                        } |
-                        return!(true)
+                        }
                       }
                     }
                     false => {

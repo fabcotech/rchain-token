@@ -59,13 +59,13 @@ node cli create-tokens --registry-uri 6yt4 --contract-nonce daec --price 10 --qu
 ```
 # Purchase tokens from a bag
 # If --price is not given, the tokens won't be for sale
-node cli purchase-tokens --registry-uri 6yt4  --price 100 --bag 0 --quantity 3
+node cli purchase-tokens --registry-uri 6yt4  --price 100 --from-bag 0 --quantity 3
 ```
 
 ```
 # Send tokens, which is equal to splitting a bag into two bags
 # --nonce is the bag nonce, not the contract nonce
-node cli send-tokens --registry-uri 6yt4 --nonce 1f4c --bag 0 --quantity 7 --public-key aaa
+node cli send-tokens --registry-uri 6yt4 --nonce 1f4c --from-bag 0 --quantity 7 --public-key aaa
 ```
 
 **Data operations**
