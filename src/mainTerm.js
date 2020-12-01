@@ -291,6 +291,7 @@ in {
             }
             true => {
               new RevVaultCh, ownerRevAddressCh, purseVaultCh in {
+
                 registryLookup!(\`rho:rchain:revVault\`, *RevVaultCh) |
                 revAddress!("fromPublicKey", bag.get("publicKey").hexToBytes(), *ownerRevAddressCh) |
 
@@ -383,7 +384,7 @@ in {
                                 }
                               }
                               _ => {
-                                performRefundCh!("transfer error, initiate refund")
+                                performRefundCh!("error: REV transfer went wrong")
                               }
                             }
                           }
