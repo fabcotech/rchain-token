@@ -1,6 +1,8 @@
 ### Rholang (RChain) token (v4)
 
-**This is the #files branch/fork** of the standard rchain-token **[master](https://github.com/fabcotech/rchain-token)** branch. This one is tweeked to allow indexing bags by file name, `bagId` can be a string like `mydocument`, instead of `0`, `1`, `2` etc.
+**This is the #files branch/fork** of the standard rchain-token **[master](https://github.com/fabcotech/rchain-token)** branch. This one is tweeked to allow indexing bags by string instead of `0`, `1`, `2` etc. It can be used to represent files, as well as names in the dappy name system for example.
+
+Except for the bags created with `"CREATE_TOKENS"` by the owner, all bags have `"quantity": 1`. Bag with ID `"0"` is special, it is the only one that when you purchase from it (you always purchase `"quantity": 1`), you can create an new bag with arbitrary ID, see `./purchase_tokens.rho`. Make sure you ALWAYS create a bag with ID `"0"` right after you deploy, fancy things could happen if you don't.
 
 Fungibles and non-fungibles tokens on the RChain blockchain. Includes buy/sell capabilities by default, metadata that can be associated to a token type (ex: pizza), or a specific set of tokens (pizza n°1021).
 
