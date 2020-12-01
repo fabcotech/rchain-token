@@ -285,7 +285,7 @@ in {
               return!("error : not enough tokens in bag (bag ID: " ++ *payload.get("bagId") ++ ") available")
             }
             true => {
-              new RevVaultCh, ownerRevAddressCh in {
+              new RevVaultCh, ownerRevAddressCh, purseVaultCh, performRefundCh in {
 
                 registryLookup!(\`rho:rchain:revVault\`, *RevVaultCh) |
                 revAddress!("fromPublicKey", bag.get("publicKey").hexToBytes(), *ownerRevAddressCh) |
@@ -297,85 +297,84 @@ in {
                     *payload.get("quantity") * bag.get("price")
                   ) {
                     (from, to, amount) => {
-                      new purseVaultCh in {
-                        @RevVault!("findOrCreate", from, *purseVaultCh) |
-                        for (@(true, purseVault) <- purseVaultCh) {
-
-                          new resultCh in {
-                            @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh) |
-                            for (@result <- resultCh) {
-                              match result {
-                                (true, Nil) => {
-                                  match "\${bagId}" %% { "bagId": currentBags.size() } {
-                                    bagId => {
-                                      match *payload.get("data") {
-                                        Nil => {}
-                                        data => {
-                                          for (@currentBagsData <- bagsData) {
-                                            bagsData!(currentBagsData.set(bagId, data))
-                                          }
+                      @RevVault!("findOrCreate", from, *purseVaultCh) |
+                      for (@(true, purseVault) <- purseVaultCh) {
+                        // refund
+                        for (@message <- performRefundCh) {
+                          new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
+                            @purseVault!("balance", *refundPurseBalanceCh) |
+                            revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
+                            for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
+                              @purseVault!("transfer", revAddress, balance, *payload.get("purseAuthKey"), *refundResultCh) |
+                              for (@refundResult <- refundResultCh) {
+                                match refundResult {
+                                  (true, Nil) => {
+                                    stdout!("refund went well") |
+                                    return!(message ++ ", issuer was refunded")
+                                  }
+                                  _ => {
+                                    stdout!("error: refund DID NOT go well") |
+                                    return!(message ++ ", issuer was NOT refunded")
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        } |
+                        new resultCh in {
+                          @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh) |
+                          for (@result <- resultCh) {
+                            match result {
+                              (true, Nil) => {
+                                match "\${bagId}" %% { "bagId": currentBags.size() } {
+                                  bagId => {
+                                    match *payload.get("data") {
+                                      Nil => {}
+                                      data => {
+                                        for (@currentBagsData <- bagsData) {
+                                          bagsData!(currentBagsData.set(bagId, data))
+                                        }
+                                      }
+                                    } |
+                                    for (_ <- bags) {
+                                      match bag.get("quantity") - *payload.get("quantity") == 0 {
+                                        true => {
+                                          // todo, should we delete bag data for *payload.get("bagId") here ?
+                                          bags!(
+                                            currentBags.set(bagId, {
+                                              "quantity": *payload.get("quantity"),
+                                              "publicKey": *payload.get("publicKey"),
+                                              "nonce": *payload.get("nonce"),
+                                              "n": bag.get("n"),
+                                              "price": Nil,
+                                            })
+                                            // Delete seller bag
+                                            .delete(*payload.get("bagId"))
+                                          )
+                                        }
+                                        false => {
+                                          bags!(
+                                            currentBags.set(bagId, {
+                                              "quantity": *payload.get("quantity"),
+                                              "publicKey": *payload.get("publicKey"),
+                                              "nonce": *payload.get("nonce"),
+                                              "n": bag.get("n"),
+                                              "price": Nil,
+                                            // Udate quantity in seller token ownership
+                                            }).set(
+                                              *payload.get("bagId"),
+                                              bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
+                                            )
+                                          )
                                         }
                                       } |
-                                      for (_ <- bags) {
-                                        match bag.get("quantity") - *payload.get("quantity") == 0 {
-                                          true => {
-                                            // todo, should we delete bag data for *payload.get("bagId") here ?
-                                            bags!(
-                                              currentBags.set(bagId, {
-                                                "quantity": *payload.get("quantity"),
-                                                "publicKey": *payload.get("publicKey"),
-                                                "nonce": *payload.get("nonce"),
-                                                "n": bag.get("n"),
-                                                "price": Nil,
-                                              })
-                                              // Delete seller bag
-                                              .delete(*payload.get("bagId"))
-                                            ) 
-                                          }
-                                          false => {
-                                            bags!(
-                                              currentBags.set(bagId, {
-                                                "quantity": *payload.get("quantity"),
-                                                "publicKey": *payload.get("publicKey"),
-                                                "nonce": *payload.get("nonce"),
-                                                "n": bag.get("n"),
-                                                "price": Nil,
-                                              // Udate quantity in seller token ownership
-                                              }).set(
-                                                *payload.get("bagId"),
-                                                bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
-                                              )
-                                            )
-                                          }
-                                        } |
-                                        return!(true)
-                                      }
+                                      return!(true)
                                     }
                                   }
                                 }
-                                _ => {
-                                  stdout!("transfer error, initiate refund") |
-                                  stdout!(result) |
-                                  new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
-                                    @purseVault!("balance", *refundPurseBalanceCh) |
-                                    revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
-                                    for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
-                                      @purseVault!("transfer", revAddress, balance, *payload.get("purseAuthKey"), *refundResultCh) |
-                                      for (@refundResult <- refundResultCh) {
-                                        match refundResult {
-                                          (true, Nil) => {
-                                            stdout!("refund went well") |
-                                            return!("error : REV transfer went wrong, issuer was refunded")
-                                          }
-                                          _ => {
-                                            stdout!("error: refund DID NOT go well") |
-                                            return!("error : REV transfer went wrong, issuer was NOT refunded")
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
+                              }
+                              _ => {
+                                performRefundCh!("error: REV transfer went wrong")
                               }
                             }
                           }
