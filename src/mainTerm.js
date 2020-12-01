@@ -579,7 +579,7 @@ in {
     }
   } |
 
-  insertArbitrary!(*entryCh, *entryUriCh) |
+  insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
 
