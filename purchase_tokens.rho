@@ -30,6 +30,7 @@ in {
   // Quantity you want to purchase, make sure enough are available
   quantityCh!!(QUANTITY) |
   // Your public key
+  // If the transfer fails, refund will go to the corresponding REV address
   publicKeyCh!!("PUBLIC_KEY") |
   // A unique nonce to be changed on each operation
   nonceCh!!("BAG_NONCE") |

@@ -35,6 +35,7 @@ in {
   // Quantity you want to purchase, make sure enough are available
   quantityCh!!(${payload.quantity}) |
   // Your public key
+  // If the transfer fails, refund will go to the corresponding REV address
   publicKeyCh!!("${payload.publicKey}") |
   // A unique nonce to be changed on each operation
   nonceCh!!("${payload.bagNonce}") |
