@@ -284,7 +284,7 @@ in {
               return!("error : not enough tokens in bag (bag ID: " ++ *payload.get("bagId") ++ ") available")
             }
             true => {
-              new RevVaultCh, ownerRevAddressCh, purseVaultCh, performRefundCh in {
+              new RevVaultCh, ownerRevAddressCh, purseVaultCh in {
 
                 registryLookup!(`rho:rchain:revVault`, *RevVaultCh) |
                 revAddress!("fromPublicKey", bag.get("publicKey").hexToBytes(), *ownerRevAddressCh) |
@@ -298,29 +298,29 @@ in {
                     (from, to, amount) => {
                       @RevVault!("findOrCreate", from, *purseVaultCh) |
                       for (@(true, purseVault) <- purseVaultCh) {
-                        // refund
-                        for (@message <- performRefundCh) {
-                          new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
-                            @purseVault!("balance", *refundPurseBalanceCh) |
-                            revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
-                            for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
-                              @purseVault!("transfer", revAddress, balance, *payload.get("purseAuthKey"), *refundResultCh) |
-                              for (@refundResult <- refundResultCh) {
-                                match refundResult {
-                                  (true, Nil) => {
-                                    stdout!("refund went well") |
-                                    return!(message ++ ", issuer was refunded")
-                                  }
-                                  _ => {
-                                    stdout!("error: refund DID NOT go well") |
-                                    return!(message ++ ", issuer was NOT refunded")
+                        new resultCh, performRefundCh in {                        
+                          // refund
+                          for (@message <- performRefundCh) {
+                            new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
+                              @purseVault!("balance", *refundPurseBalanceCh) |
+                              revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
+                              for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
+                                @purseVault!("transfer", revAddress, balance, *payload.get("purseAuthKey"), *refundResultCh) |
+                                for (@refundResult <- refundResultCh) {
+                                  match refundResult {
+                                    (true, Nil) => {
+                                      stdout!("refund went well") |
+                                      return!(message ++ ", issuer was refunded")
+                                    }
+                                    _ => {
+                                      stdout!("error: refund DID NOT go well") |
+                                      return!(message ++ ", issuer was NOT refunded")
+                                    }
                                   }
                                 }
                               }
                             }
-                          }
-                        } |
-                        new resultCh in {
+                          } |
                           @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh) |
                           for (@result <- resultCh) {
                             match result {
