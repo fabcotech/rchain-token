@@ -360,8 +360,27 @@ in {
                                   }
                                 }
                                 _ => {
-                                  bags!(currentBags) |
-                                  return!("error : REV transfer went wrong " ++ result.nth(2))
+                                  stdout!("transfer error, initiate refund") |
+                                  stdout!(result) |
+                                  new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
+                                    @purseVault!("balance", *refundPurseBalanceCh) |
+                                    revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
+                                    for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
+                                      @purseVault!("transfer", revAddress, balance, *payload.get("purseAuthKey"), *refundResultCh) |
+                                      for (@refundResult <- refundResultCh) {
+                                        match refundResult {
+                                          (true, Nil) => {
+                                            stdout!("refund went well") |
+                                            return!("error : REV transfer went wrong, issuer was refunded")
+                                          }
+                                          _ => {
+                                            stdout!("error: refund DID NOT go well") |
+                                            return!("error : REV transfer went wrong, issuer was NOT refunded")
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
                                 }
                               }
                             }
@@ -591,7 +610,7 @@ in {
     }
   } |
 
-  insertArbitrary!(*entryCh, *entryUriCh) |
+  insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
 

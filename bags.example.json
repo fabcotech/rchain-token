@@ -1,5 +1,5 @@
 {
-  "heya": {
+  "bob": {
     "n": "0",
     "nonce": "abbcbabd",
     "publicKey": "04b50dbf4e03cf9abe39238086ca74f53a9ec9f1b68efc6376cb0cd88dd263ea7b987c5a0f3c655252abdfac247d8eb76b3c93f95bbc61467a0dc78c8d32a5bbb7",
@@ -18,7 +18,7 @@
       }]
     }
   },
-  "heyou": {
+  "alice": {
     "n": "0",
     "nonce": "abbcbabd",
     "address": "blabli",
