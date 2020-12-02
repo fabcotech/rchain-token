@@ -60,17 +60,17 @@ module.exports.view = async () => {
       return;
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
-    console.log('\n bag ID        token ID   owner         quantity           price (dust) \n');
+    console.log('\n bag ID            token ID   owner         quantity           price (dust) \n');
     Object.keys(bags).forEach(bagId => {
       let s = '';
       s += bagId;
-      s = s.padEnd(14, ' ');
+      s = s.padEnd(18, ' ');
       s+= bags[bagId].n;
-      s = s.padEnd(25, ' ');
+      s = s.padEnd(29, ' ');
       s+= bags[bagId].publicKey.slice(0,9) + '...';
-      s = s.padEnd(39, ' ');
+      s = s.padEnd(43, ' ');
       s+= bags[bagId].quantity;
-      s = s.padEnd(58, ' ');
+      s = s.padEnd(62, ' ');
       s+= typeof bags[bagId].price === "number" ? bags[bagId].price :  'not for sale';
       if (bags[bagId].publicKey === publicKey) {
         console.log('\x1b[32m', s);
