@@ -14,8 +14,6 @@ This repo includes a CLI so you can very quickly start playing with rchain-token
 
 First rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
 
-Aliases: You can use `-r` option instead of `--registry-uri`, you can also add a line `REGISTRY_URI=*` in `.env` file and do not provide this option at all.
-
 ```
 # Deploy a new empty rchain-token contract
 node cli deploy
@@ -23,7 +21,9 @@ node cli deploy
 node cli deploy --bags-file ./bags.json
 ```
 
-After having first deployed you can see the registry URI, this is the identifier of the rchain-token contract on the blockchain.
+After having first deployed, `registry URI` and other values are logged to the console. `registry URI` is the identifier/location of the rchain-token contract on the blockchain.
+
+Aliases: You can use `-r` option instead of `--registry-uri`, you can also add a line `REGISTRY_URI=*` in `.env` file and do not provide this option at all, `node cli deploy` should add this line in `.env` file.
 
 **View**
 
