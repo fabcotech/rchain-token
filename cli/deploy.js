@@ -34,7 +34,7 @@ module.exports.deploy = async () => {
   if (bagsFile) {
     const bags = JSON.parse(bagsFile);
     Object.keys(bags).forEach(bagId => {
-      defaultBagsData[bagId] = { ...bags[bagId].data };
+      defaultBagsData[bagId] = bags[bagId].data;
       delete bags[bagId].data;
       defaultBags[bagId] = bags[bagId]
     })
