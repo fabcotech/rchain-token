@@ -408,27 +408,27 @@ in {
           return!("error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist")
         }
         bag => {
-          match bag.get("quantity") - *payload.get("quantity") >= 0 {
-            true => {
-              new justVerifySignatureReturnCh in {
-                justVerifySignatureCh!((
-                  bag.get("publicKey"),
-                  *signature,
-                  *payload,
-                  bag.get("nonce"),
-                  *justVerifySignatureReturnCh
-                )) |
-                for (@r <- justVerifySignatureReturnCh) {
-                  match r {
-                    true => {
-                      match "${bagId}" %% { "bagId": currentBags.size() } {
-                        bagId => {
+          match currentBags.get(*payload.get("newBagId")) {
+            Nil => {
+              match bag.get("quantity") - *payload.get("quantity") >= 0 {
+                true => {
+                  new justVerifySignatureReturnCh in {
+                    justVerifySignatureCh!((
+                      bag.get("publicKey"),
+                      *signature,
+                      *payload,
+                      bag.get("nonce"),
+                      *justVerifySignatureReturnCh
+                    )) |
+                    for (@r <- justVerifySignatureReturnCh) {
+                      match r {
+                        true => {
                           // Add bag data if found in payload
                           match *payload.get("data") {
                             Nil => {}
                             data => {
                               for (@currentBagsData <- bagsData) {
-                                bagsData!(currentBagsData.set(bagId, data))
+                                bagsData!(currentBagsData.set(*payload.get("newBagId"), data))
                               }
                             }
                           } |
@@ -437,7 +437,7 @@ in {
                               true => {
                                 bags!(
                                   // todo, should we delete bag data for *payload.get("bagId") here ?
-                                  currentBags.set(bagId, {
+                                  currentBags.set(*payload.get("newBagId"), {
                                     "quantity": *payload.get("quantity"),
                                     "publicKey": *payload.get("publicKey"),
                                     "nonce": *payload.get("bagNonce2"),
@@ -450,7 +450,7 @@ in {
                               false => {
                                 bags!(
                                   // New bag ID for new bag
-                                  currentBags.set(bagId, {
+                                  currentBags.set(*payload.get("newBagId"), {
                                     "quantity": *payload.get("quantity"),
                                     "publicKey": *payload.get("publicKey"),
                                     "nonce": *payload.get("bagNonce2"),
@@ -472,17 +472,20 @@ in {
                             return!(true)
                           }
                         }
+                        false => {
+                          return!("error: Invalid signature, could not perform operation")
+                        }
                       }
-                    }
-                    false => {
-                      return!("error: Invalid signature, could not perform operation")
                     }
                   }
                 }
+                false => {
+                  return!("error : not enough tokens in bag (bag ID) " ++ *payload.get("bagId") ++ " available")
+                }
               }
             }
-            false => {
-              return!("error : not enough tokens in bag (bag ID) " ++ *payload.get("bagId") ++ " available")
+            _ => {
+              return!("error : new bag ID already exists")
             }
           }
         }
@@ -587,10 +590,8 @@ in {
         }
       }
       "SEND_TOKENS" => {
-        return!("error: SEND_TOKENS is blocked")
-        /*
         match *action.get("payload") {
-          { "quantity": Int, "bagId": String, "publicKey": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
+          { "quantity": Int, "bagId": "0", "newBagId": String, "publicKey": String, "bagNonce": String, "bagNonce2": String, "data": _, } => {
             sendCh!(
               *action.get("payload"),
               *action.get("signature"),
@@ -598,10 +599,9 @@ in {
             )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
+            return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': '0', 'newBagId': String 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
           }
         }
-        */
       }
       _ => {
         return!("error: unknown action")
