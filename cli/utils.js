@@ -13,13 +13,15 @@ const getProcessArgv = (param) => {
 module.exports.getProcessArgv = getProcessArgv;
 
 module.exports.logData = (data) => {
-  const str = `
-Public key     : ${data.publicKey}
-Registry URI   : ${data.registryUri.replace('rho:id:', '')}
-Contract nonce : ${data.nonce}
-Locked         : ${data.locked}
-Version        : ${data.version}`;
-  return str;
+  console.log(`Public key     : ${data.publicKey}`);
+  console.log(`Registry URI   : ${data.registryUri.replace('rho:id:', '')}`);
+  console.log(`Contract nonce : ${data.nonce}`, data.locked ? '\x1b[32m' : '\x1b[31m');
+  if (data.locked) {
+    console.log(`Locked         : ${data.locked}`, '\x1b[0m')
+  } else {
+    console.log(`Locked         : ${data.locked}`, '\x1b[0m')
+  }
+  console.log(`Version        : ${data.version}`)
 }
 
 module.exports.prepareDeploy = async (httpUrlReadOnly, publicKey, timestamp) => {

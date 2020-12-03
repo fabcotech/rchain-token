@@ -16,21 +16,12 @@ in {
         "payload": {
           // new nonce, must be different and random (generateNonce.js)
           "newNonce": "NEW_NONCE",
-          // new nonce for the bag, must be random (generateNonce.js)
-          "bagNonce": "BAG_NONCE",
-          // new bag ID (index, home, contact, document etc.)
-          "newBagId": "NEW_BAG_ID",
-          // per token price, can be Nil if the token is not for sale
-          "price": PRICEE,
-          // The token you create can be a new one ("n" : Nil)
-          // or it can be linked to an existing token data (ex: "n": "0")
-          "n": TOKEN_ID,
-          // quantity of tokens to create
-          "quantity": QUANTITY,
-          // publicKey this set of tokens (depending on quantity) will belong to
-          "publicKey": "PUBLIC_KEY", // used only if new token
-          // data you will associated to the new bag (NOT TOKEN DATA)
-          "data": DATA
+          // example
+          // "bags": { "0": { "price": 2, "quantity": 3, "publicKey": "aaa", "nonce": "abcdefba", data: Nil }}
+          "bags": CREATE_TOKENS_BAGS,
+          // example
+          // "data": { "0": "this bag is mine" }
+          "data": CREATE_TOKENS_BAGS_DATA,
         }
       },
       *returnCh

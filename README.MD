@@ -55,7 +55,8 @@ node cli lock --registry-uri 6yt4 --contract-nonce daec
 # Create tokens
 # If --token is not given, a new token id will be created
 # If --price is not given, the tokens won't be for sale
-node cli create-tokens --registry-uri 6yt4 --contract-nonce daec --price 10 --quantity 3  --token 0
+# If make sure --new-bag is not an int like "0", "1", "2", "12", it could overide/mess up the contract because bags ID are incremental, choose rather "a", "b", "c"
+node cli create-tokens --registry-uri 6yt4 --contract-nonce daec --price 10 --quantity 3  --token 0 --new-bag a
 ```
 
 ```

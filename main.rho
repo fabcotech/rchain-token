@@ -241,13 +241,7 @@ in {
                       for (@newBagId <- newBagIdCh) {
                         for (_ <- bags) {
                           bags!(
-                            currentBags.set(newBagId, {
-                              "quantity": *payload.get("quantity"),
-                              "publicKey": *payload.get("publicKey"),
-                              "nonce": *payload.get("bagNonce"),
-                              "n": *payload.get("n"),
-                              "price": *payload.get("price"),
-                            })
+                            currentBags.union(*payload.get("bags"))
                           )
                         } |
 
@@ -256,7 +250,7 @@ in {
                           data => {
                             for (@currentBagsData <- bagsData) {
                               bagsData!(
-                                currentBagsData.set(newBagId, data)
+                                currentBagsData.union(*payload.get("data"))
                               )
                             }
                           }
@@ -603,14 +597,21 @@ in {
       "CREATE_TOKENS" => {
         match *action.get("payload") {
           {
+            "bags": _,
+            "data": _,
+/*             "bags": {
+              [String]: {
+                "nonce": String,
+                "quantity": Int,
+                "publicKey": String,
+                "n": String,
+                "price": Nil \/ Int,
+              }
+            },
+            "data": {
+              [String]: _
+            }, */
             "newNonce": String,
-            "bagNonce": String,
-            "quantity": Int,
-            "publicKey": String,
-            "newBagId": String,
-            "price": Nil \/ Int,
-            "n": String,
-            "data": _
           } => {
             createCh!(
               *action.get("payload"),

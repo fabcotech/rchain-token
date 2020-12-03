@@ -32,7 +32,7 @@ module.exports.updateTokenData = async () => {
     data: data ? encodeURI(data) : undefined
   }
 
-  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const ba = rchainToolkit.utils.toByteArray(payload);
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = updateTokenDataTerm(
     registryUri,

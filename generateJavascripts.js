@@ -17,6 +17,8 @@ const replaceEverything = (a) => {
         '${typeof payload.n == "string" ? \'"\' + payload.n + \'"\' : "Nil"}'
       )
       .replace("NEW_NONCE", "${payload.newNonce}")
+      .replace("CREATE_TOKENS_BAGS_DATA", `\${JSON.stringify(payload.data).replace(new RegExp(': null|:null', 'g'), ': Nil')}`)
+      .replace("CREATE_TOKENS_BAGS", `\${JSON.stringify(payload.bags).replace(new RegExp(': null|:null', 'g'), ': Nil')}`)
       .replace("BAG_NONCE", "${payload.bagNonce}")
       .replace("BAG_NONCE_2", "${payload.bagNonce2}")
       // avoid changing "CHANGING_PRICE" string
