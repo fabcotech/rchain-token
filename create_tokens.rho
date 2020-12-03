@@ -21,7 +21,7 @@ in {
           // new bag ID (index, home, contact, document etc.)
           "newBagId": "NEW_BAG_ID",
           // per token price, can be Nil if the token is not for sale
-          "price": PRICE,
+          "price": PRICEE,
           // The token you create can be a new one ("n" : Nil)
           // or it can be linked to an existing token data (ex: "n": "0")
           "n": TOKEN_ID,

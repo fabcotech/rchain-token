@@ -9,6 +9,7 @@ const { readBagOrTokenDataTerm } = require("./readBagOrTokenDataTerm");
 const { readBagsOrTokensDataTerm } = require("./readBagsOrTokensDataTerm");
 const { read } = require("./read");
 const { readBagsTerm } = require("./readBagsTerm");
+const { changePriceTerm } = require("./changePriceTerm");
 
 module.exports = {
   version: '4.0.0',
@@ -23,4 +24,5 @@ module.exports = {
   readBagsOrTokensDataTerm,
   read,
   readBagsTerm,
+  changePriceTerm,
 };
