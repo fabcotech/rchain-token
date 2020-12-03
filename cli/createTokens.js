@@ -11,7 +11,6 @@ const {
   getNewBagId,
   getQuantity,
   getRegistryUri,
-  getNewBagId,
   generateSignature,
   getTokenId,
   log,
