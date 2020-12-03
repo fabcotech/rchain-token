@@ -40,7 +40,7 @@ module.exports.view = async () => {
     const bags = rchainToolkit.utils.rhoValToJs(
       JSON.parse(results[1]).expr[0]
     );
-    console.log(logData(data));
+    logData(data);
     if (Object.keys(bags).length === 0) {
       console.log('\n no bags');
       return;

@@ -23,7 +23,7 @@ module.exports.lock = async () => {
     newNonce: newNonce,
   }
 
-  const ba = rchainToolkit.utils.objectToByteArray(payload);
+  const ba = rchainToolkit.utils.toByteArray(payload);
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
   const term = setLockedTerm(
     registryUri,

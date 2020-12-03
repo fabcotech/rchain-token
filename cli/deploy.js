@@ -43,12 +43,10 @@ module.exports.deploy = async () => {
   }
 
   const defaultBagsAsString = JSON.stringify(defaultBags)
-    .replace(new RegExp(": null", 'g'), ": Nil")
-    .replace(new RegExp(":null", 'g'), ": Nil");
+    .replace(new RegExp(": null|:null", 'g'), ": Nil");
 
   const defaultBagsDataAsString = JSON.stringify(defaultBagsData)
-    .replace(new RegExp(":null", 'g'), ": Nil")
-    .replace(new RegExp(": null", 'g'), ": Nil");
+    .replace(new RegExp(": null|:null", 'g'), ": Nil");
 
   const term = mainTerm(newNonce, publicKey)
     .replace('{/*DEFAULT_BAGS*/}', defaultBagsAsString)
@@ -134,5 +132,5 @@ module.exports.deploy = async () => {
   fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
   log(`✓ updated .env file with REGISTRY_URI=${data.registryUri.replace('rho:id:', '')}`);
-  console.log(logData(data));
+  logData(data);
 }
