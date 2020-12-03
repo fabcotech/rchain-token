@@ -1,20 +1,23 @@
 module.exports.mainTerm = (newNonce, publicKey) => {
     return `new 
   mainCh,
+
   createCh,
   purchaseCh,
   sendCh,
+  changePriceCh,
   entryCh,
   entryUriCh,
   setLockedCh,
   updateTokenDataCh,
   updateBagDataCh,
-  updateUriCh,
+  verifySignatureAndUpdateNonceCh,
+  justVerifySignatureCh,
+
   bags,
   bagsData,
   tokensData,
-  verifySignatureAndUpdateNonceCh,
-  justVerifySignatureCh,
+
   insertArbitrary(\`rho:registry:insertArbitrary\`),
   stdout(\`rho:io:stdout\`),
   secpVerify(\`rho:crypto:secp256k1Verify\`),
@@ -480,6 +483,48 @@ in {
       }
     }
   } |
+
+  contract changePriceCh(payload, signature, return) = {
+    stdout!("changePriceCh") |
+    for (@currentBags <<- bags) {
+      match currentBags.get(*payload.get("bagId")) {
+        Nil => {
+          return!("error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist")
+        }
+        bag => {
+          new justVerifySignatureReturnCh in {
+            justVerifySignatureCh!((
+              bag.get("publicKey"),
+              *signature,
+              *payload,
+              bag.get("nonce"),
+              *justVerifySignatureReturnCh
+            )) |
+            for (@r <- justVerifySignatureReturnCh) {
+              match r {
+                true => {
+                  for (_ <- bags) {
+                    bags!(
+                      currentBags.set(
+                        *payload.get("bagId"),
+                        bag
+                          .set("price", *payload.get("price"))
+                          .set("nonce", *payload.get("bagNonce"))
+                      )
+                    ) |
+                    return!(true)
+                  }
+                }
+                false => {
+                  return!("error: Invalid signature, could not perform operation")
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } |
   
   contract entryCh(action, return) = {
     match *action.get("type") {
@@ -587,6 +632,20 @@ in {
           }
           _ => {
             return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'publicKey': String, 'bagNonce': String, 'bagNonce2': String, 'data': Any }")
+          }
+        }
+      }
+      "CHANGE_PRICE" => {
+        match *action.get("payload") {
+          { "bagId": String, "price": Nil \\/ Int, "bagNonce": String } => {
+            changePriceCh!(
+              *action.get("payload"),
+              *action.get("signature"),
+              *return
+            )
+          }
+          _ => {
+            return!("error: invalid payload, structure should be { 'price': Nil or Int, 'bagId': String, 'bagNonce': String }")
           }
         }
       }

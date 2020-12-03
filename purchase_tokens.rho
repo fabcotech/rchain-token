@@ -24,7 +24,7 @@ in {
   // Unique ID of the token you want to purchase
   bagIdCh!!("BAG_ID") |
   // Per token price, make sure it is accurate
-  priceCh!!(PRICE) |
+  priceCh!!(PRICEE) |
   // Bag data: Any
   bagDataCh!!(BAG_DATA) |
   // Quantity you want to purchase, make sure enough are available

@@ -7,6 +7,7 @@ const { lock } = require('./cli/lock');
 const { updateBagData } = require('./cli/updateBagData');
 const { updateTokenData } = require('./cli/updateTokenData');
 const { viewData } = require('./cli/viewData');
+const { changePrice } = require('./cli/changePrice');
 
 const {
   log,
@@ -87,7 +88,14 @@ const main = async () => {
     return;
   }
 
-  console.log('unknown command');
+  const changePriceArg = process.argv.findIndex((arg) => arg === 'change-price') !== -1;
+  if (changePriceArg) {
+    changePrice();
+    return;
+  }
+
+  throw new Error('unknown command');
+
 };
 
 main();

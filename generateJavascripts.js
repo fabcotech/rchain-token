@@ -19,7 +19,8 @@ const replaceEverything = (a) => {
       .replace("NEW_NONCE", "${payload.newNonce}")
       .replace("BAG_NONCE", "${payload.bagNonce}")
       .replace("BAG_NONCE_2", "${payload.bagNonce2}")
-      .replace("PRICE", '${payload.price || "Nil"}')
+      // avoid changing "CHANGING_PRICE" string
+      .replace("PRICEE", '${payload.price || "Nil"}')
       .replace("QUANTITY", "${payload.quantity}")
       .replace("PUBLIC_KEY", "${payload.publicKey}")
       .replace("BAG_ID", "${payload.bagId}")
@@ -116,6 +117,20 @@ fs.writeFileSync(
   signature, 
 ) => {
   return \`${replaceEverything(sendTokensFile)}\`;
+};
+`
+);
+
+const changePriceFile = fs.readFileSync("./change_price.rho").toString("utf8");
+
+fs.writeFileSync(
+  "./src/changePriceTerm.js",
+  `module.exports.changePriceTerm = (
+  registryUri,
+  payload,
+  signature,
+) => {
+  return \`${replaceEverything(changePriceFile)}\`;
 };
 `
 );
