@@ -41,7 +41,7 @@ module.exports.createTokens = async () => {
         nonce: bagNonce,
         publicKey: publicKey,
         n: tokenId,
-        price: price,
+        price: price || null,
         quantity: quantity,
       }
     },
