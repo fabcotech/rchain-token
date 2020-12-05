@@ -332,14 +332,6 @@ in {
                                   _ => { performRefundCh!("error: bagId, already exists") }
                                 } |
                                 for (@newBagId <- newBagIdCh) {
-                                  match *payload.get("data") {
-                                    Nil => {}
-                                    data => {
-                                      for (@currentBagsData <- bagsData) {
-                                        bagsData!(currentBagsData.set(newBagId, data))
-                                      }
-                                    }
-                                  } |
                                   for (_ <- bags) {
                                     match *payload.get("bagId") == "0" {
                                       true => {
@@ -357,7 +349,15 @@ in {
                                             *payload.get("bagId"),
                                             bag.set("quantity", bag.get("quantity") - *payload.get("quantity"))
                                           )
-                                        )
+                                        ) |
+                                        match *payload.get("data") {
+                                          Nil => {}
+                                          data => {
+                                            for (@currentBagsData <- bagsData) {
+                                              bagsData!(currentBagsData.set(newBagId, data))
+                                            }
+                                          }
+                                        }
                                       }
                                       false => {
                                         // purchase from bag other than "0"
@@ -372,7 +372,15 @@ in {
                                             "n": bag.get("n"),
                                             "price": Nil,
                                           })
-                                        )
+                                        ) |
+                                        match *payload.get("data") {
+                                          Nil => {}
+                                          data => {
+                                            for (@currentBagsData <- bagsData) {
+                                              bagsData!(currentBagsData.set(*payload.get("bagId"), data))
+                                            }
+                                          }
+                                        }
                                       }
                                     } |
                                     return!(true)
@@ -620,7 +628,7 @@ in {
             )
           }
           _ => {
-            return!("error: invalid payload, structure should be { 'newNonce': String, 'newBagId': String, 'bagNonce': String, 'quantity': Int, 'n': String, 'price': Nil or Int, 'publicKey': String, 'data': Any }")
+            return!("error: invalid payload")
           }
         }
       }
