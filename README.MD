@@ -10,6 +10,8 @@ This repo includes a CLI so you can very quickly start playing with rchain-token
 
 ![RChain token](https://i.ibb.co/qrnCwVp/rchaintoken.png)
 
+**Note:** [MakeMint](https://github.com/rchain/rchain/blob/dev/casper/src/main/resources/MakeMint.rho) is a more straightforward, it uses [OCAP](http://erights.org/elib/capability/ode/index.html) instead of encryption/signatures. It is the contract used for REV, RChain's native currency. It does less, but more efficiently, consider checking it.
+
 ### Using CLI
 
 First rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
@@ -108,7 +110,7 @@ Missing in CLI: changing price of a bag of tokens
 
 ### Compile rholang -> javascript (src/)
 
-_Generate all javascript source code in `src/` from rholang with `node generateJavascripts.js`
+\_Generate all javascript source code in `src/` from rholang with `node generateJavascripts.js`
 
 ### Token representation on chain
 

@@ -1,6 +1,6 @@
 const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
-const { blake2b } = require("blakejs");
+const { blake2b } = require('blakejs');
 
 const getProcessArgv = (param) => {
   const index = process.argv.findIndex((arg) => arg === param);
@@ -15,16 +15,23 @@ module.exports.getProcessArgv = getProcessArgv;
 module.exports.logData = (data) => {
   console.log(`Public key     : ${data.publicKey}`);
   console.log(`Registry URI   : ${data.registryUri.replace('rho:id:', '')}`);
-  console.log(`Contract nonce : ${data.nonce}`, data.locked ? '\x1b[32m' : '\x1b[31m');
+  console.log(
+    `Contract nonce : ${data.nonce}`,
+    data.locked ? '\x1b[32m' : '\x1b[31m'
+  );
   if (data.locked) {
-    console.log(`Locked         : ${data.locked}`, '\x1b[0m')
+    console.log(`Locked         : ${data.locked}`, '\x1b[0m');
   } else {
-    console.log(`Locked         : ${data.locked}`, '\x1b[0m')
+    console.log(`Locked         : ${data.locked}`, '\x1b[0m');
   }
-  console.log(`Version        : ${data.version}`)
-}
+  console.log(`Version        : ${data.version}`);
+};
 
-module.exports.prepareDeploy = async (httpUrlReadOnly, publicKey, timestamp) => {
+module.exports.prepareDeploy = async (
+  httpUrlReadOnly,
+  publicKey,
+  timestamp
+) => {
   let prepareDeployResponse;
   try {
     prepareDeployResponse = await rchainToolkit.http.prepareDeploy(
@@ -37,11 +44,11 @@ module.exports.prepareDeploy = async (httpUrlReadOnly, publicKey, timestamp) => 
     );
   } catch (err) {
     console.log(err);
-    throw new Error("Unable to prepare deploy");
+    throw new Error('Unable to prepare deploy');
   }
 
   return prepareDeployResponse;
-}
+};
 
 module.exports.validAfterBlockNumber = async (httpUrlReadOnly) => {
   let validAfterBlockNumberResponse;
@@ -52,20 +59,20 @@ module.exports.validAfterBlockNumber = async (httpUrlReadOnly) => {
       })
     )[0].blockNumber;
   } catch (err) {
-    log("Unable to get last finalized block", "error");
+    log('Unable to get last finalized block', 'error');
     console.log(err);
-    throw new Error()
+    throw new Error();
   }
   return validAfterBlockNumberResponse;
-}
+};
 
-const log = (a, level = "info") => {
-  if (level === "warning") {
-    console.log("\x1b[33m%s\x1b[0m", new Date().toISOString() + " [WARN] " + a);
-  } else if (level === "error") {
+const log = (a, level = 'info') => {
+  if (level === 'warning') {
+    console.log('\x1b[33m%s\x1b[0m', new Date().toISOString() + ' [WARN] ' + a);
+  } else if (level === 'error') {
     console.log(
-      "\x1b[31m%s\x1b[0m",
-      new Date().toISOString() + " [ERROR] " + a
+      '\x1b[31m%s\x1b[0m',
+      new Date().toISOString() + ' [ERROR] ' + a
     );
   } else {
     console.log(new Date().toISOString(), a);
@@ -73,114 +80,114 @@ const log = (a, level = "info") => {
 };
 module.exports.log = log;
 
-
 module.exports.generateSignature = (nonce, privateKey) => {
-  const bufferToSign = Buffer.from(nonce, "utf8");
+  const bufferToSign = Buffer.from(nonce, 'utf8');
   const uInt8Array = new Uint8Array(bufferToSign);
   const blake2bHash = blake2b(uInt8Array, 0, 32);
   const signature = rchainToolkit.utils.signSecp256k1(blake2bHash, privateKey);
-  const signatureHex = Buffer.from(signature).toString("hex");
+  const signatureHex = Buffer.from(signature).toString('hex');
 
   return signatureHex;
-}
-
-module.exports.buildUnforgeableNameQuery = unforgeableName => {
-  return {
-    UnforgPrivate: { data: unforgeableName }
-  };
 };
 
+module.exports.buildUnforgeableNameQuery = (unforgeableName) => {
+  return {
+    UnforgPrivate: { data: unforgeableName },
+  };
+};
 
 // command line arguments
 
 module.exports.getBagsFile = () => {
   return getProcessArgv('--bags-file');
-}
+};
 
 module.exports.getTokenId = () => {
   const tokenId = getProcessArgv('--token');
   return tokenId;
-}
+};
 
 module.exports.getNonce = () => {
   const nonce = getProcessArgv('--nonce');
-  if(typeof nonce !== "string") {
+  if (typeof nonce !== 'string') {
     throw new Error('Missing arguments --nonce');
   }
   return nonce;
-}
+};
 
 module.exports.getContractNonce = () => {
   const nonce = getProcessArgv('--contract-nonce');
-  if(typeof nonce !== "string") {
+  if (typeof nonce !== 'string') {
     throw new Error('Missing arguments --contract-nonce');
   }
   return nonce;
-}
+};
 
 module.exports.getPrice = () => {
-  const price = getProcessArgv('--price') ?
-    parseInt(getProcessArgv('--price'), 10) :
-    undefined;
-  if(typeof price !== "number" || isNaN(price)) {
+  const price = getProcessArgv('--price')
+    ? parseInt(getProcessArgv('--price'), 10)
+    : undefined;
+  if (typeof price !== 'number' || isNaN(price)) {
     throw new Error('Missing arguments --price');
   }
   return price;
-}
+};
 
 module.exports.getQuantity = () => {
-  const quantity = getProcessArgv('--quantity') ?
-    parseInt(getProcessArgv('--quantity'), 10) :
-    undefined;
-  if(typeof quantity !== "number" || isNaN(quantity)) {
+  const quantity = getProcessArgv('--quantity')
+    ? parseInt(getProcessArgv('--quantity'), 10)
+    : undefined;
+  if (typeof quantity !== 'number' || isNaN(quantity)) {
     throw new Error('Missing arguments --quantity');
   }
   return quantity;
-}
+};
 
 module.exports.getPublicKey = () => {
   const publicKey = getProcessArgv('--public-key');
-  if(typeof publicKey !== "string") {
+  if (typeof publicKey !== 'string') {
     throw new Error('Missing arguments --public-key');
   }
   return publicKey;
-}
+};
 
 module.exports.getFromBagId = () => {
   const bagId = getProcessArgv('--from-bag');
-  if(!bagId) {
+  if (!bagId) {
     throw new Error('Missing arguments --from-bag');
   }
   return bagId;
-}
+};
 
 module.exports.getNewBagId = () => {
   const bagId = getProcessArgv('--new-bag');
-  if(!bagId) {
+  if (!bagId) {
     throw new Error('Missing arguments --new-bag');
   }
   return bagId;
-}
+};
 
 module.exports.getFile = () => {
   const path = getProcessArgv('--file');
-  if(typeof path !== "string" || !fs.existsSync(path)) {
+  if (typeof path !== 'string' || !fs.existsSync(path)) {
     throw new Error('Missing arguments --file, or file does not exist');
   }
   const data = fs.readFileSync(path, 'utf8');
   return data;
-}
+};
 
 module.exports.getRegistryUri = () => {
   let registryUri = getProcessArgv('--registry-uri');
   if (!registryUri) {
     registryUri = getProcessArgv('-r');
   }
-  if (typeof registryUri !== "string") {
+  if (typeof registryUri !== 'string') {
     registryUri = process.env.REGISTRY_URI;
   }
-  if(typeof registryUri !== "string" || registryUri.length === 0) {
-    throw new Error('Missing arguments --registry-uri, or -r, or REGISTRY_URI=* in .env file');
+  if (typeof registryUri !== 'string' || registryUri.length === 0) {
+    throw new Error(
+      'Missing arguments --registry-uri, or -r, or REGISTRY_URI=* in .env file'
+    );
   }
   return registryUri;
-}
+};
