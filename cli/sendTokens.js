@@ -1,9 +1,7 @@
 const rchainToolkit = require('rchain-toolkit');
-const uuidv4 = require("uuid/v4");
+const uuidv4 = require('uuid/v4');
 
-const {
-  sendTokensTerm,
-} = require('../src/');
+const { sendTokensTerm } = require('../src/');
 
 const {
   getFromBagId,
@@ -21,8 +19,8 @@ module.exports.sendTokens = async () => {
   const quantity = getQuantity();
   const publicKey = getPublicKey();
   const bagId = getFromBagId();
-  const bagNonce = uuidv4().replace(/-/g, "");
-  const bagNonce2 = uuidv4().replace(/-/g, "");
+  const bagNonce = uuidv4().replace(/-/g, '');
+  const bagNonce2 = uuidv4().replace(/-/g, '');
   const timestamp = new Date().getTime();
 
   const payload = {
@@ -37,15 +35,11 @@ module.exports.sendTokens = async () => {
 
   const ba = rchainToolkit.utils.toByteArray(payload);
   const signature = generateSignature(ba, process.env.PRIVATE_KEY);
-  const term = sendTokensTerm(
-    registryUri,
-    payload,
-    signature,
-  );
+  const term = sendTokensTerm(registryUri, payload, signature);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
-    "secp256k1",
+    'secp256k1',
     timestamp,
     term,
     process.env.PRIVATE_KEY,
@@ -60,14 +54,14 @@ module.exports.sendTokens = async () => {
       deployOptions
     );
     if (!deployResponse.startsWith('"Success!')) {
-      log("Unable to deploy");
+      log('Unable to deploy');
       console.log(deployResponse);
       process.exit();
     }
   } catch (err) {
-    log("Unable to deploy");
+    log('Unable to deploy');
     console.log(err);
     process.exit();
   }
   log('✓ deployed');
-}
+};
