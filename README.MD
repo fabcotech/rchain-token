@@ -163,7 +163,7 @@ READ_ONLY_HOST=http://127.0.0.1:40403
 VALIDATOR_HOST=http://127.0.0.1:40403
 ```
 
-`node tests/index`
+`npm run test`
 
 ### TODO
 

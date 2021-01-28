@@ -39,6 +39,7 @@ const main = async () => {
   );
   await checkBagsAndTokens(data.registryUri.replace('rho:id:', ''));
   console.log('✓ 02 check initial bags and data');
+  const t = new Date().getTime();
   await createTokens(
     data.registryUri.replace('rho:id:', ''),
     PRIVATE_KEY,
@@ -51,6 +52,11 @@ const main = async () => {
   console.log(
     '  03 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+  );
+  console.log(
+    `  03 avg time of deploy+propose : ` +
+      (new Date().getTime() - t) / 1000 +
+      's'
   );
   await checkBagsAndTokens2(
     data.registryUri.replace('rho:id:', ''),

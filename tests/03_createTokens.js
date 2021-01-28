@@ -43,7 +43,7 @@ module.exports.main = async (
   const ba = rc.utils.toByteArray(payload);
   const signature = generateSignature(ba, privateKey1);
   const term = createTokensTerm(registryUri, payload, signature);
-
+  console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
     'secp256k1',
