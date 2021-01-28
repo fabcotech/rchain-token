@@ -139,6 +139,32 @@ Change version in `src/index.js` and in `rollup.config.js`.
 npm run build:browser
 ```
 
+### Testing
+
+Have a local rnode instance running with the following bonds and wallets file. And automatic propose every x seconds. The private keys used for deployments are in `tests/index.js`.
+
+wallets.txt
+
+```
+0x3769b4e68650bdfc7b55375034be6ee52978a14f,1000000000000,0
+0x7f847d40c3ec604fe3d4263bfdd04111eb9b4e32,1000000000000,0
+```
+
+bonds.txt
+
+```
+04be064356846e36e485408df50b877dd99ba406d87208add4c92b3c7d4e4c663c2fbc6a1e6534c7e5c0aec00b26486fad1daf20079423b7c8ebffbbdff3682b58 100000000000
+```
+
+Also have at least those 2 lines in your .env file
+
+```
+READ_ONLY_HOST=http://127.0.0.1:40403
+VALIDATOR_HOST=http://127.0.0.1:40403
+```
+
+`node tests/index`
+
 ### TODO
 
 - Exchange capabilities
