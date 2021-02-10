@@ -81,8 +81,8 @@ module.exports.main = async (
                 JSON.parse(dataAtNameResponse).exprs &&
                 JSON.parse(dataAtNameResponse).exprs.length
               ) {
-                resolve(dataAtNameResponse);
                 clearInterval(interval);
+                resolve(dataAtNameResponse);
               } else {
                 console.log(
                   'Did not find transaction data, will try again in 15 seconds'

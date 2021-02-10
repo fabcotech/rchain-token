@@ -4,6 +4,7 @@
   "description": "Fungibles and non-fungibles tokens on the RChain blockchain",
   "main": "src/index.js",
   "scripts": {
+    "generate": "node generateJavascripts",
     "build:browser": "npx rollup -c",
     "test": "node tests/index"
   },
