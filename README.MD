@@ -121,6 +121,12 @@ Missing in CLI: changing price of a bag of tokens
 - `bagsData` : map containing the data associated with each bag (a bag is a token ownership), it can be anything, depending on the usecase (JSON, images, files etc...), example: `{ "color": "red" }`. The owner of a bag _is the only person who can_ change the data associated to the bag.
 - `mainCh` : map that contains data about this contract : `registryUri`, unique `nonce` that is changed each time an admin action is performed, `publicKey` of the owner (person who can lock and create tokens), `locked` boolean.
 
+### Authentication and property in rholang
+
+rchain-token does not follow OCAP standards, the ownership is expressed by the possibility to sign a payload that will change a bag (`bagCh`), bag data (`bagDataCh`) or token data (`tokenDataCh`). The authentication is therefore signature + encryption based and not unforgeable names based.
+
+The typical authentication is that a signature of (payload + existing nonce) must be provided, if the operation is a owner operation (see below) then the nonce is the contract nonce (in mainCh), if it is a normale operation, the nonce is the bag nonce.
+
 ### Methods exposed
 
 Through the `entry` channel that is exposed to the registry, any user can interact with this contract, you can just check the other `.rho` files of this repository to see what's possible .
