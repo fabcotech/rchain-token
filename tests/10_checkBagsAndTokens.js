@@ -2,7 +2,6 @@ const getAllData = require('./getAllData').main;
 
 module.exports.main = async (registryUri, bagsToCreate, bagId) => {
   const allData = await getAllData(registryUri);
-
   if (
     (typeof allData.bags !== 'object' && typeof allData.bags !== 'function') ||
     allData.bags === null ||
