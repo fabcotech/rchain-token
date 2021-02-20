@@ -9,6 +9,7 @@ in {
     entry!(
       {
         "type": "READ_TOKENS_DATA",
+        "payload": Set("1")
       },
       *stdout
     )

@@ -9,6 +9,7 @@ in {
     entry!(
       {
         "type": "READ_BAGS",
+        "payload": Set("1")
       },
       *stdout
     )

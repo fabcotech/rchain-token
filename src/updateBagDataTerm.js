@@ -23,7 +23,7 @@ in {
           "newNonce": "${payload.newNonce}",
           // bag ID you want to attach data to
           "bagId": "${payload.bagId}",
-          // data is used only if new token ("n" : Nil)
+          // data
           "data": ${payload.data ? '"' + payload.data + '"' : "Nil"}
         }
       },

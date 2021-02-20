@@ -14,7 +14,7 @@ const checkBagData = require('./08_checkBagData.js').main;
 const sendTokens = require('./09_sendTokens.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
 
-const BAGS_TO_CREATE = 100;
+const BAGS_TO_CREATE = 10;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';

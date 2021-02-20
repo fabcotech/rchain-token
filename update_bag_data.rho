@@ -18,7 +18,7 @@ in {
           "newNonce": "NEW_NONCE",
           // bag ID you want to attach data to
           "bagId": "BAG_ID",
-          // data is used only if new token ("n" : Nil)
+          // data
           "data": DATA
         }
       },
