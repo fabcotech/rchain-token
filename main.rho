@@ -323,7 +323,14 @@ in {
                                 performRefundCh!("error: you are buying from bag 0 but new bag "++*payload.get("newBagId")++" already exists")
                               }
                               _ => {
-                                @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh)
+                                match (*payload.get("bagId") == "0", *payload.get("newBagId").size() > 50)) {
+                                  (true, true) => {
+                                    performRefundCh!("error: new bag id max size is 50")
+                                  }
+                                  _ => {
+                                    @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh)
+                                  }
+                                }
                               }
                             } |
                             for (@result <- resultCh) {
