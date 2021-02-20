@@ -125,7 +125,7 @@ Missing in CLI: changing price of a bag of tokens
 
 rchain-token does not follow OCAP standards, the ownership is expressed by the possibility to sign a payload that will change a bag (`bagCh`), bag data (`bagDataCh`) or token data (`tokenDataCh`). The authentication is therefore signature + encryption based and not unforgeable names based.
 
-The typical authentication is that a signature of (payload + existing nonce) must be provided, if the operation is a owner operation (see below) then the nonce is the contract nonce (in mainCh), if it is a normale operation, the nonce is the bag nonce.
+The typical authentication is that a signature of (payload + existing nonce) must be provided, if the operation is a owner operation (see below) then the nonce is the contract nonce (in `mainCh`), if it is a normal operation, the nonce is the bag nonce. Nonce is a string of random characters. For any operation, a new nonce must be provided, this way even if the operation is the same (same payload), the signature is expected to be different, and a hacker can't reuse an old one.
 
 ### Methods exposed
 
