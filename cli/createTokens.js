@@ -20,7 +20,6 @@ module.exports.createTokens = async () => {
     'Make sure the private key provided is the one of the contract owner (initial deploy)'
   );
   log('Make sure the contract is not locked');
-  log('Make sure you dont override any existing bag with --new-bag option');
   const registryUri = getRegistryUri();
   const contractNonce = getContractNonce();
   const tokenId = getTokenId();
@@ -28,7 +27,6 @@ module.exports.createTokens = async () => {
     throw new Error('Please provide a token ID with --token option');
   }
   const quantity = getQuantity();
-  const newBagId = getNewBagId();
   const price = getProcessArgv('--price')
     ? parseInt(getProcessArgv('--price'), 10)
     : undefined;
@@ -39,7 +37,7 @@ module.exports.createTokens = async () => {
   );
   const payload = {
     bags: {
-      [`${newBagId}`]: {
+      [`newbag1`]: {
         nonce: bagNonce,
         publicKey: publicKey,
         n: tokenId,
@@ -48,7 +46,7 @@ module.exports.createTokens = async () => {
       },
     },
     data: {
-      [`${newBagId}`]: null,
+      [`newbag1`]: null,
     },
     nonce: contractNonce,
     newNonce: newNonce,
