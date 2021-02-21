@@ -14,6 +14,9 @@ const updateBagData = require('./07_updateBagData.js').main;
 const checkBagData = require('./08_checkBagData.js').main;
 const sendTokens = require('./09_sendTokens.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
+const changePrice = require('./11_changePrice').main;
+const checkBagPrice = require('./12_checkBagPrice').main;
+const tryPurchase = require('./13_tryPurchase').main;
 
 // If you want to go superior to 100, upgrade getAllData.js
 const BAGS_TO_CREATE = 5;
@@ -98,7 +101,10 @@ const main = async () => {
     '  07 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
-  await checkBagData(data.registryUri.replace('rho:id:', ''), newBagId);
+  const bagPurchased = await checkBagData(
+    data.registryUri.replace('rho:id:', ''),
+    newBagId
+  );
   console.log(`✓ 08 check data associated with bag ${newBagId}`);
   const allData = await getAllData(data.registryUri.replace('rho:id:', ''));
   const newBagId2 = getRandomName();
@@ -124,6 +130,29 @@ const main = async () => {
     `✓ 10 check the presence of ${
       BAGS_TO_CREATE + 2
     } bags and of new bag ID ${newBagId2}`
+  );
+  await changePrice(
+    data.registryUri.replace('rho:id:', ''),
+    bagPurchased.nonce,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    newBagId
+  );
+  await checkBagPrice(data.registryUri.replace('rho:id:', ''), newBagId);
+  console.log('✓ 12 changed price of a bag');
+  await tryPurchase(
+    data.registryUri.replace('rho:id:', ''),
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    newBagId
+  );
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+  console.log(
+    '✓ 12 try to purchase unavailable quantity, fails and is refunded'
+  );
+  console.log(
+    '  12 dust cost: ' +
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 };
 

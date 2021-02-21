@@ -3,6 +3,7 @@ module.exports.mainTerm = (newNonce, publicKey) => {
   mainCh,
 
   createCh,
+  refundCh,
   purchaseCh,
   sendCh,
   changePriceCh,
@@ -19,7 +20,6 @@ module.exports.mainTerm = (newNonce, publicKey) => {
   bagsIds,
   bagsData,
   tokensData,
-  counterCh,
 
   insertArbitrary(\`rho:registry:insertArbitrary\`),
   stdout(\`rho:io:stdout\`),
@@ -28,8 +28,6 @@ module.exports.mainTerm = (newNonce, publicKey) => {
   revAddress(\`rho:rev:address\`),
   registryLookup(\`rho:registry:lookup\`)
 in {
-
-  counterCh!(0) |
 
   /*
     BAGS
@@ -270,13 +268,51 @@ in {
     }
   } |
 
+  contract refundCh(payload, message, return) = {
+    stdout!("refundCh") |
+    new RevVaultCh, emitterRevAddressCh, purseVaultCh, balanceCh in {
+      registryLookup!(\`rho:rchain:revVault\`, *RevVaultCh) |
+      revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *emitterRevAddressCh) |
+      for (@(_, RevVault) <- RevVaultCh; @emitterRevAddress <- emitterRevAddressCh) {
+        match (
+          *payload.get("purseRevAddr"),
+          emitterRevAddress,
+        ) {
+          (from, to) => {
+            @RevVault!("findOrCreate", from, *purseVaultCh) |
+            for (@(true, purseVault) <- purseVaultCh) {
+              @purseVault!("balance", *balanceCh) |
+              for (balance <- balanceCh) {
+                new resultCh in {
+                  @purseVault!("transfer", to, *balance, *payload.get("purseAuthKey"), *resultCh) |
+                  for (@result <- resultCh) {
+                    match result {
+                      (true, Nil) => {
+                        stdout!("refund went well") |
+                        return!(*message ++ ", issuer was refunded \${b}" %% { "b": *balance })
+                      }
+                      _ => {
+                        stdout!("error: refund DID NOT go well") |
+                        return!(*message ++ ", issuer was NOT refunded")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } |
+
   // purchase token (1 or more)
   contract purchaseCh(payload, return) = {
     stdout!("purchaseCh") |
     for (@ids <<- bagsIds) {
       match ids.contains(*payload.get("bagId")) {
         false => {
-          return!("error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist")
+          refundCh!(*payload, "error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist", *return)
         }
         true => {
           for (@bag <<- @(*bags, *payload.get("bagId"))) {
@@ -296,35 +332,20 @@ in {
                       (from, to, amount) => {
                         @RevVault!("findOrCreate", from, *purseVaultCh) |
                         for (@(true, purseVault) <- purseVaultCh) {
-                          new resultCh, performRefundCh in {                        
-                            // refund
-                            for (@message <- performRefundCh) {
-                              new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
-                                @purseVault!("balance", *refundPurseBalanceCh) |
-                                revAddress!("fromPublicKey", *payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
-                                for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
-                                  @purseVault!("transfer", revAddress, balance, *payload.get("purseAuthKey"), *refundResultCh) |
-                                  for (@refundResult <- refundResultCh) {
-                                    match refundResult {
-                                      (true, Nil) => {
-                                        stdout!("refund went well") |
-                                        return!(message ++ ", issuer was refunded")
-                                      }
-                                      _ => {
-                                        stdout!("error: refund DID NOT go well") |
-                                        return!(message ++ ", issuer was NOT refunded")
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            } |
+                          new resultCh in {                        
                             match (*payload.get("bagId") == "0", ids.contains(*payload.get("newBagId"))) {
                               (true, true) => {
-                                performRefundCh!("error: you are buying from bag 0 but new bag "++*payload.get("newBagId")++" already exists")
+                                refundCh!(*payload, "error: you are buying from bag 0 but new bag "++*payload.get("newBagId")++" already exists", *return)
                               }
                               _ => {
-                                @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh)
+                                match (*payload.get("bagId") == "0", *payload.get("newBagId").length() > 50) {
+                                  (true, true) => {
+                                    refundCh!(*payload, "error: new bag id max size is 50", *return)
+                                  }
+                                  _ => {
+                                    @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh)
+                                  }
+                                }
                               }
                             } |
                             for (@result <- resultCh) {
@@ -378,7 +399,7 @@ in {
                                   }
                                 }
                                 _ => {
-                                  performRefundCh!("error: REV transfer went wrong")
+                                  refundCh!(*payload, "error: REV transfer went wrong", *return)
                                 }
                               }
                             }
@@ -390,7 +411,7 @@ in {
                 }
               }
               _ => {
-                return!("error : not enough tokens in bag (bag ID: " ++ *payload.get("bagId") ++ ") available")
+                refundCh!(*payload, "error : not enough tokens in bag (bag ID: " ++ *payload.get("bagId") ++ ") available", *return)
               }
             }
           }
@@ -424,7 +445,6 @@ in {
                         *justVerifySignatureReturnCh
                       )) |
                       for (@r <- justVerifySignatureReturnCh) {
-                        stdout!(("sendCh 1", r)) |
                         match r {
                           true => {
                             // Add bag data if found in payload
@@ -676,7 +696,7 @@ in {
                 purchaseCh!(*action.get("payload"), *return)
               }
               _ => {
-                return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
+                return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
               }
             }
           }

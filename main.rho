@@ -311,7 +311,7 @@ in {
     for (@ids <<- bagsIds) {
       match ids.contains(*payload.get("bagId")) {
         false => {
-          return!("error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist")
+          refundCh!(*payload, "error : token (bag ID) " ++ *payload.get("bagId") ++ " does not exist", *return)
         }
         true => {
           for (@bag <<- @(*bags, *payload.get("bagId"))) {
@@ -334,12 +334,12 @@ in {
                           new resultCh in {                        
                             match (*payload.get("bagId") == "0", ids.contains(*payload.get("newBagId"))) {
                               (true, true) => {
-                                performRefundCh!("error: you are buying from bag 0 but new bag "++*payload.get("newBagId")++" already exists")
+                                refundCh!(*payload, "error: you are buying from bag 0 but new bag "++*payload.get("newBagId")++" already exists", *return)
                               }
                               _ => {
-                                match (*payload.get("bagId") == "0", *payload.get("newBagId").size() > 50)) {
+                                match (*payload.get("bagId") == "0", *payload.get("newBagId").length() > 50) {
                                   (true, true) => {
-                                    performRefundCh!("error: new bag id max size is 50")
+                                    refundCh!(*payload, "error: new bag id max size is 50", *return)
                                   }
                                   _ => {
                                     @purseVault!("transfer", to, amount, *payload.get("purseAuthKey"), *resultCh)
@@ -398,7 +398,7 @@ in {
                                   }
                                 }
                                 _ => {
-                                  refundCh!("error: REV transfer went wrong")
+                                  refundCh!(*payload, "error: REV transfer went wrong", *return)
                                 }
                               }
                             }
@@ -410,7 +410,7 @@ in {
                 }
               }
               _ => {
-                refundCh!("error : not enough tokens in bag (bag ID: " ++ *payload.get("bagId") ++ ") available")
+                refundCh!(*payload, "error : not enough tokens in bag (bag ID: " ++ *payload.get("bagId") ++ ") available", *return)
               }
             }
           }
@@ -695,7 +695,7 @@ in {
                 purchaseCh!(*action.get("payload"), *return)
               }
               _ => {
-                return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
+                return!("error: invalid payload, structure should be { 'quantity': Int, 'bagId': String, 'newBagId': String, 'publicKey': String, 'nonce': String, 'data': Any, 'purseRevAddr': String, 'purseAuthKey': AuthKey }")
               }
             }
           }

@@ -2,13 +2,10 @@ const rc = require('rchain-toolkit');
 const uuidv4 = require('uuid/v4');
 
 const { purchaseTokensTerm } = require('../src/purchaseTokensTerm');
-const {
-  validAfterBlockNumber,
-  generateSignature,
-  prepareDeploy,
-} = require('../cli/utils');
+const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
+const getRandomName = require('./getRandomName').main;
 
-module.exports.main = async (registryUri, privateKey2, publicKey2) => {
+module.exports.main = async (registryUri, privateKey2, publicKey2, bagId) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
@@ -17,9 +14,10 @@ module.exports.main = async (registryUri, privateKey2, publicKey2) => {
   );
   const term = purchaseTokensTerm(registryUri, {
     publicKey: publicKey2,
-    bagId: '1',
-    quantity: 3,
-    price: 1,
+    bagId: bagId,
+    newBagd: getRandomName(),
+    quantity: 1,
+    price: 11,
     bagNonce: uuidv4().replace(/-/g, ''),
     data: undefined,
   });
@@ -73,7 +71,7 @@ module.exports.main = async (registryUri, privateKey2, publicKey2) => {
                 );
                 if (
                   data.message ===
-                  'error : not enough tokens in bag (bag ID: 1) available, issuer was refunded 3'
+                  'error: REV transfer went wrong, issuer was refunded 11'
                 ) {
                   resolve(dataAtNameResponse);
                   clearInterval(interval);

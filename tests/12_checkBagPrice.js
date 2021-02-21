@@ -3,8 +3,8 @@ const getAllData = require('./getAllData').main;
 module.exports.main = async (registryUri, bagId) => {
   const allData = await getAllData(registryUri);
 
-  if (allData.bagsData[bagId] !== 'aaa') {
-    throw new Error('08_checkBagsAndTokens invalid bagData');
+  if (allData.bags[bagId].price !== 12) {
+    throw new Error('12_checkBagPrice invalid bag price');
   }
 
   return allData.bags[bagId];
