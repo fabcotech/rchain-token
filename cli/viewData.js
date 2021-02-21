@@ -2,29 +2,27 @@ const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
 const { getProcessArgv, getRegistryUri } = require('./utils');
-const { readBagOrTokenDataTerm } = require('../src');
+const { readBagsOrTokensDataTerm } = require('../src');
 
 module.exports.viewData = async () => {
   const bagId = getProcessArgv('--bag');
   const tokenId = getProcessArgv('--token');
+  const registryUri = getRegistryUri();
 
   if (typeof bagId === 'undefined' && typeof tokenId === 'undefined') {
     console.log('Please provide one of options --bag or --token');
     process.exit();
   }
 
-  const registryUri = getRegistryUri();
   rchainToolkit.http
     .exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: readBagOrTokenDataTerm(
-        registryUri,
-        tokenId ? 'tokens' : 'bags',
-        tokenId || bagId
-      ),
+      term: readBagsOrTokensDataTerm(registryUri, tokenId ? 'tokens' : 'bags', [
+        tokenId || bagId,
+      ]),
     })
     .then((results) => {
       let data = rchainToolkit.utils.rhoValToJs(JSON.parse(results).expr[0]);
-      data = decodeURI(data);
+      data = decodeURI(data[tokenId || bagId]);
 
       let fileName = `./token-${tokenId}-data.txt`;
       if (bagId) {

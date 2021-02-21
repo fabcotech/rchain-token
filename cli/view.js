@@ -2,14 +2,30 @@ const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 const path = require('path');
 
-const { read, readBagsTerm } = require('../src');
+const { read, readBagsTerm, readBagsIdsTerm } = require('../src');
 const { getProcessArgv, getRegistryUri, logData } = require('./utils');
 
 module.exports.view = async () => {
   const bagId = getProcessArgv('--bag');
   const registryUri = getRegistryUri();
+
+  const term0 = readBagsIdsTerm(registryUri);
+  const result0 = await rchainToolkit.http.exploreDeploy(
+    process.env.READ_ONLY_HOST,
+    {
+      term: term0,
+    }
+  );
+  let ids = [];
+  if (bagId === undefined) {
+    ids = rchainToolkit.utils.rhoValToJs(JSON.parse(result0).expr[0]);
+  }
+
   const term1 = read(registryUri);
-  const term2 = readBagsTerm(registryUri);
+  const term2 = readBagsTerm(
+    registryUri,
+    bagId === undefined ? ids.slice(0, 99) : [bagId]
+  );
   const publicKey = process.env.PRIVATE_KEY
     ? rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY)
     : 'é';
@@ -46,7 +62,7 @@ module.exports.view = async () => {
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
     console.log(
-      '\n bag ID            token ID   owner         quantity           price (dust) \n'
+      '\n Bags [0-99]\n bag ID            token ID   owner         quantity           price (dust) \n'
     );
     Object.keys(bags).forEach((bagId) => {
       let s = '';
