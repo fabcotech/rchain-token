@@ -13,6 +13,7 @@ const updateBagData = require('./07_updateBagData.js').main;
 const checkBagData = require('./08_checkBagData.js').main;
 const sendTokens = require('./09_sendTokens.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
+const tryPurchase = require('./11_try_purchase.js').main;
 
 const BAGS_TO_CREATE = 10;
 
@@ -113,6 +114,19 @@ const main = async () => {
     BAGS_TO_CREATE
   );
   console.log(`✓ 10 check the presence of ${BAGS_TO_CREATE + 2} bags`);
+  await tryPurchase(
+    data.registryUri.replace('rho:id:', ''),
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2
+  );
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+  console.log(
+    '✓ 11 try to purchase unavailable quantity, fails and is refunded'
+  );
+  console.log(
+    '  11 dust cost: ' +
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+  );
 };
 
 main();
