@@ -7,5 +7,5 @@ module.exports.main = async (registryUri, bagsToCreate) => {
     throw new Error('08_checkBagsAndTokens invalid bagData');
   }
 
-  return null;
+  return allData.bags[`${bagsToCreate}`];
 };

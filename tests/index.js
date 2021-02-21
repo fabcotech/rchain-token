@@ -13,7 +13,9 @@ const updateBagData = require('./07_updateBagData.js').main;
 const checkBagData = require('./08_checkBagData.js').main;
 const sendTokens = require('./09_sendTokens.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
-const tryPurchase = require('./11_try_purchase.js').main;
+const changePrice = require('./11_changePrice').main;
+const checkBagPrice = require('./12_checkBagPrice').main;
+const tryPurchase = require('./14_tryPurchase').main;
 
 const BAGS_TO_CREATE = 10;
 
@@ -94,7 +96,10 @@ const main = async () => {
     '  07 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
-  await checkBagData(data.registryUri.replace('rho:id:', ''), BAGS_TO_CREATE);
+  const bagPurchased = await checkBagData(
+    data.registryUri.replace('rho:id:', ''),
+    BAGS_TO_CREATE
+  );
   console.log(`✓ 08 check data associated with bag ${BAGS_TO_CREATE}`);
   const allData = await getAllData(data.registryUri.replace('rho:id:', ''));
   await sendTokens(
@@ -114,17 +119,27 @@ const main = async () => {
     BAGS_TO_CREATE
   );
   console.log(`✓ 10 check the presence of ${BAGS_TO_CREATE + 2} bags`);
+  await changePrice(
+    data.registryUri.replace('rho:id:', ''),
+    bagPurchased.nonce,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    BAGS_TO_CREATE
+  );
+  await checkBagPrice(data.registryUri.replace('rho:id:', ''), BAGS_TO_CREATE);
+  console.log('✓ 12 changed price of a bag');
   await tryPurchase(
     data.registryUri.replace('rho:id:', ''),
-    PRIVATE_KEY_2,
-    PUBLIC_KEY_2
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    BAGS_TO_CREATE
   );
-  balances2.push(await getBalance(PUBLIC_KEY_2));
+  balances1.push(await getBalance(PUBLIC_KEY));
   console.log(
-    '✓ 11 try to purchase unavailable quantity, fails and is refunded'
+    '✓ 13 try to purchase with insuffiscient REV, fails and is refunded'
   );
   console.log(
-    '  11 dust cost: ' +
+    '  12 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 };
