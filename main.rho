@@ -39,12 +39,15 @@ in {
     bagsIds is a Set with all bags that contain at least one token
   */
   bagsIds!(Set()) |
+  /*DEFAULT_BAGS_IDS*/
+  /*DEFAULT_BAGS*/
 
   /*
     BAGS DATA
     bags data are stored in a tuple-based channel, example bag 12:
     @(*bagsData, 12)!("red")
   */
+  /*DEFAULT_BAGS_DATA*/
 
   /*
     TOKENS DATA
