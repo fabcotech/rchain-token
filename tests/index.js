@@ -126,8 +126,13 @@ const main = async () => {
     PUBLIC_KEY_2,
     BAGS_TO_CREATE
   );
+  balances2.push(await getBalance(PUBLIC_KEY_2));
   await checkBagPrice(data.registryUri.replace('rho:id:', ''), BAGS_TO_CREATE);
-  console.log('✓ 12 changed price of a bag');
+  console.log('✓ 11 changed price of a bag');
+  console.log(
+    '  11 dust cost: ' +
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+  );
   await tryPurchase(
     data.registryUri.replace('rho:id:', ''),
     PRIVATE_KEY,
@@ -136,11 +141,11 @@ const main = async () => {
   );
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log(
-    '✓ 13 try to purchase with insuffiscient REV, fails and is refunded'
+    '✓ 12 try to purchase with insuffiscient REV, fails and is refunded'
   );
   console.log(
     '  12 dust cost: ' +
-      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 };
 
