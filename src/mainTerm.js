@@ -542,20 +542,18 @@ in {
   contract iterateCh(@(channelToReadFrom, ids, return)) = {
     new tmpCh, itCh in {
       for (@(tmpCh, ids) <= itCh) {
-        match ids {
-          Nil                 => @return!([])
-          Set(last)           => {
-            stdout!(("last", last)) |
-            for (val <<- @(channelToReadFrom, last)) {
-              for (tmp <- @tmpCh) {
+        for (tmp <- @tmpCh) {
+          match ids {
+            Nil => {
+              @return!(*tmp)
+            }
+            Set(last) => {
+              for (val <<- @(channelToReadFrom, last)) {
                 @return!(*tmp.set(last, *val))
               }
             }
-          }
-          Set(first ... rest) => {
-            for (val <<- @(channelToReadFrom, first)) {
-              for (tmp <- @tmpCh) {
-                stdout!(("tmp", *tmp)) |
+            Set(first ... rest) => {
+              for (val <<- @(channelToReadFrom, first)) {
                 @tmpCh!(*tmp.set(first, *val)) |
                 itCh!((tmpCh, rest))
               }
