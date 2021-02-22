@@ -14,9 +14,13 @@ module.exports.main = async (publicKey) => {
     }
   }`;
 
-  const result = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-    term: term,
-  });
+  try {
+    const result = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
+      term: term,
+    });
 
-  return rc.utils.rhoValToJs(JSON.parse(result).expr[0]);
+    return rc.utils.rhoValToJs(JSON.parse(result).expr[0]);
+  } catch (e) {
+    return 0;
+  }
 };

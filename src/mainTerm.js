@@ -557,9 +557,9 @@ in {
             }
             Set(first ... rest) => {
               for (val <<- @(channelToReadFrom, first)) {
-                @tmpCh!(*tmp.set(first, *val)) |
-                itCh!((tmpCh, rest))
-              }
+                @tmpCh!(*tmp.set(first, *val))
+              } |
+              itCh!((tmpCh, rest))
             }
           }
         }

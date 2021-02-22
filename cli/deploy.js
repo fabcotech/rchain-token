@@ -89,7 +89,7 @@ module.exports.deploy = async () => {
     process.env.PRIVATE_KEY,
     publicKey,
     1,
-    1000000,
+    10000000,
     vab || -1
   );
 
