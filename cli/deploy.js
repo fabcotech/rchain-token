@@ -31,6 +31,10 @@ module.exports.deploy = async () => {
   const bagsFile = getBagsFile() ? fs.readFileSync(getBagsFile(), 'utf8') : '';
   const defaultBagsData = {};
   const defaultBags = {};
+
+  let defaultBagsIdsRholang = '';
+  let defaultBagsRholang = '';
+  let defaultBagsDataRholang = '';
   if (bagsFile) {
     const bags = JSON.parse(bagsFile);
     Object.keys(bags).forEach((bagId) => {
@@ -40,21 +44,41 @@ module.exports.deploy = async () => {
     });
     log(Object.keys(defaultBags).length + ' bags found in json file');
     log(Object.keys(defaultBagsData).length + ' bags data found in json file');
+
+    defaultBagsIdsRholang = 'for (ids <- bagsIds) { bagsIds!(Set(';
+    defaultBagsIdsRholang += Object.keys(defaultBags)
+      .map((a) => `"${a}"`)
+      .join(',');
+    defaultBagsIdsRholang += ')) } |';
+
+    Object.keys(defaultBags).forEach((id) => {
+      defaultBagsRholang += `@(*bags, "${id}")!(${JSON.stringify(
+        defaultBags[id]
+      ).replace(new RegExp(': null|:null', 'g'), ': Nil')}) |\n`;
+    });
+
+    Object.keys(defaultBags).forEach((id) => {
+      let data = 'Nil';
+      if (
+        (typeof defaultBagsData[id] === 'object' ||
+          typeof defaultBagsData[id] === 'function') &&
+        defaultBagsData[id] !== null
+      ) {
+        data = JSON.stringify(defaultBagsData[id]).replace(
+          new RegExp(': null|:null', 'g'),
+          ': Nil'
+        );
+      } else if (defaultBagsData[id]) {
+        data = `"${defaultBagsData[id]}"`;
+      }
+      defaultBagsDataRholang += `@(*bagsData, "${id}")!(${data}) |\n`;
+    });
   }
 
-  const defaultBagsAsString = JSON.stringify(defaultBags).replace(
-    new RegExp(': null|:null', 'g'),
-    ': Nil'
-  );
-
-  const defaultBagsDataAsString = JSON.stringify(defaultBagsData).replace(
-    new RegExp(': null|:null', 'g'),
-    ': Nil'
-  );
-
   const term = mainTerm(newNonce, publicKey)
-    .replace('{/*DEFAULT_BAGS*/}', defaultBagsAsString)
-    .replace('{/*DEFAULT_BAGS_DATA*/}', defaultBagsDataAsString);
+    .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)
+    .replace('/*DEFAULT_BAGS*/', defaultBagsRholang)
+    .replace('/*DEFAULT_BAGS_DATA*/', defaultBagsDataRholang);
 
   log('✓ prepare deploy');
 
