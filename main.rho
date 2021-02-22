@@ -543,19 +543,14 @@ in {
           match ids {
             Nil => {
               @return!(*tmp)
-              
             }
-            Set(last)           => {
-              stdout!(("last", last)) |
+            Set(last) => {
               for (val <<- @(channelToReadFrom, last)) {
-                stdout!(("val", *val)) |
                 @return!(*tmp.set(last, *val))
               }
             }
             Set(first ... rest) => {
-              stdout!(("first", *first)) |
               for (val <<- @(channelToReadFrom, first)) {
-                stdout!(("val", *val)) |
                 @tmpCh!(*tmp.set(first, *val)) |
                 itCh!((tmpCh, rest))
               }
