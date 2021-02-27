@@ -74,12 +74,12 @@ in {
     decide which id to give to the new purse
     and make/instantiates the purse
   */
-  for (@(purse, data, return) <= makePurseCh) {
+  for (@(properties, data, return) <= makePurseCh) {
     for (counter <- counterCh) {
       counterCh!(*counter + 1) |
-      match purse.set("id", "${n}" %% { "n": *counter }) {
-        newPurse => {
-          match newPurse {
+      match properties.set("id", "${n}" %% { "n": *counter }) {
+        purseProperties => {
+          match purseProperties {
             {
               "quantity": Int,
               // not used in main contract or box contract
@@ -89,24 +89,24 @@ in {
               "id": String
             } => {
               for (ids <- pursesIds) {
-                match *ids.contains(newPurse.get("id")) {
+                match *ids.contains(purseProperties.get("id")) {
                   false => {
-                    pursesIds!(*ids.union(Set(newPurse.get("id")))) |
-                    @(*purses, newPurse.get("id"))!(newPurse) |
-                    @(*pursesData, newPurse.get("id"))!(data) |
+                    pursesIds!(*ids.union(Set(purseProperties.get("id")))) |
+                    @(*purses, purseProperties.get("id"))!(purseProperties) |
+                    @(*pursesData, purseProperties.get("id"))!(data) |
                     new purse in {
-                      @(*vault, *purse)!(newPurse.get("id")) |
+                      @(*vault, *purse)!(purseProperties.get("id")) |
                       @return!(*purse) |
 
                       /*
                         READ
                         Returns prperties "id", "quantity", "n", "publicKey" and "price"(not implemented)
-                        (Nil) => properties
+                        (Nil) => propertie
                       */
                       for (@(Nil, returnRead) <= @(*purse, "READ")) {
                         for (id <<- @(*vault, *purse)) {
-                          for (properties <<- @(*purses, *id)) {
-                            @returnRead!(*properties.set("id", *id))
+                          for (props <<- @(*purses, *id)) {
+                            @returnRead!(*props.set("id", *id))
                           }
                         }
                       } |
@@ -123,8 +123,8 @@ in {
                             pursesIds!(*ids.delete(*id))
                           } |
                           for (data <- @(*pursesData, *id)) { Nil } |
-                          for (properties <- @(*purses, *id)) {
-                            makePurseCh!((*properties, Nil, returnSwap))
+                          for (props <- @(*purses, *id)) {
+                            makePurseCh!((*props, Nil, returnSwap))
                           }
                         }
                       } |
