@@ -37,12 +37,7 @@ node cli view
 node cli view --purse 0
 ```
 
-**Tokens/bags operations**
-
-```
-# Lock contract, no token will ever be created in this contract anymore
-node cli lock --registry-uri 6yt4 --contract-nonce daec
-```
+**Purses/tokens operations**
 
 ```
 # Create purse
@@ -54,21 +49,6 @@ node cli create-purse --quantity 12 --token GOLD
 # Send a purse to a box address
 CLI NOT IMPLEMENTED YET
 ```
-
-**Data operations**
-
-```
-# Update data associated with a token
-node cli update-token-data --registry-uri 6yt4 --file ./README.MD --contract-nonce daec --token 0
-```
-
-```
-# Update data associated with a bag
-# --nonce is the bag nonce, not the contract nonce
-node cli update-token-data --registry-uri 6yt4 --file ./README.MD --nonce 1f4c --bag 0
-```
-
-Missing in CLI: playing with token data and bag data, changing price of a bag of tokens
 
 ### Using SDK
 
