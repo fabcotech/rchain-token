@@ -16,11 +16,13 @@ module.exports.mainTerm = (fromBoxRegistryUri) => {
 
     // peek and check purse
     for (id <<- @(*vault, *purse)) {
-      out!(*purse)
+      out!(*purse) |
       // "12"
+      for (purse <- @(*purses, "12")) {
+        out!(*purse)
+        // { "quantity": 100, "n": "GOLD", "publicKey": "aaa" }
+      }
     }
-
-    pursesIds is a Set with all purse ids that contain at least one token
   */
   vault,
 
