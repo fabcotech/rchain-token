@@ -1,16 +1,16 @@
 const fs = require('fs');
 
-const createTokensFile = fs
-  .readFileSync('./create_tokens.rho')
-  .toString('utf8');
-
 const replaceEverything = (a) => {
   return (
     a
       .replace(/`/g, '\\`')
       .replace(/\$\{/g, '\\${')
       .replace(/\\\//g, '\\\\/')
-      .replace('REGISTRY_URI', '${registryUri}')
+      .replace(/FROM_BOX_REGISTRY_URI/g, '${payload.fromBoxRegistryUri}')
+      .replace(/TO_BOX_REGISTRY_URI/g, '${payload.toBoxRegistryUri}')
+      .replace(/BOX_REGISTRY_URI/g, '${boxRegistryUri}')
+      .replace(/REGISTRY_URI/g, '${registryUri}')
+      .replace(/PURSE_ID/g, '${payload.purseId}')
       .replace('SIGNATURE', '${signature}')
       .replace(
         'TOKEN_ID',
@@ -18,12 +18,12 @@ const replaceEverything = (a) => {
       )
       .replace('NEW_NONCE', '${payload.newNonce}')
       .replace(
-        'CREATE_TOKENS_BAGS_DATA',
+        'CREATE_PURSESS_DATA',
         `\${JSON.stringify(payload.data).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
       )
       .replace(
-        'CREATE_TOKENS_BAGS',
-        `\${JSON.stringify(payload.bags).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
+        'CREATE_PURSESS',
+        `\${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
       )
       .replace('BAG_NONCE', '${payload.bagNonce}')
       .replace('BAG_NONCE_2', '${payload.bagNonce2}')
@@ -50,114 +50,117 @@ const replaceEverything = (a) => {
       )
   );
 };
-fs.writeFileSync(
-  './src/createTokensTerm.js',
-  `module.exports.createTokensTerm = (
-  registryUri,
-  payload,
-  signature,
-) => {
-  return \`${replaceEverything(createTokensFile)}\`;
-};
-`
-);
 
-const purchaseTokensFile = fs
-  .readFileSync('./purchase_tokens.rho')
+const createPursesFile = fs
+  .readFileSync('./rholang/create_purses.rho')
   .toString('utf8');
-
 fs.writeFileSync(
-  './src/purchaseTokensTerm.js',
-  `
-module.exports.purchaseTokensTerm = (
+  './src/createPursesTerm.js',
+  `module.exports.createPursesTerm = (
   registryUri,
   payload
 ) => {
-  return \`${replaceEverything(purchaseTokensFile)}\`;
+  return \`${replaceEverything(createPursesFile)}\`;
 };
 `
 );
 
-const setLockedFile = fs.readFileSync('./set_locked.rho').toString('utf8');
+const readFile = fs.readFileSync('./rholang/read.rho').toString('utf8');
 
 fs.writeFileSync(
-  './src/setLockedTerm.js',
-  `module.exports.setLockedTerm = (registryUri, payload, signature) => {
-  return \`${replaceEverything(setLockedFile)}\`;
-};`
+  './src/readTerm.js',
+  `
+module.exports.readTerm = (
+  registryUri
+) => {
+  return \`${replaceEverything(readFile)}\`;
+};
+`
 );
 
-const updateTokenDataFile = fs
-  .readFileSync('./update_token_data.rho')
+const readPursesIdsFile = fs
+  .readFileSync('./rholang/read_purses_ids.rho')
   .toString('utf8');
 
 fs.writeFileSync(
-  './src/updateTokenDataTerm.js',
-  `module.exports.updateTokenDataTerm = (
-  registryUri,
-  payload,
-  signature, 
+  './src/readPursesIdsTerm.js',
+  `
+module.exports.readPursesIdsTerm = (
+  registryUri
 ) => {
-  return \`${replaceEverything(updateTokenDataFile)}\`;
+  return \`${replaceEverything(readPursesIdsFile)}\`;
 };
 `
 );
 
-const updateBagDataFile = fs
-  .readFileSync('./update_bag_data.rho')
+const readPursesFile = fs
+  .readFileSync('./rholang/read_purses.rho')
   .toString('utf8');
 
 fs.writeFileSync(
-  './src/updateBagDataTerm.js',
-  `module.exports.updateBagDataTerm = (
+  './src/readPursesTerm.js',
+  `
+module.exports.readPursesTerm = (
   registryUri,
-  payload,
-  signature,
+  payload
 ) => {
-  return \`${replaceEverything(updateBagDataFile)}\`;
-};
-`
+  return \`${replaceEverything(readPursesFile).replace(
+    'PURSES_IDS',
+    `\${payload.pursesIds
+  .map((id) => '"' + id + '"')
+  .join(',')}`
+  )}\`;
+    }`
 );
 
-const sendTokensFile = fs.readFileSync('./send_tokens.rho').toString('utf8');
+const readBoxFile = fs.readFileSync('./rholang/read_box.rho').toString('utf8');
 
 fs.writeFileSync(
-  './src/sendTokensTerm.js',
-  `module.exports.sendTokensTerm = (
-  registryUri,
-  payload,
-  signature, 
+  './src/readBoxTerm.js',
+  `
+module.exports.readBoxTerm = (
+  boxRegistryUri
 ) => {
-  return \`${replaceEverything(sendTokensFile)}\`;
+  return \`${replaceEverything(readBoxFile)}\`;
 };
 `
 );
 
-const changePriceFile = fs.readFileSync('./change_price.rho').toString('utf8');
+const boxFile = fs.readFileSync('./rholang/box.rho').toString('utf8');
 
 fs.writeFileSync(
-  './src/changePriceTerm.js',
-  `module.exports.changePriceTerm = (
-  registryUri,
-  payload,
-  signature,
-) => {
-  return \`${replaceEverything(changePriceFile)}\`;
+  './src/boxTerm.js',
+  `
+module.exports.boxTerm = () => {
+  return \`${replaceEverything(boxFile)}\`;
 };
 `
 );
 
-const mainTerm = fs.readFileSync('./main.rho').toString('utf8');
+const sendPurseFile = fs
+  .readFileSync('./rholang/send_purse.rho')
+  .toString('utf8');
 
+fs.writeFileSync(
+  './src/sendPurseTerm.js',
+  `module.exports.sendPurseTerm = (
+    registryUri,
+  payload
+) => {
+  return \`${replaceEverything(sendPurseFile)}\`;
+};
+`
+);
+
+const mainTerm = fs.readFileSync('./rholang/main.rho').toString('utf8');
 fs.writeFileSync(
   './src/mainTerm.js',
-  `module.exports.mainTerm = (newNonce, publicKey) => {
+  `module.exports.mainTerm = (fromBoxRegistryUri) => {
     return \`${mainTerm
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')
       .replace(/\$\{/g, '\\${')
-      .replace(/NEW_NONCE/g, '${newNonce}')
-      .replace(/PUBLIC_KEY/g, '${publicKey}')}\`;
+      .replace(/FROM_BOX_REGISTRY_URI/g, '${fromBoxRegistryUri}')}\`;
 };
 `
 );

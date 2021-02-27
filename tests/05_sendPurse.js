@@ -1,33 +1,40 @@
 const rc = require('rchain-toolkit');
-const uuidv4 = require('uuid/v4');
 
+const { sendPurseTerm } = require('../src/');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (registryUri, privateKey2, publicKey2) => {
+module.exports.main = async (
+  contractRegistryUri,
+  privateKey,
+  publicKey,
+  fromBoxRegistryUri,
+  toBoxRegistryUri,
+  purseId
+) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
-    publicKey2,
+    publicKey,
     timestamp
   );
-  const term = purchaseTokensTerm(registryUri, {
-    publicKey: publicKey2,
-    bagId: '1',
-    quantity: 1,
-    price: 1,
-    bagNonce: uuidv4().replace(/-/g, ''),
-    data: undefined,
-  });
+
+  const payload = {
+    fromBoxRegistryUri: fromBoxRegistryUri,
+    toBoxRegistryUri: toBoxRegistryUri,
+    purseId: purseId,
+  };
+
+  const term = sendPurseTerm(contractRegistryUri, payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
     'secp256k1',
     timestamp,
     term,
-    privateKey2,
-    publicKey2,
+    privateKey,
+    publicKey,
     1,
-    100000000,
+    10000000,
     vab
   );
   try {
@@ -37,11 +44,11 @@ module.exports.main = async (registryUri, privateKey2, publicKey2) => {
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('05_purchase 01');
+      throw new Error('07_updateBagData 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('05_purchase 02');
+    throw new Error('07_updateBagData 02');
   }
 
   let dataAtNameResponse;
@@ -73,17 +80,17 @@ module.exports.main = async (registryUri, privateKey2, publicKey2) => {
             })
             .catch((err) => {
               console.log(err);
-              throw new Error('05_purchase 03');
+              throw new Error('07_updateBagData 03');
             });
         } catch (err) {
           console.log(err);
-          throw new Error('05_purchase 04');
+          throw new Error('07_updateBagData 04');
         }
       }, 4000);
     });
   } catch (err) {
     console.log(err);
-    throw new Error('05_purchase 05');
+    throw new Error('07_updateBagData 05');
   }
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr

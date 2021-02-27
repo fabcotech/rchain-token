@@ -1,5 +1,4 @@
-module.exports.mainTerm = (fromBoxRegistryUri) => {
-    return `new 
+new 
   mainCh,
 
   entryCh,
@@ -58,11 +57,11 @@ module.exports.mainTerm = (fromBoxRegistryUri) => {
 
   counterCh,
 
-  insertArbitrary(\`rho:registry:insertArbitrary\`),
-  stdout(\`rho:io:stdout\`),
-  revAddress(\`rho:rev:address\`),
-  registryLookup(\`rho:registry:lookup\`),
-  deployerId(\`rho:rchain:deployerId\`)
+  insertArbitrary(`rho:registry:insertArbitrary`),
+  stdout(`rho:io:stdout`),
+  revAddress(`rho:rev:address`),
+  registryLookup(`rho:registry:lookup`),
+  deployerId(`rho:rchain:deployerId`)
 in {
 
   counterCh!(0) |
@@ -76,7 +75,7 @@ in {
   for (@(purse, data, return) <= makePurseCh) {
     for (counter <- counterCh) {
       counterCh!(*counter + 1) |
-      match purse.set("id", "\${n}" %% { "n": *counter }) {
+      match purse.set("id", "${n}" %% { "n": *counter }) {
         newPurse => {
           match newPurse {
             {
@@ -382,11 +381,11 @@ in {
 
   for (entryUri <- entryUriCh) {
     new boxDataCh, boxReturnCh in {
-      @(*deployerId, "rho:id:${fromBoxRegistryUri}")!({ "type": "READ" }, *boxDataCh) |
+      @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!({ "type": "READ" }, *boxDataCh) |
       for (r <- boxDataCh) {
         match (*r.get("version")) {
           "5.0.0" => {
-            @(*deployerId, "rho:id:${fromBoxRegistryUri}")!(
+            @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!(
               {
                 "type": "SAVE_SUPER_KEY",
                 "payload": { "superKey": *superKeyCh, "registryUri": *entryUri }
@@ -434,5 +433,3 @@ in {
     /*OUTPUT_CHANNEL*/
   }
 }
-`;
-};

@@ -1,12 +1,10 @@
 const { mainTerm } = require('../src/mainTerm');
 const rc = require('rchain-toolkit');
-const uuidv4 = require('uuid/v4');
 
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (privateKey1, publicKey1) => {
-  const nonce = uuidv4().replace(/-/g, '');
-  const term = mainTerm(nonce, publicKey1);
+module.exports.main = async (privateKey1, publicKey1, boxRegistryUri) => {
+  const term = mainTerm(boxRegistryUri);
   console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
@@ -64,7 +62,7 @@ module.exports.main = async (privateKey1, publicKey1) => {
                 clearInterval(interval);
               } else {
                 console.log(
-                  'Did not find transaction data, will try again in 15 seconds'
+                  'Did not find transaction data, will try again in 4 seconds'
                 );
               }
             })
@@ -76,7 +74,7 @@ module.exports.main = async (privateKey1, publicKey1) => {
           console.log(err);
           throw new Error('01_deploy 04');
         }
-      }, 15000);
+      }, 4000);
     });
   } catch (err) {
     console.log(err);
@@ -86,12 +84,6 @@ module.exports.main = async (privateKey1, publicKey1) => {
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (data.nonce !== nonce) {
-    throw new Error('01_deploy invalid nonce');
-  }
-  if (data.publicKey !== publicKey1) {
-    throw new Error('01_deploy invalid publicKey');
-  }
   if (data.locked !== false) {
     throw new Error('01_deploy invalid locked');
   }

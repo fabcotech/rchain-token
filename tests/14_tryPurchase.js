@@ -1,7 +1,6 @@
 const rc = require('rchain-toolkit');
 const uuidv4 = require('uuid/v4');
 
-const { purchaseTokensTerm } = require('../src/purchaseTokensTerm');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 const getRandomName = require('./getRandomName').main;
 
@@ -82,7 +81,7 @@ module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
                 }
               } else {
                 console.log(
-                  'Did not find transaction data, will try again in 15 seconds'
+                  'Did not find transaction data, will try again in 4 seconds'
                 );
               }
             })
@@ -94,7 +93,7 @@ module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
           console.log(err);
           throw new Error('05_purchase 04');
         }
-      }, 15000);
+      }, 4000);
     });
   } catch (err) {
     console.log(err);

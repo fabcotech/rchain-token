@@ -1,60 +1,48 @@
 const rchainToolkit = require('rchain-toolkit');
-const uuidv4 = require('uuid/v4');
 
-const { createTokensTerm } = require('../src/');
+const { createPursesTerm } = require('../src');
 
 const {
   getProcessArgv,
-  getContractNonce,
-  getNewBagId,
+  getBoxRegistryUri,
   getQuantity,
   getRegistryUri,
-  generateSignature,
   getTokenId,
   log,
   validAfterBlockNumber,
 } = require('./utils');
 
-module.exports.createTokens = async () => {
+module.exports.createPurse = async () => {
   log(
     'Make sure the private key provided is the one of the contract owner (initial deploy)'
   );
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
-  const contractNonce = getContractNonce();
+  const boxRegistryUri = getBoxRegistryUri();
   const tokenId = getTokenId();
   if (!tokenId) {
     throw new Error('Please provide a token ID with --token option');
   }
   const quantity = getQuantity();
-  const price = getProcessArgv('--price')
-    ? parseInt(getProcessArgv('--price'), 10)
-    : undefined;
-  const newNonce = uuidv4().replace(/-/g, '');
-  const bagNonce = uuidv4().replace(/-/g, '');
+
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
   const payload = {
-    bags: {
+    purses: {
       [`newbag1`]: {
-        nonce: bagNonce,
-        publicKey: publicKey,
         n: tokenId,
-        price: price || null,
+        publicKey: publicKey,
         quantity: quantity,
       },
     },
     data: {
       [`newbag1`]: null,
     },
-    nonce: contractNonce,
-    newNonce: newNonce,
+    fromBoxRegistryUri: boxRegistryUri,
   };
 
-  const ba = rchainToolkit.utils.toByteArray(payload);
-  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
-  const term = createTokensTerm(registryUri, payload, signature);
+  const term = createPursesTerm(registryUri, payload);
 
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
@@ -65,7 +53,7 @@ module.exports.createTokens = async () => {
     process.env.PRIVATE_KEY,
     publicKey,
     1,
-    1000000,
+    10000000,
     vab
   );
 

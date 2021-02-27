@@ -1,0 +1,60 @@
+new basket,
+  returnCh,
+  boxCh,
+  stdout(`rho:io:stdout`),
+  deployerId(`rho:rchain:deployerId`),
+  registryLookup(`rho:registry:lookup`)
+in {
+
+  @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!({ "type": "READ_SUPER_KEYS" }, *boxCh) |
+
+  for (superKeys <- boxCh) {
+    match *superKeys.get(`rho:id:REGISTRY_URI`) {
+      ch => {
+        @(ch, "CREATE_PURSES")!((
+          {
+            // example
+            // "purses": { "0": { "publicKey": "abc", "n": "gold", "quantity": 3, "data": Nil }}
+            "purses": CREATE_PURSESS,
+            // example
+            // "data": { "0": "this bag is mine" }
+            "data": CREATE_PURSESS_DATA,
+          },
+          *returnCh
+        ))
+      }
+    }
+  } |
+
+  for (resp <- returnCh) {
+    match *resp {
+      String => {
+        basket!({ "status": "failed", "message": *resp }) |
+        stdout!(("failed", *resp))
+      }
+      (true, payload) => {
+        new entryCh, return2Ch in {
+          registryLookup!(`rho:id:FROM_BOX_REGISTRY_URI`, *entryCh) |
+          for (entry <- entryCh) {
+            @(*entry, "RECEIVE_PURSES")!((
+              payload.set("registryUri", `rho:id:REGISTRY_URI`),
+              *return2Ch
+            )) |
+            for (r <- return2Ch) {
+              match *r {
+                String => {
+                  basket!({ "status": "failed", "message": *r }) |
+                  stdout!(("failed", *r))
+                }
+                _ => {
+                  stdout!("completed, purses created and saved to box") |
+                  basket!({ "status": "completed" })
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

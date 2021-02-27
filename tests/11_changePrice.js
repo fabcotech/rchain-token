@@ -81,7 +81,7 @@ module.exports.main = async (
                 resolve(dataAtNameResponse);
               } else {
                 console.log(
-                  'Did not find transaction data, will try again in 15 seconds'
+                  'Did not find transaction data, will try again in 4 seconds'
                 );
               }
             })
@@ -93,7 +93,7 @@ module.exports.main = async (
           console.log(err);
           throw new Error('11_changePrice 04');
         }
-      }, 15000);
+      }, 4000);
     });
   } catch (err) {
     console.log(err);

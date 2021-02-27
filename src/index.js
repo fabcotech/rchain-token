@@ -1,30 +1,20 @@
+const { boxTerm } = require('./boxTerm');
 const { mainTerm } = require('./mainTerm');
-const { createTokensTerm } = require('./createTokensTerm');
-const { purchaseTokensTerm } = require('./purchaseTokensTerm');
-const { sendTokensTerm } = require('./sendTokensTerm');
-const { setLockedTerm } = require('./setLockedTerm');
-const { updateTokenDataTerm } = require('./updateTokenDataTerm');
-const { updateBagDataTerm } = require('./updateBagDataTerm');
-const { readBagOrTokenDataTerm } = require('./readBagOrTokenDataTerm');
-const { readBagsOrTokensDataTerm } = require('./readBagsOrTokensDataTerm');
-const { read } = require('./read');
-const { readBagsTerm } = require('./readBagsTerm');
-const { readBagsIdsTerm } = require('./readBagsIdsTerm');
-const { changePriceTerm } = require('./changePriceTerm');
+const { createPursesTerm } = require('./createPursesTerm');
+const { sendPurseTerm } = require('./sendPurseTerm');
+const { readPursesTerm } = require('./readPursesTerm');
+const { readPursesIdsTerm } = require('./readPursesIdsTerm');
+const { readBoxTerm } = require('./readBoxTerm');
+const { readTerm } = require('./readTerm');
 
 module.exports = {
-  version: '4.0.0',
+  version: '5.0.0',
+  boxTerm,
   mainTerm,
-  createTokensTerm,
-  purchaseTokensTerm,
-  sendTokensTerm,
-  setLockedTerm,
-  updateTokenDataTerm,
-  updateBagDataTerm,
-  readBagOrTokenDataTerm,
-  readBagsOrTokensDataTerm,
-  read,
-  readBagsTerm,
-  readBagsIdsTerm,
-  changePriceTerm,
+  createPursesTerm,
+  sendPurseTerm,
+  readPursesTerm,
+  readPursesIdsTerm,
+  readBoxTerm,
+  readTerm,
 };

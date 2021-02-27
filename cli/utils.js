@@ -13,12 +13,7 @@ const getProcessArgv = (param) => {
 module.exports.getProcessArgv = getProcessArgv;
 
 module.exports.logData = (data) => {
-  console.log(`Public key     : ${data.publicKey}`);
   console.log(`Registry URI   : ${data.registryUri.replace('rho:id:', '')}`);
-  console.log(
-    `Contract nonce : ${data.nonce}`,
-    data.locked ? '\x1b[32m' : '\x1b[31m'
-  );
   if (data.locked) {
     console.log(`Locked         : ${data.locked}`, '\x1b[0m');
   } else {
@@ -157,6 +152,14 @@ module.exports.getFromBagId = () => {
     throw new Error('Missing arguments --from-bag');
   }
   return bagId;
+};
+
+module.exports.getBoxRegistryUri = () => {
+  let boxRegistryUri = process.env.BOX_REGISTRY_URI;
+  if (typeof boxRegistryUri !== 'string' || boxRegistryUri.length === 0) {
+    throw new Error('Missing arguments --box or BOX_NAME=* in .env file');
+  }
+  return boxRegistryUri;
 };
 
 module.exports.getNewBagId = () => {

@@ -1,27 +1,22 @@
 const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
-const { mainTerm } = require('../src/');
+const { boxTerm } = require('../src/');
 
-const {
-  log,
-  validAfterBlockNumber,
-  prepareDeploy,
-  logData,
-  getBagsFile,
-  getBoxRegistryUri,
-} = require('./utils');
+const { log, validAfterBlockNumber, prepareDeploy } = require('./utils');
 
-module.exports.deploy = async () => {
-  if (typeof process.env.REGISTRY_URI === 'string') {
-    console.log('Please remove REGISTRY_URI=* line in .env file');
+module.exports.deployBox = async () => {
+  if (typeof process.env.BOX_NAME === 'string') {
+    console.log('Please remove BOX_NAME=* line in .env file');
     process.exit();
   }
-  const boxRegistryUri = getBoxRegistryUri();
+  if (typeof process.env.BOX_REGISTRY_URI === 'string') {
+    console.log('Please remove BOX_REGISTRY_URI=* line in .env file');
+    process.exit();
+  }
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
-
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const pd = await prepareDeploy(
@@ -29,58 +24,8 @@ module.exports.deploy = async () => {
     publicKey,
     timestamp
   );
-  const bagsFile = getBagsFile() ? fs.readFileSync(getBagsFile(), 'utf8') : '';
-  const defaultBagsData = {};
-  const defaultBags = {};
 
-  let defaultBagsIdsRholang = '';
-  let defaultBagsRholang = '';
-  let defaultBagsDataRholang = '';
-  if (bagsFile) {
-    const bags = JSON.parse(bagsFile);
-    Object.keys(bags).forEach((bagId) => {
-      defaultBagsData[bagId] = bags[bagId].data;
-      delete bags[bagId].data;
-      defaultBags[bagId] = bags[bagId];
-    });
-    log(Object.keys(defaultBags).length + ' bags found in json file');
-    log(Object.keys(defaultBagsData).length + ' bags data found in json file');
-
-    defaultBagsIdsRholang = 'for (ids <- bagsIds) { bagsIds!(Set(';
-    defaultBagsIdsRholang += Object.keys(defaultBags)
-      .map((a) => `"${a}"`)
-      .join(',');
-    defaultBagsIdsRholang += ')) } |';
-
-    Object.keys(defaultBags).forEach((id) => {
-      defaultBagsRholang += `@(*bags, "${id}")!(${JSON.stringify(
-        defaultBags[id]
-      ).replace(new RegExp(': null|:null', 'g'), ': Nil')}) |\n`;
-    });
-
-    Object.keys(defaultBags).forEach((id) => {
-      let data = 'Nil';
-      if (
-        (typeof defaultBagsData[id] === 'object' ||
-          typeof defaultBagsData[id] === 'function') &&
-        defaultBagsData[id] !== null
-      ) {
-        data = JSON.stringify(defaultBagsData[id]).replace(
-          new RegExp(': null|:null', 'g'),
-          ': Nil'
-        );
-      } else if (defaultBagsData[id]) {
-        data = `"${defaultBagsData[id]}"`;
-      }
-      defaultBagsDataRholang += `@(*bagsData, "${id}")!(${data}) |\n`;
-    });
-  }
-
-  const term = mainTerm(boxRegistryUri);
-  //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)
-  //   .replace('/*DEFAULT_BAGS*/', defaultBagsRholang)
-  //   .replace('/*DEFAULT_BAGS_DATA*/', defaultBagsDataRholang);
-
+  const term = boxTerm();
   log('✓ prepare deploy');
 
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
@@ -90,7 +35,7 @@ module.exports.deploy = async () => {
     process.env.PRIVATE_KEY,
     publicKey,
     1,
-    10000000,
+    1000000,
     vab || -1
   );
 
@@ -161,14 +106,10 @@ module.exports.deploy = async () => {
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
   let envText = fs.readFileSync('./.env', 'utf8');
-  envText += `\nREGISTRY_URI=${data.registryUri.replace('rho:id:', '')}`;
+  const boxRegstryUri = data.registryUri.replace('rho:id:', '');
+  envText += `\BOX_REGISTRY_URI=${boxRegstryUri}`;
   fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
-  log(
-    `✓ updated .env file with REGISTRY_URI=${data.registryUri.replace(
-      'rho:id:',
-      ''
-    )}`
-  );
-  logData(data);
+  log(`✓ updated .env file with BOX_REGISTRY_URI=${boxRegstryUri}`);
+  console.log(`Registry URI (box)    : ${boxRegstryUri}`);
 };

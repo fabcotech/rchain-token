@@ -1,22 +1,16 @@
 const rc = require('rchain-toolkit');
 const uuidv4 = require('uuid/v4');
 
-const { createTokensTerm } = require('../src/createTokensTerm');
-const {
-  validAfterBlockNumber,
-  generateSignature,
-  prepareDeploy,
-} = require('../cli/utils');
+const { createPursesTerm } = require('../src/createPursesTerm');
+const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (
-  registryUri,
+  contractRegistryUri,
   privateKey1,
   publicKey1,
-  nonce,
+  boxRegistryUri,
   bagsToCreate
 ) => {
-  const newNonce = uuidv4().replace(/-/g, '');
-
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
@@ -25,24 +19,19 @@ module.exports.main = async (
   );
 
   const payload = {
-    bags: {},
+    purses: {},
     data: {},
-    nonce: nonce,
-    newNonce: newNonce,
+    fromBoxRegistryUri: boxRegistryUri,
   };
   for (let i = 0; i < bagsToCreate; i += 1) {
-    payload.bags[i] = {
-      nonce: uuidv4().replace(/-/g, ''),
+    payload.purses[i] = {
       publicKey: publicKey1,
       n: '0',
-      price: 1,
       quantity: 3,
     };
   }
 
-  const ba = rc.utils.toByteArray(payload);
-  const signature = generateSignature(ba, privateKey1);
-  const term = createTokensTerm(registryUri, payload, signature);
+  const term = createPursesTerm(contractRegistryUri, payload);
   console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -93,7 +82,7 @@ module.exports.main = async (
                 clearInterval(interval);
               } else {
                 console.log(
-                  'Did not find transaction data, will try again in 15 seconds'
+                  'Did not find transaction data, will try again in 4 seconds'
                 );
               }
             })
@@ -105,7 +94,7 @@ module.exports.main = async (
           console.log(err);
           throw new Error('03_createTokens 04');
         }
-      }, 15000);
+      }, 4000);
     });
   } catch (err) {
     console.log(err);
