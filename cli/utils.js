@@ -172,6 +172,14 @@ module.exports.getBoxRegistryUri = () => {
   return boxRegistryUri;
 };
 
+module.exports.getFungible = () => {
+  const fungible = getProcessArgv('--fungible');
+  if (!['true', 'false'].includes(fungible)) {
+    throw new Error('Missing arguments --fungible true/false');
+  }
+  return fungible === 'true';
+};
+
 module.exports.getNewBagId = () => {
   const bagId = getProcessArgv('--new-bag');
   if (!bagId) {

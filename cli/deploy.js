@@ -7,6 +7,7 @@ const {
   log,
   validAfterBlockNumber,
   prepareDeploy,
+  getFungible,
   logData,
   getBagsFile,
   getBoxRegistryUri,
@@ -18,6 +19,12 @@ module.exports.deploy = async () => {
     process.exit();
   }
   const boxRegistryUri = getBoxRegistryUri();
+  const fungible = getFungible();
+  console.log(
+    `Will deploy a\x1b[36m`,
+    fungible ? 'fungible' : 'non-fungible',
+    '\x1b[0mtokens contract'
+  );
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
@@ -76,7 +83,7 @@ module.exports.deploy = async () => {
     });
   }
 
-  const term = mainTerm(boxRegistryUri);
+  const term = mainTerm(boxRegistryUri, { fungible: fungible });
   //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)
   //   .replace('/*DEFAULT_BAGS*/', defaultBagsRholang)
   //   .replace('/*DEFAULT_BAGS_DATA*/', defaultBagsDataRholang);

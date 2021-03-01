@@ -7,7 +7,7 @@ const {
   getBoxRegistryUri,
   getQuantity,
   getRegistryUri,
-  getTokenId,
+  getType,
   getNewId,
   log,
   validAfterBlockNumber,
@@ -21,11 +21,11 @@ module.exports.createPurse = async () => {
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
   const boxRegistryUri = getBoxRegistryUri();
-  const type = getTokenId();
+  const type = getType();
   if (!type) {
     throw new Error('Please provide a type with --type option');
   }
-  const newId = getNewBagId();
+  const newId = getNewId();
   if (!newId) {
     console.log(
       'No --new-id option found. If your contract deals with non-fungible, please provide a --new-id'
@@ -39,7 +39,7 @@ module.exports.createPurse = async () => {
   const payload = {
     purses: {
       [`newbag1`]: {
-        id: newId, // will be ignored if fungible = true
+        id: newId || '', // will be ignored if fungible = true
         type: type,
         publicKey: publicKey,
         quantity: quantity,

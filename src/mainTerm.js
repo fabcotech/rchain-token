@@ -100,7 +100,6 @@ in {
         }
       } |
       for (idAndQuantity <- idAndQuantityCh) {
-        stdout!(("idAndQuantity", *idAndQuantity)) |
         match properties
           .set("id", *idAndQuantity.get("id"))
           .set("quantity", *idAndQuantity.get("quantity"))
