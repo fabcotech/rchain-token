@@ -25,6 +25,7 @@ module.exports.main = async (
   };
   for (let i = 0; i < bagsToCreate; i += 1) {
     payload.purses[i] = {
+      id: '', // will be ignored, contract is fugible contract
       publicKey: publicKey1,
       type: '0',
       quantity: 3,

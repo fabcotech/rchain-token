@@ -97,9 +97,14 @@ module.exports.getBagsFile = () => {
   return getProcessArgv('--bags-file');
 };
 
-module.exports.getTokenId = () => {
-  const tokenId = getProcessArgv('--token');
-  return tokenId;
+module.exports.getType = () => {
+  const type = getProcessArgv('--type');
+  return type;
+};
+
+module.exports.getNewId = () => {
+  const newId = getProcessArgv('--new-id');
+  return newId;
 };
 
 module.exports.getNonce = () => {

@@ -8,8 +8,10 @@ const {
   getQuantity,
   getRegistryUri,
   getTokenId,
+  getNewId,
   log,
   validAfterBlockNumber,
+  getNewBagId,
 } = require('./utils');
 
 module.exports.createPurse = async () => {
@@ -19,9 +21,15 @@ module.exports.createPurse = async () => {
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
   const boxRegistryUri = getBoxRegistryUri();
-  const tokenId = getTokenId();
-  if (!tokenId) {
-    throw new Error('Please provide a token ID with --token option');
+  const type = getTokenId();
+  if (!type) {
+    throw new Error('Please provide a type with --type option');
+  }
+  const newId = getNewBagId();
+  if (!newId) {
+    console.log(
+      'No --new-id option found. If your contract deals with non-fungible, please provide a --new-id'
+    );
   }
   const quantity = getQuantity();
 
@@ -31,7 +39,8 @@ module.exports.createPurse = async () => {
   const payload = {
     purses: {
       [`newbag1`]: {
-        type: tokenId,
+        id: newId, // will be ignored if fungible = true
+        type: type,
         publicKey: publicKey,
         quantity: quantity,
       },

@@ -155,11 +155,12 @@ fs.writeFileSync(
 const mainTerm = fs.readFileSync('./rholang/main.rho').toString('utf8');
 fs.writeFileSync(
   './src/mainTerm.js',
-  `module.exports.mainTerm = (fromBoxRegistryUri) => {
+  `module.exports.mainTerm = (fromBoxRegistryUri, payload) => {
     return \`${mainTerm
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')
       .replace(/\$\{/g, '\\${')
+      .replace(/FUNGIBLE/g, '${payload.fungible}')
       .replace(/FROM_BOX_REGISTRY_URI/g, '${fromBoxRegistryUri}')}\`;
 };
 `

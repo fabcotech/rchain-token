@@ -4,7 +4,7 @@ const rc = require('rchain-toolkit');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (privateKey1, publicKey1, boxRegistryUri) => {
-  const term = mainTerm(boxRegistryUri);
+  const term = mainTerm(boxRegistryUri, { fungible: true });
   console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

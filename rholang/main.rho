@@ -79,92 +79,117 @@ in {
     and make/instantiates the purse
   */
   for (@(properties, data, return) <= makePurseCh) {
-    for (counter <- counterCh) {
-      counterCh!(*counter + 1) |
-      match properties.set("id", "${n}" %% { "n": *counter }) {
-        purseProperties => {
-          match purseProperties {
-            {
-              "quantity": Int,
-              // not used in main contract or box contract
-              // only useful for dumping data
-              "publicKey": String,
-              "type": String,
-              "id": String
-            } => {
-              for (ids <- pursesIds) {
-                match *ids.contains(purseProperties.get("id")) {
-                  false => {
-                    pursesIds!(*ids.union(Set(purseProperties.get("id")))) |
-                    @(*purses, purseProperties.get("id"))!(purseProperties) |
-                    @(*pursesData, purseProperties.get("id"))!(data) |
-                    new purse in {
-                      @(*vault, *purse)!(purseProperties.get("id")) |
-                      @return!(*purse) |
+    new idAndQuantityCh in {
+      for (current <<- mainCh) {
+        match *current.get("fungible") {
+          true => {
+            for (counter <- counterCh) {
+              counterCh!(*counter + 1) |
+              idAndQuantityCh!({ "id": "${n}" %% { "n": *counter }, "quantity": properties.get("quantity") })
+            }
+          }
+          _ => {
+            for (ids <<- pursesIds) {
+              match *ids.contains(properties.get("id")) {
+                true => { @return!("error: purse ID already exists") }
+                false => { idAndQuantityCh!({ "id": properties.get("id"), "quantity": 1 }) }
+              }
+            }
+          }
+        }
+      } |
+      for (idAndQuantity <- idAndQuantityCh) {
+        match properties
+          .set("id", *idAndQuantity.get("id"))
+          .set("quantity", *idAndQuantity.get("quantity"))
+        {
+          purseProperties => {
+            stdout!(purseProperties) |
+            match purseProperties {
+              {
+                "quantity": Int,
+                // not used in main contract or box contract
+                // only useful for dumping data
+                "publicKey": String,
+                "type": String,
+                "id": String
+              } => {
+                for (ids <- pursesIds) {
+                  match *ids.contains(purseProperties.get("id")) {
+                    false => {
+                      pursesIds!(*ids.union(Set(purseProperties.get("id")))) |
+                      @(*purses, purseProperties.get("id"))!(purseProperties) |
+                      @(*pursesData, purseProperties.get("id"))!(data) |
+                      new purse in {
+                        @(*vault, *purse)!(purseProperties.get("id")) |
+                        @return!(*purse) |
 
-                      /*
-                        READ
-                        Returns prperties "id", "quantity", "type", "publicKey" and "price"(not implemented)
-                        (Nil) => propertie
-                      */
-                      for (@(Nil, returnRead) <= @(*purse, "READ")) {
-                        for (id <<- @(*vault, *purse)) {
-                          for (props <<- @(*purses, *id)) {
-                            @returnRead!(*props.set("id", *id))
+                        /*
+                          READ
+                          Returns prperties "id", "quantity", "type", "publicKey" and "price"(not implemented)
+                          (Nil) => propertie
+                        */
+                        for (@(Nil, returnRead) <= @(*purse, "READ")) {
+                          for (id <<- @(*vault, *purse)) {
+                            for (props <<- @(*purses, *id)) {
+                              @returnRead!(*props.set("id", *id))
+                            }
                           }
-                        }
-                      } |
+                        } |
 
-                      /*
-                        SWAP
-                        (Nil) => purse
-                        Useful when you receive purse from unknown source, swap it
-                        to make sure emitter did not keep a copy
-                      */
-                      for (@(Nil, returnSwap) <= @(*purse, "SWAP")) {
-                        for (id <- @(*vault, *purse)) {
-                          for (ids <- pursesIds) {
-                            pursesIds!(*ids.delete(*id))
-                          } |
-                          for (data <- @(*pursesData, *id)) { Nil } |
-                          for (props <- @(*purses, *id)) {
-                            makePurseCh!((*props, Nil, returnSwap))
+                        /*
+                          SWAP
+                          (Nil) => purse
+                          Useful when you receive purse from unknown source, swap it
+                          to make sure emitter did not keep a copy
+                        */
+                        for (@(Nil, returnSwap) <= @(*purse, "SWAP")) {
+                          for (id <- @(*vault, *purse)) {
+                            for (ids <- pursesIds) {
+                              pursesIds!(*ids.delete(*id))
+                            } |
+                            for (data <- @(*pursesData, *id)) { Nil } |
+                            for (props <- @(*purses, *id)) {
+                              makePurseCh!((
+                                *props, Nil, returnSwap
+                              ))
+                            }
                           }
-                        }
-                      } |
+                        } |
 
-                      /*
-                        SPLIT
-                        (int[]) => string | (true, purse[])
-                      */
-                      for (@(payload, returnSplit) <= @(*purse, "SPLIT")) { Nil } |
+                        /*
+                          SPLIT
+                          (int[]) => string | (true, purse[])
+                        */
+                        for (@(payload, returnSplit) <= @(*purse, "SPLIT")) { Nil } |
 
-                      /*
-                        SEND
-                        (boxRegistryUri: URI) => string | (true, Nil)
-                      */
-                      for (@(payload, returnSend) <= @(*purse, "SEND")) {
-                        new boxEntryCh, receivePursesReturnCh in {
-                          registryLookup!(payload, *boxEntryCh) |
-                          for (boxEntry <- boxEntryCh) {
-                            for (current <<- mainCh) {
-                              @(*boxEntry, "RECEIVE_PURSES")!((
-                                {
-                                  "registryUri": *current.get("registryUri"),
-                                  "purses": [*purse]
-                                },
-                                *receivePursesReturnCh
-                              )) |
-                              for (r <- receivePursesReturnCh) {
-                                match *r {
-                                  String => { @returnSend!(*r) }
-                                  _ => {
-                                    /*
-                                      at this point *purse has been swapped,
-                                      nothing in @(*vault, *purse), or pursesIds,
-                                      it is worthless
-                                    */
-                                    @returnSend!((true, Nil))
+                        /*
+                          SEND
+                          (boxRegistryUri: URI) => string | (true, Nil)
+                        */
+                        for (@(payload, returnSend) <= @(*purse, "SEND")) {
+                          new boxEntryCh, receivePursesReturnCh in {
+                            registryLookup!(payload, *boxEntryCh) |
+                            for (boxEntry <- boxEntryCh) {
+                              for (current <<- mainCh) {
+                                @(*boxEntry, "RECEIVE_PURSES")!((
+                                  {
+                                    "registryUri": *current.get("registryUri"),
+                                    "purses": [*purse]
+                                  },
+                                  *receivePursesReturnCh
+                                )) |
+                                for (r <- receivePursesReturnCh) {
+                                  match *r {
+                                    String => { @returnSend!(*r) }
+                                    _ => {
+                                      /*
+                                        at this point *purse has been swapped,
+                                        nothing in @(*vault, *purse), or pursesIds,
+                                        it is worthless
+                                      */
+                                      @returnSend!((true, Nil))
+                                    }
                                   }
                                 }
                               }
@@ -173,16 +198,16 @@ in {
                         }
                       }
                     }
-                  }
-                  true => {
-                    pursesIds!(*ids) |
-                    @return!("error: purse ID already exists")
+                    true => {
+                      pursesIds!(*ids) |
+                      @return!("error: purse ID already exists")
+                    }
                   }
                 }
               }
-            }
-            _ => {
-              @return!("error: invalid purse")
+              _ => {
+                @return!("error: invalid purse")
+              }
             }
           }
         }
@@ -421,12 +446,14 @@ in {
                     "status": "completed",
                     "registryUri": *entryUri,
                     "locked": false,
+                    "fungible": FUNGIBLE,
                     "version": "5.0.0"
                   }) |
                   stdout!({
                     "status": "completed",
                     "registryUri": *entryUri,
                     "locked": false,
+                    "fungible": FUNGIBLE,
                     "version": "5.0.0"
                   }) |
                   stdout!("completed, contract deployed")

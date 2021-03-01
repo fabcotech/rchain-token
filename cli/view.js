@@ -56,20 +56,20 @@ module.exports.view = async () => {
       }
       console.log('\n purse ID ' + purseId + '\n');
       console.log(` Public key : ${purses[purseId].publicKey}`);
-      console.log(` Token ID   : ${purses[purseId].n}`);
+      console.log(` Type   : ${purses[purseId].type}`);
       console.log(` Quantity   : ${purses[purseId].quantity}`);
       console.log(` Price      : ${purses[purseId].price || 'not for sale'}`);
       return;
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
     console.log(
-      '\n Bags [0-99]\n bag ID            token ID   owner         quantity           price (dust) \n'
+      '\n Bags [0-99]\n bag ID            type       owner         quantity           price (dust) \n'
     );
     Object.keys(purses).forEach((bagId) => {
       let s = '';
       s += bagId;
       s = s.padEnd(18, ' ');
-      s += purses[bagId].n;
+      s += purses[bagId].type;
       s = s.padEnd(29, ' ');
       s += purses[bagId].publicKey.slice(0, 9) + '...';
       s = s.padEnd(43, ' ');
