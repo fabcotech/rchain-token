@@ -2,13 +2,15 @@
 
 Fungibles and non-fungibles tokens on the RChain blockchain.
 
-This repo includes a CLI so you can very quickly start playing with rchain-token contract, and SDK that you can integrate in any javascript application.
+This repo includes a CLI so you can very quickly start playing with rchain-token contract, and SDK that you can integrate in any javascript application. The code and architecture takes advantage of [rholang's](https://rchain.coop/) powerful model of computation, and state of the art OCAP (object capabilities) paradigm to manage authorizations.
 
 ![RChain token](https://i.ibb.co/qrnCwVp/rchaintoken.png)
 
-### Using CLI
+Object capabilities is a safe, no-encryption and flexible way to express ownership, permissions or authorizations. See or read about object capabilities [here](https://www.youtube.com/watch?v=EGX2I31OhBE), [here](https://www.youtube.com/watch?v=ZnBbi6ifzdo) or [here](http://erights.org/elib/capability/ode/ode-capabilities.html).
 
-First rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
+### Use CLI
+
+Rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
 
 ```
 # Deploy a box to store purses

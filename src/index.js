@@ -6,6 +6,8 @@ const { readPursesTerm } = require('./readPursesTerm');
 const { readPursesIdsTerm } = require('./readPursesIdsTerm');
 const { readBoxTerm } = require('./readBoxTerm');
 const { readTerm } = require('./readTerm');
+const { updatePurseDataTerm } = require('./updatePurseDataTerm');
+const { readPursesDataTerm } = require('./readPursesDataTerm');
 
 module.exports = {
   version: '5.0.0',
@@ -17,4 +19,6 @@ module.exports = {
   readPursesIdsTerm,
   readBoxTerm,
   readTerm,
+  updatePurseDataTerm,
+  readPursesDataTerm,
 };

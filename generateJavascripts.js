@@ -17,6 +17,7 @@ const replaceEverything = (a) => {
         '${typeof payload.n == "string" ? \'"\' + payload.n + \'"\' : "Nil"}'
       )
       .replace('NEW_NONCE', '${payload.newNonce}')
+      .replace('UPDATE_PURSE_DATA', `\${payload.data}`)
       .replace(
         'CREATE_PURSESS_DATA',
         `\${JSON.stringify(payload.data).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
@@ -113,6 +114,26 @@ module.exports.readPursesTerm = (
     }`
 );
 
+const readPursesDataFile = fs
+  .readFileSync('./rholang/read_purses_data.rho')
+  .toString('utf8');
+
+fs.writeFileSync(
+  './src/readPursesDataTerm.js',
+  `
+module.exports.readPursesDataTerm = (
+  registryUri,
+  payload
+) => {
+  return \`${replaceEverything(readPursesDataFile).replace(
+    'PURSES_IDS',
+    `\${payload.pursesIds
+  .map((id) => '"' + id + '"')
+  .join(',')}`
+  )}\`;
+    }`
+);
+
 const readBoxFile = fs.readFileSync('./rholang/read_box.rho').toString('utf8');
 
 fs.writeFileSync(
@@ -148,6 +169,21 @@ fs.writeFileSync(
   payload
 ) => {
   return \`${replaceEverything(sendPurseFile)}\`;
+};
+`
+);
+
+const updatePurseDataFile = fs
+  .readFileSync('./rholang/update_purse_data.rho')
+  .toString('utf8');
+
+fs.writeFileSync(
+  './src/updatePurseDataTerm.js',
+  `module.exports.updatePurseDataTerm = (
+    registryUri,
+  payload
+) => {
+  return \`${replaceEverything(updatePurseDataFile)}\`;
 };
 `
 );

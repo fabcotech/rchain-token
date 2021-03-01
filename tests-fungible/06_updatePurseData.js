@@ -1,23 +1,30 @@
 const rc = require('rchain-toolkit');
-const uuidv4 = require('uuid/v4');
 
+const { updatePurseDataTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
+module.exports.main = async (
+  contractRegistryUri,
+  privateKey,
+  publicKey,
+  fromBoxRegistryUri,
+  purseId,
+  data
+) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
     publicKey,
     timestamp
   );
-  const term = purchaseTokensTerm(registryUri, {
-    publicKey: publicKey,
-    bagId: bagId,
-    quantity: 1,
-    price: 11,
-    bagNonce: uuidv4().replace(/-/g, ''),
-    data: undefined,
-  });
+
+  const payload = {
+    fromBoxRegistryUri: fromBoxRegistryUri,
+    purseId: purseId,
+    data: data,
+  };
+
+  const term = updatePurseDataTerm(contractRegistryUri, payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -27,7 +34,7 @@ module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
     privateKey,
     publicKey,
     1,
-    100000000,
+    10000000,
     vab
   );
   try {
@@ -37,11 +44,11 @@ module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('05_purchase 01');
+      throw new Error('07_updatePurseData 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('05_purchase 02');
+    throw new Error('07_updatePurseData 02');
   }
 
   let dataAtNameResponse;
@@ -63,21 +70,8 @@ module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
                 JSON.parse(dataAtNameResponse).exprs &&
                 JSON.parse(dataAtNameResponse).exprs.length
               ) {
-                const data = rc.utils.rhoValToJs(
-                  JSON.parse(dataAtNameResponse).exprs[0].expr
-                );
-                if (
-                  data.message ===
-                  'error: REV transfer went wrong, issuer was refunded 11'
-                ) {
-                  resolve(dataAtNameResponse);
-                  clearInterval(interval);
-                } else {
-                  console.log(data);
-                  throw new Error(
-                    '11_try_purchase should have fail to purchase from bag 1 and should have recieve error message'
-                  );
-                }
+                resolve(dataAtNameResponse);
+                clearInterval(interval);
               } else {
                 console.log(
                   'Did not find transaction data, will try again in 4 seconds'
@@ -86,21 +80,16 @@ module.exports.main = async (registryUri, privateKey, publicKey, bagId) => {
             })
             .catch((err) => {
               console.log(err);
-              throw new Error('05_purchase 03');
+              throw new Error('07_updatePurseData 03');
             });
         } catch (err) {
           console.log(err);
-          throw new Error('05_purchase 04');
+          throw new Error('07_updatePurseData 04');
         }
       }, 4000);
     });
   } catch (err) {
     console.log(err);
-    throw new Error('05_purchase 05');
+    throw new Error('07_updatePurseData 05');
   }
-  const data = rc.utils.rhoValToJs(
-    JSON.parse(dataAtNameResponse).exprs[0].expr
-  );
-
-  return;
 };

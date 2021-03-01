@@ -8,7 +8,10 @@ const deployBox = require('../tests-fungible/00_deployBox').main;
 const deploy = require('../tests-fungible/01_deploy').main;
 const checkDefaultPurses = require('../tests-fungible/01_checkDefaultPurses')
   .main;
+const checkPurseDataInContract = require('../tests-fungible/checkPurseDataInContract.js')
+  .main;
 const createPurses = require('./03_createPurses.js').main;
+const updatePurseData = require('../tests-fungible/06_updatePurseData.js').main;
 const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const sendPurse = require('../tests-fungible/05_sendPurse.js').main;
@@ -127,6 +130,16 @@ const main = async () => {
     '  06 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
+
+  await updatePurseData(
+    contractRegistryUri,
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    boxRegistryUri,
+    ids[0], // bag 11 that probably has not been sent
+    'aaa'
+  );
+  await checkPurseDataInContract(contractRegistryUri, ids[0], 'aaa');
   process.exit();
   const lastBag = await checkBagsAndTokens3(
     data.registryUri.replace('rho:id:', ''),

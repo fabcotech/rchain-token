@@ -159,6 +159,23 @@ in {
                         } |
 
                         /*
+                          UPDATE_DATA
+                          (int[]) => string | (true, purse[])
+                        */
+                        for (@(payload, returnUpdateData) <= @(*purse, "UPDATE_DATA")) {
+                          new readReturnCh in {
+                            @(*purse, "READ")!((Nil, *readReturnCh)) |
+                            for (properties <- readReturnCh) {
+                              stdout!(("READ", *properties)) |
+                              for (_ <- @(*pursesData, *properties.get("id"))) {
+                                @(*pursesData, *properties.get("id"))!(payload) |
+                                @returnUpdateData!((true, Nil))
+                              }
+                            }
+                          }
+                        } |
+
+                        /*
                           SPLIT
                           (int[]) => string | (true, purse[])
                         */

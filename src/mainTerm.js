@@ -76,8 +76,9 @@ in {
     only place where new purses are created
     "MINT", "SWAP", "CREATE_PURSES" call this channel
 
-    decide which id to give to the new purse
-    and make/instantiates the purse
+    depending on if .fungible is true or false, it decides
+    which id to give to the new purse, then it instantiates
+    the purse with SEND, SPLIT, SWAP, BURN "instance channels"
   */
   for (@(properties, data, return) <= makePurseCh) {
     new idAndQuantityCh in {
@@ -154,6 +155,23 @@ in {
                               makePurseCh!((
                                 *props, Nil, returnSwap
                               ))
+                            }
+                          }
+                        } |
+
+                        /*
+                          UPDATE_DATA
+                          (int[]) => string | (true, purse[])
+                        */
+                        for (@(payload, returnUpdateData) <= @(*purse, "UPDATE_DATA")) {
+                          new readReturnCh in {
+                            @(*purse, "READ")!((Nil, *readReturnCh)) |
+                            for (properties <- readReturnCh) {
+                              stdout!(("READ", *properties)) |
+                              for (_ <- @(*pursesData, *properties.get("id"))) {
+                                @(*pursesData, *properties.get("id"))!(payload) |
+                                @returnUpdateData!((true, Nil))
+                              }
                             }
                           }
                         } |
@@ -332,6 +350,7 @@ in {
   // ====================================
   // ===== ANY USER / PUBLIC capabilities
   // ====================================
+
   for (@(payload, return) <= @(*entryCh, "READ_PURSES_IDS")) {
     stdout!("READ_PURSES_IDS") |
     for (ids <<- pursesIds) {

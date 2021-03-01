@@ -8,9 +8,10 @@ const deploy = require('./01_deploy').main;
 const checkDefaultPurses = require('./01_checkDefaultPurses').main;
 const createPurses = require('./03_createPurses.js').main;
 const checkPursesInContract = require('./checkPursesInContract.js').main;
+const checkPurseDataInContract = require('./checkPurseDataInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const sendPurse = require('./05_sendPurse.js').main;
-const updateBagData = require('./07_updateBagData.js').main;
+const updatePurseData = require('./06_updatePurseData.js').main;
 const checkBagData = require('./08_checkBagData.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
 const changePrice = require('./11_changePrice').main;
@@ -139,6 +140,20 @@ const main = async () => {
     '  06 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
+  await updatePurseData(
+    contractRegistryUri,
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    boxRegistryUri,
+    '' + (PURSES_TO_CREATE + 1), // bag 11 that probably has not been sent
+    'aaa'
+  );
+  await checkPurseDataInContract(
+    contractRegistryUri,
+    '' + (PURSES_TO_CREATE + 1),
+    'aaa'
+  );
+
   process.exit();
   const lastBag = await checkBagsAndTokens3(
     data.registryUri.replace('rho:id:', ''),

@@ -1,5 +1,8 @@
-const { readPursesTerm } = require('../src/readPursesTerm');
-const { readPursesIdsTerm } = require('../src/readPursesIdsTerm');
+const {
+  readPursesTerm,
+  readPursesIdsTerm,
+  readPursesDataTerm,
+} = require('../src/');
 const rc = require('rchain-toolkit');
 
 module.exports.main = async (contractRegistryUri) => {
@@ -14,14 +17,18 @@ module.exports.main = async (contractRegistryUri) => {
   } catch (e) {}
 
   const term1 = readPursesTerm(contractRegistryUri, { pursesIds: ids });
+  const term2 = readPursesDataTerm(contractRegistryUri, { pursesIds: ids });
   const results = await Promise.all([
     rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
       term: term1,
+    }),
+    rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
+      term: term2,
     }),
   ]);
 
   return {
     purses: rc.utils.rhoValToJs(JSON.parse(results[0]).expr[0]),
-    pursesData: {},
+    pursesData: rc.utils.rhoValToJs(JSON.parse(results[1]).expr[0]),
   };
 };
