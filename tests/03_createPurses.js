@@ -26,7 +26,7 @@ module.exports.main = async (
   for (let i = 0; i < bagsToCreate; i += 1) {
     payload.purses[i] = {
       publicKey: publicKey1,
-      n: '0',
+      type: '0',
       quantity: 3,
     };
   }

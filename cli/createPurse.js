@@ -31,7 +31,7 @@ module.exports.createPurse = async () => {
   const payload = {
     purses: {
       [`newbag1`]: {
-        n: tokenId,
+        type: tokenId,
         publicKey: publicKey,
         quantity: quantity,
       },

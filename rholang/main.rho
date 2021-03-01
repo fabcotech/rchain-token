@@ -19,14 +19,14 @@ new
       // "12"
       for (purse <- @(*purses, "12")) {
         out!(*purse)
-        // { "quantity": 100, "n": "GOLD", "publicKey": "aaa" }
+        // { "quantity": 100, "type": "GOLD", "publicKey": "aaa" }
       }
     }
   */
   vault,
 
   /*
-    A purse's properties is a Map {"quantity", "n", "price", "publicKey"}
+    A purse's properties is a Map {"quantity", "type", "price", "publicKey"}
     stored in the channel *purses. Anyone can read it through
     "READ_PURSES" public channel.
 
@@ -71,6 +71,10 @@ in {
   pursesIds!(Set()) |
 
   /*
+    MAKE PURSE
+    only place where new purses are created
+    "MINT", "SWAP", "CREATE_PURSES" call this channel
+
     decide which id to give to the new purse
     and make/instantiates the purse
   */
@@ -85,7 +89,7 @@ in {
               // not used in main contract or box contract
               // only useful for dumping data
               "publicKey": String,
-              "n": String,
+              "type": String,
               "id": String
             } => {
               for (ids <- pursesIds) {
@@ -100,7 +104,7 @@ in {
 
                       /*
                         READ
-                        Returns prperties "id", "quantity", "n", "publicKey" and "price"(not implemented)
+                        Returns prperties "id", "quantity", "type", "publicKey" and "price"(not implemented)
                         (Nil) => propertie
                       */
                       for (@(Nil, returnRead) <= @(*purse, "READ")) {
@@ -140,18 +144,18 @@ in {
                         (boxRegistryUri: URI) => string | (true, Nil)
                       */
                       for (@(payload, returnSend) <= @(*purse, "SEND")) {
-                        registryLookup!(payload, *entryCh) |
-                        new receivePursesCh in {
-                          for (entry <- entryCh) {
-                            for (current <- mainCh) {
-                              @(*entry, "RECEIVE_PURSES")!((
+                        new boxEntryCh, receivePursesReturnCh in {
+                          registryLookup!(payload, *boxEntryCh) |
+                          for (boxEntry <- boxEntryCh) {
+                            for (current <<- mainCh) {
+                              @(*boxEntry, "RECEIVE_PURSES")!((
                                 {
                                   "registryUri": *current.get("registryUri"),
                                   "purses": [*purse]
                                 },
-                                *receivePursesCh
+                                *receivePursesReturnCh
                               )) |
-                              for (r <- receivePursesCh) {
+                              for (r <- receivePursesReturnCh) {
                                 match *r {
                                   String => { @returnSend!(*r) }
                                   _ => {
@@ -186,7 +190,11 @@ in {
     }
   } |
 
-  // SUPER / ADMIN / PRIVATE capabilities (if not locked)
+  // ====================================
+  // SUPER / ADMIN / OWNER capabilities (if not locked)
+  // You must have the superKeyCh to perform those operations
+  // ====================================
+
   for (@(Nil, return) <= @(*superKeyCh, "LOCK")) {
     for (@current <<- mainCh) {
       match current.get("locked") {
@@ -260,7 +268,9 @@ in {
   } |
 
   /*
-    Returns values corresponding to ids
+    Returns values corresponding to ids, "READ_PURSES"
+    and "READ_PURSES_DATA" call this channel
+
     channelToReadFrom: *pursesData or *purses
     ids: Set purse ids (they must all exist)
     example iterateCh!((*pursesData, Set("1", "2", "18"), *return))
@@ -293,7 +303,9 @@ in {
   } |
 
 
-  // ANY USER / PUBLIC capabilities
+  // ====================================
+  // ===== ANY USER / PUBLIC capabilities
+  // ====================================
   for (@(payload, return) <= @(*entryCh, "READ_PURSES_IDS")) {
     stdout!("READ_PURSES_IDS") |
     for (ids <<- pursesIds) {
@@ -372,6 +384,12 @@ in {
       itCh!((*tmpCh, payload))
     }
   } |
+
+
+  // ====================================
+  // ===================== INITIALIZATION
+  // save superKeyCh to a box
+  // ====================================
 
   /*
     todo: secure with bundle- (*entryCh -> bundle-{*entryCh}) , but we must

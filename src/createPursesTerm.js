@@ -18,7 +18,7 @@ in {
         @(ch, "CREATE_PURSES")!((
           {
             // example
-            // "purses": { "0": { "publicKey": "abc", "n": "gold", "quantity": 3, "data": Nil }}
+            // "purses": { "0": { "publicKey": "abc", "type": "gold", "quantity": 3, "data": Nil }}
             "purses": ${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')},
             // example
             // "data": { "0": "this bag is mine" }

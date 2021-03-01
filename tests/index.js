@@ -5,15 +5,11 @@ const getBalance = require('./getBalance').main;
 const getAllBoxData = require('./getAllBoxData').main;
 const deployBox = require('./00_deployBox').main;
 const deploy = require('./01_deploy').main;
-const checkPursesInBox1 = require('./02_checkPurses.js').main;
-const createTokens = require('./03_createTokens.js').main;
-const checkPursesInBox2 = require('./04_checkPursesInBox.js').main;
-const checkPursesInContract1 = require('./04_checkPursesInContract.js').main;
-const checkPursesInBox3 = require('./06_checkPursesInBox.js').main;
-const checkPursesInContract2 = require('./06_checkPursesInContract.js').main;
-const checkPursesInSecondBox1 = require('./07_checkPursesInSecondBox.js').main;
+const checkDefaultPurses = require('./01_checkDefaultPurses').main;
+const createPurses = require('./03_createPurses.js').main;
+const checkPursesInContract = require('./checkPursesInContract.js').main;
+const checkPursesInBox = require('./checkPursesInBox.js').main;
 const sendPurse = require('./05_sendPurse.js').main;
-const purchase = require('./05_purchase.js').main;
 const updateBagData = require('./07_updateBagData.js').main;
 const checkBagData = require('./08_checkBagData.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
@@ -40,9 +36,10 @@ const main = async () => {
 
   const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
   const boxRegistryUri = dataBox.registryUri.replace('rho:id:', '');
-
-  const secondDataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
+  console.log('boxRegistryUri', boxRegistryUri);
+  const secondDataBox = await deployBox(PRIVATE_KEY_2, PUBLIC_KEY_2);
   const secondBoxRegistryUri = secondDataBox.registryUri.replace('rho:id:', '');
+  console.log('secondBoxRegistryUri', secondBoxRegistryUri);
 
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 00 deploy boxes');
@@ -59,11 +56,11 @@ const main = async () => {
     '  01 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
-  await checkPursesInBox1(boxRegistryUri);
+  await checkDefaultPurses(boxRegistryUri);
   console.log('✓ 02 check initial bags and data');
 
   const t = new Date().getTime();
-  await createTokens(
+  await createPurses(
     contractRegistryUri,
     PRIVATE_KEY,
     PUBLIC_KEY,
@@ -81,16 +78,18 @@ const main = async () => {
       (new Date().getTime() - t) / 1000 +
       's'
   );
-  await checkPursesInBox2(
-    boxRegistryUri,
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, PURSES_TO_CREATE);
+  await checkPursesInContract(
     contractRegistryUri,
-    PURSES_TO_CREATE
+    PURSES_TO_CREATE,
+    PURSES_TO_CREATE,
+    3
   );
-  await checkPursesInContract1(contractRegistryUri, PURSES_TO_CREATE);
   console.log(
     `✓ 04 check the presence of ${PURSES_TO_CREATE} purses with the right ids`
   );
 
+  // send from box 1 to box 2
   await sendPurse(
     contractRegistryUri,
     PRIVATE_KEY,
@@ -100,19 +99,48 @@ const main = async () => {
     '' + PURSES_TO_CREATE // ID of the purse to send
   );
 
+  await checkPursesInContract(
+    contractRegistryUri,
+    PURSES_TO_CREATE,
+    PURSES_TO_CREATE * 2,
+    3
+  );
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 05 send one purse from box 1 to box 2');
   console.log(
     '  05 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
-  await checkPursesInBox3(
+  await checkPursesInBox(
     boxRegistryUri,
     contractRegistryUri,
-    PURSES_TO_CREATE
+    PURSES_TO_CREATE - 1
   );
-  await checkPursesInSecondBox1(secondBoxRegistryUri, contractRegistryUri);
-  await checkPursesInContract2(contractRegistryUri, PURSES_TO_CREATE);
+  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 1);
+
+  // send from box 2 to box 1
+  await sendPurse(
+    contractRegistryUri,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    secondBoxRegistryUri,
+    boxRegistryUri,
+    '' + PURSES_TO_CREATE * 2 // ID of the purse to send
+  );
+  await checkPursesInContract(
+    contractRegistryUri,
+    PURSES_TO_CREATE,
+    PURSES_TO_CREATE * 2 + 1,
+    3
+  );
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, PURSES_TO_CREATE);
+  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 0);
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+  console.log('✓ 06 send one purse from box 2 to box 1');
+  console.log(
+    '  06 dust cost: ' +
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+  );
   process.exit();
   const lastBag = await checkBagsAndTokens3(
     data.registryUri.replace('rho:id:', ''),

@@ -9,7 +9,7 @@ module.exports.main = async (boxRegistryUri) => {
     allData.purses === null ||
     Object.keys(allData.purses).length !== 0
   ) {
-    throw new Error('02_checkPurses invalid bags');
+    throw new Error('01_checkDefaultPurses invalid bags');
   }
 
   return null;
