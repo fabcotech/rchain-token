@@ -13,11 +13,50 @@ First rename the `.env.example` file to `.env` and eventually update the values 
 ```
 # Deploy a box to store purses
 node cli deploy-box
-# Deploy a contract, the super key (admin/owner capability for this contract) will be stored in the box
-node cli deploy
+
+# Deploy a contract
+# The super key (admin/owner capability for this contract) will be stored in the box
+
+# non-fungible tokens
+# ex: tokens with ids "pikachu", "amazon", "cat123" that can't be split
+# and all have quantity: 1
+node cli deploy --fungible false
+
+# create a purse (quantity is always 1 for non-fungibles)
+node cli create-purse --quantity 1 --type "0" --new-id "cat123"
+
+# fungible tokens ex: 1000 shares
+node cli deploy --fungible false
 
 # Create/mint a purse with 12 tokens "GOLD" using the admin/owner capability
 node cli create-purse --quantity 12 --token "GOLD"
+```
+
+**non-fungible tokens**
+
+Non-fungibles tokens are identified by an ID like "pikachu", "amazon" or "cat123". They are still represented by purses, all purses have quantity 1, a purse cannot be divided.
+
+```
+# The super key (admin/owner capability for this contract) will be stored in the box
+node cli deploy --fungible false
+
+# create a non-fungible "cat123" token (quantity is always 1 for non-fungibles)
+node cli create-purse --quantity 1 --type "0" --new-id "cat123"
+```
+
+**fungible tokens**
+
+Fungibles tokens are identified mainly by the type property, purses can have a quantity superior to one. For examples 100 gold tokens, 1000 shares that can be exchanged, or any ERC-20 tokens will be fungible. The IDs of purses are automatically incremented (0, 1, 2 etc.), they do not matter that much.
+
+```
+# fungible tokens ex: 1000 shares
+node cli deploy --fungible true
+
+# Create/mint a purse with 12 tokens "GOLD" using the admin/owner capability
+node cli create-purse --quantity 12 --type "GOLD"
+
+# In the same contract, you can create another purse with another type of tokens
+node cli create-purse --quantity 24 --type "SILVER"
 ```
 
 **View**
@@ -40,13 +79,7 @@ node cli view --purse 0
 **Purses/tokens operations**
 
 ```
-# Create purse
-# You need to have the contract's super key in your box
-node cli create-purse --quantity 12 --token GOLD
-```
-
-```
-# Send a purse to a box address
+# Send a purse from a box to another box
 CLI NOT IMPLEMENTED YET
 ```
 
