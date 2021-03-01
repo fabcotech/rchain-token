@@ -14,10 +14,15 @@ module.exports.getProcessArgv = getProcessArgv;
 
 module.exports.logData = (data) => {
   console.log(`Registry URI   : ${data.registryUri.replace('rho:id:', '')}`);
-  if (data.locked) {
-    console.log(`Locked         : ${data.locked}`, '\x1b[0m');
+  if (data.fungible) {
+    console.log(`Fungibility    :\x1b[36m`, 'fungible tokens', '\x1b[0m');
   } else {
-    console.log(`Locked         : ${data.locked}`, '\x1b[0m');
+    console.log(`Fungibility    :\x1b[36m`, 'non-fungible tokens', '\x1b[0m');
+  }
+  if (data.locked) {
+    console.log(`Locked         : locked`, '\x1b[0m');
+  } else {
+    console.log('Locked         :\x1b[31m NOT LOCKED \x1b[0m');
   }
   console.log(`Version        : ${data.version}`);
 };

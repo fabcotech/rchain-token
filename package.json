@@ -6,7 +6,9 @@
   "scripts": {
     "generate": "node generateJavascripts",
     "build:browser": "npx rollup -c",
-    "test": "node tests/index"
+    "test": "npm run test test:fungibles && npm run test:non-fungibles",
+    "test:fungibles": "node tests-fungible/index",
+    "test:non-fungibles": "node tests-non-fungible/index"
   },
   "repository": {
     "type": "git",

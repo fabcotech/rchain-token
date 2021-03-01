@@ -1,4 +1,4 @@
-const { readBoxTerm } = require('../src/');
+const { readBoxTerm } = require('../src');
 const rc = require('rchain-toolkit');
 
 module.exports.main = async (boxRegistryUri) => {

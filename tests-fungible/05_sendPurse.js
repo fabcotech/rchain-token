@@ -1,30 +1,42 @@
-const { mainTerm } = require('../src/mainTerm');
 const rc = require('rchain-toolkit');
 
+const { sendPurseTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (privateKey1, publicKey1, boxRegistryUri) => {
-  const term = mainTerm(boxRegistryUri, { fungible: true });
-  console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
+module.exports.main = async (
+  contractRegistryUri,
+  privateKey,
+  publicKey,
+  fromBoxRegistryUri,
+  toBoxRegistryUri,
+  purseId
+) => {
   const timestamp = new Date().getTime();
-  const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
-    publicKey1,
+    publicKey,
     timestamp
   );
 
+  const payload = {
+    fromBoxRegistryUri: fromBoxRegistryUri,
+    toBoxRegistryUri: toBoxRegistryUri,
+    purseId: purseId,
+  };
+
+  const term = sendPurseTerm(contractRegistryUri, payload);
+
+  const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
     'secp256k1',
     timestamp,
     term,
-    privateKey1,
-    publicKey1,
+    privateKey,
+    publicKey,
     1,
-    1000000,
-    vab || -1
+    10000000,
+    vab
   );
-
   try {
     const deployResponse = await rc.http.deploy(
       process.env.VALIDATOR_HOST,
@@ -32,11 +44,11 @@ module.exports.main = async (privateKey1, publicKey1, boxRegistryUri) => {
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('01_deploy 01');
+      throw new Error('07_updateBagData 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('01_deploy 02');
+    throw new Error('07_updateBagData 02');
   }
 
   let dataAtNameResponse;
@@ -68,25 +80,21 @@ module.exports.main = async (privateKey1, publicKey1, boxRegistryUri) => {
             })
             .catch((err) => {
               console.log(err);
-              throw new Error('01_deploy 03');
+              throw new Error('07_updateBagData 03');
             });
         } catch (err) {
           console.log(err);
-          throw new Error('01_deploy 04');
+          throw new Error('07_updateBagData 04');
         }
       }, 4000);
     });
   } catch (err) {
     console.log(err);
-    throw new Error('01_deploy 05');
+    throw new Error('07_updateBagData 05');
   }
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (data.locked !== false) {
-    throw new Error('01_deploy invalid locked');
-  }
-
-  return data;
+  return;
 };

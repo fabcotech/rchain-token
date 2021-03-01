@@ -36,10 +36,8 @@ const main = async () => {
 
   const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
   const boxRegistryUri = dataBox.registryUri.replace('rho:id:', '');
-  console.log('boxRegistryUri', boxRegistryUri);
   const secondDataBox = await deployBox(PRIVATE_KEY_2, PUBLIC_KEY_2);
   const secondBoxRegistryUri = secondDataBox.registryUri.replace('rho:id:', '');
-  console.log('secondBoxRegistryUri', secondBoxRegistryUri);
 
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 00 deploy boxes');
@@ -48,7 +46,7 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  const data = await deploy(PRIVATE_KEY, PUBLIC_KEY, boxRegistryUri);
+  const data = await deploy(PRIVATE_KEY, PUBLIC_KEY, boxRegistryUri, true);
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy');

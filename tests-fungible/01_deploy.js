@@ -1,13 +1,16 @@
-const { boxTerm } = require('../src/');
+const { mainTerm } = require('../src/mainTerm');
 const rc = require('rchain-toolkit');
 
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (privateKey1, publicKey1) => {
-  const term = boxTerm();
-  console.log(
-    '  00 deploy box is ' + Buffer.from(term).length / 1000000 + 'mb'
-  );
+module.exports.main = async (
+  privateKey1,
+  publicKey1,
+  boxRegistryUri,
+  fungible
+) => {
+  const term = mainTerm(boxRegistryUri, { fungible: fungible });
+  console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const pd = await prepareDeploy(
@@ -34,11 +37,11 @@ module.exports.main = async (privateKey1, publicKey1) => {
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('00_deployBox 01');
+      throw new Error('01_deploy 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('00_deployBox 02');
+    throw new Error('01_deploy 02');
   }
 
   let dataAtNameResponse;
@@ -70,24 +73,24 @@ module.exports.main = async (privateKey1, publicKey1) => {
             })
             .catch((err) => {
               console.log(err);
-              throw new Error('00_deployBox 03');
+              throw new Error('01_deploy 03');
             });
         } catch (err) {
           console.log(err);
-          throw new Error('00_deployBox 04');
+          throw new Error('01_deploy 04');
         }
       }, 4000);
     });
   } catch (err) {
     console.log(err);
-    throw new Error('00_deployBox 05');
+    throw new Error('01_deploy 05');
   }
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (typeof data.registryUri !== 'string') {
-    throw new Error('00_deployBox invalid data.registryUri');
+  if (data.locked !== false) {
+    throw new Error('01_deploy invalid locked');
   }
 
   return data;
