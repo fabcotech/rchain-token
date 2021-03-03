@@ -98,8 +98,8 @@ module.exports.buildUnforgeableNameQuery = (unforgeableName) => {
 
 // command line arguments
 
-module.exports.getBagsFile = () => {
-  return getProcessArgv('--bags-file');
+module.exports.getPursesFile = () => {
+  return getProcessArgv('--purses-file');
 };
 
 module.exports.getType = () => {

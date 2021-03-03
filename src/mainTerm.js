@@ -106,7 +106,6 @@ in {
           .set("quantity", *idAndQuantity.get("quantity"))
         {
           purseProperties => {
-            stdout!(purseProperties) |
             match purseProperties {
               {
                 "quantity": Int,
@@ -150,11 +149,12 @@ in {
                             for (ids <- pursesIds) {
                               pursesIds!(*ids.delete(*id))
                             } |
-                            for (data <- @(*pursesData, *id)) { Nil } |
-                            for (props <- @(*purses, *id)) {
-                              makePurseCh!((
-                                *props, Nil, returnSwap
-                              ))
+                            for (data <- @(*pursesData, *id)) {
+                              for (props <- @(*purses, *id)) {
+                                makePurseCh!((
+                                  *props, *data, returnSwap
+                                ))
+                              }
                             }
                           }
                         } |

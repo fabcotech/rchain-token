@@ -36,52 +36,6 @@ module.exports.deploy = async () => {
     publicKey,
     timestamp
   );
-  const bagsFile = getBagsFile() ? fs.readFileSync(getBagsFile(), 'utf8') : '';
-  const defaultBagsData = {};
-  const defaultBags = {};
-
-  let defaultBagsIdsRholang = '';
-  let defaultBagsRholang = '';
-  let defaultBagsDataRholang = '';
-  if (bagsFile) {
-    const bags = JSON.parse(bagsFile);
-    Object.keys(bags).forEach((bagId) => {
-      defaultBagsData[bagId] = bags[bagId].data;
-      delete bags[bagId].data;
-      defaultBags[bagId] = bags[bagId];
-    });
-    log(Object.keys(defaultBags).length + ' bags found in json file');
-    log(Object.keys(defaultBagsData).length + ' bags data found in json file');
-
-    defaultBagsIdsRholang = 'for (ids <- bagsIds) { bagsIds!(Set(';
-    defaultBagsIdsRholang += Object.keys(defaultBags)
-      .map((a) => `"${a}"`)
-      .join(',');
-    defaultBagsIdsRholang += ')) } |';
-
-    Object.keys(defaultBags).forEach((id) => {
-      defaultBagsRholang += `@(*bags, "${id}")!(${JSON.stringify(
-        defaultBags[id]
-      ).replace(new RegExp(': null|:null', 'g'), ': Nil')}) |\n`;
-    });
-
-    Object.keys(defaultBags).forEach((id) => {
-      let data = 'Nil';
-      if (
-        (typeof defaultBagsData[id] === 'object' ||
-          typeof defaultBagsData[id] === 'function') &&
-        defaultBagsData[id] !== null
-      ) {
-        data = JSON.stringify(defaultBagsData[id]).replace(
-          new RegExp(': null|:null', 'g'),
-          ': Nil'
-        );
-      } else if (defaultBagsData[id]) {
-        data = `"${defaultBagsData[id]}"`;
-      }
-      defaultBagsDataRholang += `@(*bagsData, "${id}")!(${data}) |\n`;
-    });
-  }
 
   const term = mainTerm(boxRegistryUri, { fungible: fungible });
   //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)

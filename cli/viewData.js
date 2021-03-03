@@ -2,36 +2,36 @@ const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
 const { getProcessArgv, getRegistryUri } = require('./utils');
-const { readBagsOrTokensDataTerm } = require('../src');
+const { readPursesDataTerm } = require('../src');
 
 module.exports.viewData = async () => {
-  const bagId = getProcessArgv('--bag');
+  const purseId = getProcessArgv('--purse');
   const tokenId = getProcessArgv('--token');
   const registryUri = getRegistryUri();
 
-  if (typeof bagId === 'undefined' && typeof tokenId === 'undefined') {
-    console.log('Please provide one of options --bag or --token');
+  if (typeof purseId === 'undefined' && typeof tokenId === 'undefined') {
+    console.log('Please provide one of options --purse or --token');
     process.exit();
   }
 
+  console.log(readPursesDataTerm(registryUri, { pursesIds: [purseId] }));
   rchainToolkit.http
     .exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: readBagsOrTokensDataTerm(registryUri, tokenId ? 'tokens' : 'bags', [
-        tokenId || bagId,
-      ]),
+      term: readPursesDataTerm(registryUri, { pursesIds: [purseId] }),
     })
     .then((results) => {
       let data = rchainToolkit.utils.rhoValToJs(JSON.parse(results).expr[0]);
-      data = decodeURI(data[tokenId || bagId]);
+      console.log(data);
+      data = decodeURI(data[tokenId || purseId]);
 
-      let fileName = `./token-${tokenId}-data.txt`;
-      if (bagId) {
-        fileName = `./bag-${bagId}-data.txt`;
+      let fileName = `./data-token-${tokenId}.txt`;
+      if (purseId) {
+        fileName = `./data-purse-${purseId}.txt`;
       }
       console.log(
-        `✓ retrieved data associated with ${tokenId ? 'token' : 'bag'} ${
-          tokenId || bagId
-        } :`
+        `✓ retrieved data associated with ${
+          tokenId ? 'token' : 'data-purse'
+        } ${purseId} :`
       );
       if (typeof data === 'string') {
         console.log(data.slice(0, 20) + '...');

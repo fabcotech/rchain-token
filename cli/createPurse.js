@@ -1,9 +1,9 @@
 const rchainToolkit = require('rchain-toolkit');
+const fs = require('fs');
 
 const { createPursesTerm } = require('../src');
 
 const {
-  getProcessArgv,
   getBoxRegistryUri,
   getQuantity,
   getRegistryUri,
@@ -11,7 +11,7 @@ const {
   getNewId,
   log,
   validAfterBlockNumber,
-  getNewBagId,
+  getPursesFile,
 } = require('./utils');
 
 module.exports.createPurse = async () => {
@@ -36,7 +36,7 @@ module.exports.createPurse = async () => {
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
-  const payload = {
+  let payload = {
     purses: {
       [`newbag1`]: {
         id: newId || '', // will be ignored if fungible = true
@@ -50,6 +50,31 @@ module.exports.createPurse = async () => {
     },
     fromBoxRegistryUri: boxRegistryUri,
   };
+
+  const pursesFile = getPursesFile()
+    ? fs.readFileSync(getPursesFile(), 'utf8')
+    : '';
+  const defaultPursesData = {};
+  const defaultPurses = {};
+
+  if (pursesFile) {
+    const bags = JSON.parse(pursesFile);
+    Object.keys(bags).forEach((purseId) => {
+      defaultPursesData[purseId] = bags[purseId].data;
+      delete bags[purseId].data;
+      defaultPurses[purseId] = bags[purseId];
+      defaultPurses[purseId].publicKey = publicKey;
+    });
+    log(Object.keys(defaultPurses).length + ' purse found in json file');
+    log(
+      Object.keys(defaultPursesData).length + ' purse data found in json file'
+    );
+    payload = {
+      purses: defaultPurses,
+      data: defaultPursesData,
+      fromBoxRegistryUri: boxRegistryUri,
+    };
+  }
 
   const term = createPursesTerm(registryUri, payload);
 
