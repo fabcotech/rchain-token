@@ -11,6 +11,7 @@ const replaceEverything = (a) => {
       .replace(/BOX_REGISTRY_URI/g, '${boxRegistryUri}')
       .replace(/REGISTRY_URI/g, '${registryUri}')
       .replace(/PURSE_ID/g, '${payload.purseId}')
+      .replace(/SPLIT_PURSE_QUANTITY/g, '${payload.quantityInNewPurse}')
       .replace('SIGNATURE', '${signature}')
       .replace(
         'TOKEN_ID',
@@ -169,6 +170,21 @@ fs.writeFileSync(
   payload
 ) => {
   return \`${replaceEverything(sendPurseFile)}\`;
+};
+`
+);
+
+const splitPurseFile = fs
+  .readFileSync('./rholang/split_purse.rho')
+  .toString('utf8');
+
+fs.writeFileSync(
+  './src/splitPurseTerm.js',
+  `module.exports.splitPurseTerm = (
+    registryUri,
+  payload
+) => {
+  return \`${replaceEverything(splitPurseFile)}\`;
 };
 `
 );

@@ -11,6 +11,7 @@ const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPurseDataInContract = require('./checkPurseDataInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const sendPurse = require('./05_sendPurse.js').main;
+const splitPurse = require('./05_splitPurse.js').main;
 const updatePurseData = require('./06_updatePurseData.js').main;
 const checkBagData = require('./08_checkBagData.js').main;
 const checkBagsAndTokens4 = require('./10_checkBagsAndTokens.js').main;
@@ -77,17 +78,56 @@ const main = async () => {
       (new Date().getTime() - t) / 1000 +
       's'
   );
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, PURSES_TO_CREATE);
+  await checkPursesInBox(
+    boxRegistryUri,
+    contractRegistryUri,
+    `${PURSES_TO_CREATE}`
+  );
   await checkPursesInContract(
     contractRegistryUri,
-    PURSES_TO_CREATE,
-    PURSES_TO_CREATE,
-    3
+    1,
+    `${PURSES_TO_CREATE}`,
+    3 * PURSES_TO_CREATE
   );
   console.log(
     `✓ 04 check the presence of ${PURSES_TO_CREATE} purses with the right ids`
   );
 
+  await splitPurse(
+    contractRegistryUri,
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    boxRegistryUri,
+    5,
+    '' + PURSES_TO_CREATE // ID of the purse to split from
+  );
+
+  console.log(`✓ 05 split purse`);
+  await checkPursesInBox(
+    boxRegistryUri,
+    contractRegistryUri,
+    `${PURSES_TO_CREATE}`
+  );
+  await checkPursesInContract(
+    contractRegistryUri,
+    2,
+    `${PURSES_TO_CREATE}`,
+    PURSES_TO_CREATE * 3 - 5
+  );
+  await checkPursesInContract(
+    contractRegistryUri,
+    2,
+    `${PURSES_TO_CREATE + 1}`,
+    5
+  );
+  console.log(
+    `✓ 05 check the presence of 2 purses with the right amounts and ids`
+  );
+  balances1.push(await getBalance(PUBLIC_KEY));
+  console.log(
+    '  05 dust cost: ' +
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+  );
   // send from box 1 to box 2
   await sendPurse(
     contractRegistryUri,
@@ -95,27 +135,26 @@ const main = async () => {
     PUBLIC_KEY,
     boxRegistryUri,
     secondBoxRegistryUri,
-    '' + PURSES_TO_CREATE // ID of the purse to send
+    '' + (PURSES_TO_CREATE + 1) // ID of the purse to send
   );
 
   await checkPursesInContract(
     contractRegistryUri,
-    PURSES_TO_CREATE,
-    PURSES_TO_CREATE * 2,
-    3
+    2,
+    `${PURSES_TO_CREATE + 2}`,
+    5
   );
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 05 send one purse from box 1 to box 2');
+  console.log(`✓ 06 send one purse (5 tokens) from box 1 to box 2̀`);
   console.log(
-    '  05 dust cost: ' +
+    '  06 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
   await checkPursesInBox(
     boxRegistryUri,
     contractRegistryUri,
-    PURSES_TO_CREATE - 1
+    `${PURSES_TO_CREATE}`
   );
-  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 1);
 
   // send from box 2 to box 1
   await sendPurse(
@@ -124,18 +163,22 @@ const main = async () => {
     PUBLIC_KEY_2,
     secondBoxRegistryUri,
     boxRegistryUri,
-    '' + PURSES_TO_CREATE * 2 // ID of the purse to send
+    '' + (PURSES_TO_CREATE + 2) // ID of the purse to send
   );
   await checkPursesInContract(
     contractRegistryUri,
-    PURSES_TO_CREATE,
-    PURSES_TO_CREATE * 2 + 1,
-    3
+    1,
+    '' + PURSES_TO_CREATE,
+    30
   );
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, PURSES_TO_CREATE);
-  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 0);
+  await checkPursesInBox(
+    boxRegistryUri,
+    contractRegistryUri,
+    '' + PURSES_TO_CREATE
+  );
+  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 'none');
   balances2.push(await getBalance(PUBLIC_KEY_2));
-  console.log('✓ 06 send one purse from box 2 to box 1');
+  console.log(`✓ 07 send one purse (5 tokens) from box 2 to box 1`);
   console.log(
     '  06 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
@@ -145,12 +188,12 @@ const main = async () => {
     PRIVATE_KEY,
     PUBLIC_KEY,
     boxRegistryUri,
-    '' + (PURSES_TO_CREATE + 1), // bag 11 that probably has not been sent
+    '' + (PURSES_TO_CREATE + 0), // bag 11 that probably has not been sent
     'aaa'
   );
   await checkPurseDataInContract(
     contractRegistryUri,
-    '' + (PURSES_TO_CREATE + 1),
+    '' + (PURSES_TO_CREATE + 0),
     'aaa'
   );
 

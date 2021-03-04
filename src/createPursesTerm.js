@@ -37,25 +37,65 @@ in {
         stdout!(("failed", *resp))
       }
       (true, payload) => {
-        new entryCh, return2Ch in {
+        new entryCh, return2Ch, itCh in {
           registryLookup!(\`rho:id:${payload.fromBoxRegistryUri}\`, *entryCh) |
           for (entry <- entryCh) {
-            @(*entry, "RECEIVE_PURSES")!((
-              payload.set("registryUri", \`rho:id:${registryUri}\`),
-              *return2Ch
-            )) |
-            for (r <- return2Ch) {
-              match *r {
-                String => {
-                  basket!({ "status": "failed", "message": *r }) |
-                  stdout!(("failed", *r))
+            for (purses <= itCh) {
+              match *purses {
+                Nil => {
+                  basket!({ "status": "failed", "message": "no purse" }) |
+                  stdout!(("failed", "no purse"))
                 }
-                _ => {
-                  stdout!("completed, purses created and saved to box") |
-                  basket!({ "status": "completed" })
+                [last] => {
+                  new readReturnCh, receivePurseReturnCh in {
+                    @(last, "READ")!((Nil, *readReturnCh)) |
+                    for (properties <- readReturnCh) {
+                      @(*entry, "RECEIVE_PURSE")!(({
+                        "registryUri": \`rho:id:${registryUri}\`,
+                        "purse": last,
+                        "fungible": payload.get("fungible"),
+                        "type": *properties.get("type")
+                      }, *receivePurseReturnCh))
+                    } |
+                    for (r <- receivePurseReturnCh) {
+                      match *r {
+                        String => {
+                          basket!({ "status": "failed", "message": *r }) |
+                          stdout!(("failed", *r))
+                        }
+                        _ => {
+                          stdout!("completed, purses created and saved to box") |
+                          basket!({ "status": "completed" })
+                        }
+                      }
+                    }
+                  }
+                }
+                [first ... rest] => {
+                  new readReturnCh, receivePurseReturnCh in {
+                    @(first, "READ")!((Nil, *readReturnCh)) |
+                    for (properties <- readReturnCh) {
+                      @(*entry, "RECEIVE_PURSE")!(({
+                        "registryUri": \`rho:id:${registryUri}\`,
+                        "purse": first,
+                        "fungible": payload.get("fungible"),
+                        "type": *properties.get("type")
+                      }, *receivePurseReturnCh))
+                    } |
+                    for (r <- receivePurseReturnCh) {
+                      match *r {
+                        String => {
+                          basket!({ "status": "failed", "message": *r }) |
+                          stdout!(("failed", *r))
+                        }
+                        _ => { itCh!(rest) }
+                      }
+                    }
+                  }
                 }
               }
-            }
+            } |
+            itCh!(payload.get("purses"))
           }
         }
       }

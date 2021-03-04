@@ -63,9 +63,7 @@ module.exports.main = async (privateKey1, publicKey1) => {
                 resolve(dataAtNameResponse);
                 clearInterval(interval);
               } else {
-                console.log(
-                  'Did not find transaction data, will try again in 4 seconds'
-                );
+                console.log('  .');
               }
             })
             .catch((err) => {

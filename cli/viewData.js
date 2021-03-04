@@ -14,7 +14,6 @@ module.exports.viewData = async () => {
     process.exit();
   }
 
-  console.log(readPursesDataTerm(registryUri, { pursesIds: [purseId] }));
   rchainToolkit.http
     .exploreDeploy(process.env.READ_ONLY_HOST, {
       term: readPursesDataTerm(registryUri, { pursesIds: [purseId] }),

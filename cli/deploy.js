@@ -94,9 +94,7 @@ module.exports.deploy = async () => {
                 resolve(dataAtNameResponse);
                 clearInterval(interval);
               } else {
-                log(
-                  'Did not find transaction data, will try again in 15 seconds'
-                );
+                log('.');
               }
             })
             .catch((err) => {

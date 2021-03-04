@@ -84,9 +84,7 @@ module.exports.main = async (registryUri, privateKey2, publicKey2) => {
                   );
                 }
               } else {
-                console.log(
-                  'Did not find transaction data, will try again in 4 seconds'
-                );
+                console.log('  .');
               }
             })
             .catch((err) => {

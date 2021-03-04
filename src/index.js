@@ -8,6 +8,7 @@ const { readBoxTerm } = require('./readBoxTerm');
 const { readTerm } = require('./readTerm');
 const { updatePurseDataTerm } = require('./updatePurseDataTerm');
 const { readPursesDataTerm } = require('./readPursesDataTerm');
+const { splitPurseTerm } = require('./splitPurseTerm');
 
 module.exports = {
   version: '5.0.0',
@@ -21,4 +22,5 @@ module.exports = {
   readTerm,
   updatePurseDataTerm,
   readPursesDataTerm,
+  splitPurseTerm,
 };
