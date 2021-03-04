@@ -11,7 +11,7 @@ module.exports.updatePurseDataTerm = (
   registryLookup(\`rho:registry:lookup\`)
 in {
 
-  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!({ "type": "READ_PURSES" }, *boxCh) |
+  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(({ "type": "READ_PURSES" }, *boxCh)) |
 
   for (purses <- boxCh) {
     match *purses.get(\`rho:id:${registryUri}\`).get("${payload.purseId}") {

@@ -166,10 +166,9 @@ in {
                         for (@(payload, returnUpdateData) <= @(*purse, "UPDATE_DATA")) {
                           new readReturnCh in {
                             @(*purse, "READ")!((Nil, *readReturnCh)) |
-                            for (properties <- readReturnCh) {
-                              stdout!(("READ", *properties)) |
-                              for (_ <- @(*pursesData, *properties.get("id"))) {
-                                @(*pursesData, *properties.get("id"))!(payload) |
+                            for (@properties <- readReturnCh) {
+                              for (_ <- @(*pursesData, properties.get("id"))) {
+                                @(*pursesData, properties.get("id"))!(payload) |
                                 @returnUpdateData!((true, Nil))
                               }
                             }
@@ -208,7 +207,7 @@ in {
                                       }
                                     }
                                     _ => {
-                                      @returnSplit!("error: payload must be an integer")
+                                      @returnSplit!("error: quantity invalid")
                                     }
                                   }
                                 }
@@ -226,8 +225,6 @@ in {
                           (payload: purse) => string | (true, Nil)
                         */
                         for (@(payload, returnDeposit) <= @(*purse, "DEPOSIT")) {
-                          stdout!("DEPOSIT") |
-                          stdout!(payload) |
                           new boxEntryCh, receivePursesReturnCh, readReturnCh in {
                             @(*purse, "READ")!((Nil, *readReturnCh)) |
                             for (@properties1 <- readReturnCh) {
@@ -240,21 +237,20 @@ in {
                                     properties1.get("price")
                                   ) {
                                     (Int, true, true, Nil) => {
-                                      for (_ <- @(*vault, payload)) {
-                                        for (ids <- pursesIds) {
-                                          pursesIds!(*ids.delete(*id))
-                                        } |
-                                        for (_ <- @(*pursesData, *id)) { Nil } |
-                                        for (_ <- @(*purses, *id)) { Nil } |
-                                        for (@properties <- @(*purses, properties1.get("id"))) {
-                                          @(*purses, properties1.get("id"))!(
-                                            properties.set(
-                                              "quantity",
-                                              properties.get("quantity") + properties2.get("quantity")
-                                            )
-                                          ) |
-                                          @returnDeposit!((true, Nil))
-                                        }
+                                      for (_ <- @(*vault, payload)) { Nil } |
+                                      for (ids <- pursesIds) {
+                                        pursesIds!(*ids.delete(*id))
+                                      } |
+                                      for (_ <- @(*pursesData, *id)) { Nil } |
+                                      for (_ <- @(*purses, *id)) { Nil } |
+                                      for (@properties <- @(*purses, properties1.get("id"))) {
+                                        @(*purses, properties1.get("id"))!(
+                                          properties.set(
+                                            "quantity",
+                                            properties.get("quantity") + properties2.get("quantity")
+                                          )
+                                        ) |
+                                        @returnDeposit!((true, Nil))
                                       }
                                     }
                                     _ => {
@@ -278,13 +274,6 @@ in {
                               registryLookup!(payload, *boxEntryCh) |
                               for (boxEntry <- boxEntryCh) {
                                 for (current <<- mainCh) {
-                                  stdout!("SEND WENT WELL") |
-                                  stdout!({
-                                      "registryUri": *current.get("registryUri"),
-                                      "purse": *purse,
-                                      "fungible": *current.get("fungible"),
-                                      "type": *properties.get("type")
-                                    }) |
                                   @(*boxEntry, "RECEIVE_PURSE")!((
                                     {
                                       "registryUri": *current.get("registryUri"),
@@ -301,7 +290,7 @@ in {
                                         /*
                                           at this point *purse has been swapped/deposited,
                                           nothing in @(*vault, *purse), or pursesIds,
-                                          it is worthless
+                                          *purse is worthless
                                         */
                                         @returnSend!((true, Nil))
                                       }
@@ -541,17 +530,18 @@ in {
 
   for (entryUri <- entryUriCh) {
     new boxDataCh, boxReturnCh in {
-      @(*deployerId, "rho:id:${fromBoxRegistryUri}")!({ "type": "READ" }, *boxDataCh) |
+      @(*deployerId, "rho:id:${fromBoxRegistryUri}")!(({ "type": "READ" }, *boxDataCh)) |
       for (r <- boxDataCh) {
+      stdout!(*r) |
         match (*r.get("version")) {
           "5.0.0" => {
-            @(*deployerId, "rho:id:${fromBoxRegistryUri}")!(
+            @(*deployerId, "rho:id:${fromBoxRegistryUri}")!((
               {
                 "type": "SAVE_SUPER_KEY",
                 "payload": { "superKey": *superKeyCh, "registryUri": *entryUri }
               },
               *boxReturnCh
-            ) |
+            )) |
             for (resp <- boxReturnCh) {
               match *resp {
                 String => {

@@ -11,7 +11,7 @@ module.exports.sendPurseTerm = (
   registryLookup(\`rho:registry:lookup\`)
 in {
 
-  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!({ "type": "READ_PURSES" }, *boxCh) |
+  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(({ "type": "READ_PURSES" }, *boxCh)) |
 
   for (purses <- boxCh) {
     match *purses.get(\`rho:id:${registryUri}\`).get("${payload.purseId}") {
@@ -31,10 +31,10 @@ in {
               /*
                 Remove the purse from emitter's box now that it is worthless
               */
-              @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(
+              @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
                 { "type": "DELETE_PURSE", "payload": { "registryUri": \`rho:id:${registryUri}\`, "id": "${payload.purseId}" } },
                 *deletePurseReturnCh
-              ) |
+              )) |
               for (r2 <- deletePurseReturnCh) {
                 match *r2 {
                   String => {

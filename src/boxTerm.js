@@ -281,122 +281,123 @@ in {
 
   for (entryUri <- entryUriCh) {
 
-  // OWNER / PRIVATE capabilities
-  for (action, return <= @(*deployerId, "\${n}" %% { "n": *entryUri })) {
-    match *action.get("type") {
-      "READ" => {
-        for (main <<- mainCh) {
-          return!(*main)
+    // OWNER / PRIVATE capabilities
+    for (@(action, return) <= @(*deployerId, "\${n}" %% { "n": *entryUri })) {
+      stdout!(action) |
+      match action.get("type") {
+        "READ" => {
+          for (main <<- mainCh) {
+            @return!(*main)
+          }
         }
-      }
-      "READ_SUPER_KEYS" => {
-        for (superKeys <<- superKeysCh) {
-          return!(*superKeys)
+        "READ_SUPER_KEYS" => {
+          for (superKeys <<- superKeysCh) {
+            @return!(*superKeys)
+          }
         }
-      }
-      "READ_PURSES" => {
-        for (purses <<- boxPursesCh) {
-          return!(*purses)
+        "READ_PURSES" => {
+          for (purses <<- boxPursesCh) {
+            @return!(*purses)
+          }
         }
-      }
-      "SAVE_PURSE_SEPARATELY" => {
-        match (
-          *action.get("payload").get("registryUri"),
-          *action.get("payload").get("purse"),
-        ) {
-          (URI, _) => {
-            new createKeyReturnCh, readReturnCh in {
-              createKeyInBoxPurseIfNotExistCh!((*action.get("payload").get("registryUri"), *createKeyReturnCh)) |
-              for (purses <- createKeyReturnCh) {
-                match *purses {
-                  String => {
-                    return!("error: invalid payload")
-                  }
-                  _ => {
-                    @(*action.get("payload").get("purse"), "READ")!((Nil, *readReturnCh)) |
-                    for (@properties <- readReturnCh) {
-                      for (boxPurses <- boxPursesCh) {
-                        boxPursesCh!(
-                          *boxPurses.set(
-                            *action.get("payload").get("registryUri"),
-                            *purses.set(
-                              properties.get("id"),
-                              *action.get("payload").get("purse")
+        "SAVE_PURSE_SEPARATELY" => {
+          match (
+            action.get("payload").get("registryUri"),
+            action.get("payload").get("purse"),
+          ) {
+            (URI, _) => {
+              new createKeyReturnCh, readReturnCh in {
+                createKeyInBoxPurseIfNotExistCh!((action.get("payload").get("registryUri"), *createKeyReturnCh)) |
+                for (purses <- createKeyReturnCh) {
+                  match *purses {
+                    String => {
+                      @return!("error: invalid payload")
+                    }
+                    _ => {
+                      @(action.get("payload").get("purse"), "READ")!((Nil, *readReturnCh)) |
+                      for (@properties <- readReturnCh) {
+                        for (boxPurses <- boxPursesCh) {
+                          boxPursesCh!(
+                            *boxPurses.set(
+                              action.get("payload").get("registryUri"),
+                              *purses.set(
+                                properties.get("id"),
+                                action.get("payload").get("purse")
+                              )
                             )
-                          )
-                        ) |
-                        return!((true, Nil))
+                          ) |
+                          @return!((true, Nil))
+                        }
                       }
                     }
                   }
                 }
               }
             }
-          }
-          _ => {
-            return!("error: invalid payload")
+            _ => {
+              @return!("error: invalid payload")
+            }
           }
         }
-      }
-      "DELETE_PURSE" => {
-        for (purses <<- boxPursesCh) {
-          match *action.get("payload") {
-            payload => {
-              match (
-                payload.get("registryUri"),
-                payload.get("id"),
-                *purses.get(payload.get("registryUri"))
-              ) {
-                (URI, String, Map) => {
-                  for (boxPurses <- boxPursesCh) {
-                    boxPursesCh!(
-                      *boxPurses.set(
-                        payload.get("registryUri"),
-                        *boxPurses.get(payload.get("registryUri")).delete(payload.get("id"))
-                      )
-                    ) |
-                    return!((true, Nil))
+        "DELETE_PURSE" => {
+          for (purses <<- boxPursesCh) {
+            match action.get("payload") {
+              payload => {
+                match (
+                  payload.get("registryUri"),
+                  payload.get("id"),
+                  *purses.get(payload.get("registryUri"))
+                ) {
+                  (URI, String, Map) => {
+                    for (boxPurses <- boxPursesCh) {
+                      boxPursesCh!(
+                        *boxPurses.set(
+                          payload.get("registryUri"),
+                          *boxPurses.get(payload.get("registryUri")).delete(payload.get("id"))
+                        )
+                      ) |
+                      @return!((true, Nil))
+                    }
+                  }
+                  _ => {
+                    @return!("error: invalid payload")
                   }
                 }
-                _ => {
-                  return!("error: invalid payload")
+              }
+              _ => {
+                @return!("error: invalid payload")
+              }
+            }
+          }
+        }
+        "SAVE_SUPER_KEY" => {
+          match action.get("payload") {
+            { "superKey": _, "registryUri": URI } => {
+              for (keys <- superKeysCh) {
+                match *keys.keys().contains(action.get("payload").get("registryUri")) {
+                  true => {
+                    superKeysCh!(*keys) |
+                    @return!("error: super key for registryUri already exists in box")
+                  }
+                  false => {
+                    stdout!(*keys.set(action.get("payload").get("registryUri"), action.get("payload").get("superKey"))) |
+                    stdout!(*keys) |
+                    superKeysCh!(*keys.set(action.get("payload").get("registryUri"), action.get("payload").get("superKey"))) |
+                    @return!((true, Nil))
+                  }
                 }
               }
             }
             _ => {
-              return!("error: invalid payload")
+              @return!("error: invalid payload, structure should be { superKey: _, registryUri: String }")
             }
           }
         }
-      }
-      "SAVE_SUPER_KEY" => {
-        match *action.get("payload") {
-          { "superKey": _, "registryUri": URI } => {
-            for (keys <- superKeysCh) {
-              match *keys.keys().contains(*action.get("payload").get("registryUri")) {
-                true => {
-                  superKeysCh!(*keys) |
-                  return!("error: super key for registryUri already exists in box")
-                }
-                false => {
-                  stdout!(*keys.set(*action.get("payload").get("registryUri"), *action.get("payload").get("superKey"))) |
-                  stdout!(*keys) |
-                  superKeysCh!(*keys.set(*action.get("payload").get("registryUri"), *action.get("payload").get("superKey"))) |
-                  return!((true, Nil))
-                }
-              }
-            }
-          }
-          _ => {
-            return!("error: invalid payload, structure should be { superKey: _, registryUri: String }")
-          }
+        _ => {
+          @return!("error: unknown action")
         }
       }
-      _ => {
-        return!("error: unknown action")
-      }
-    }
-  } |
+    } |
 
     stdout!("box deployed, private channel is @(*deployerId, '\${n}')" %% { "n": *entryUri }  ) |
     mainCh!({

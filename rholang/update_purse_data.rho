@@ -7,7 +7,7 @@ new basket,
   registryLookup(`rho:registry:lookup`)
 in {
 
-  @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!({ "type": "READ_PURSES" }, *boxCh) |
+  @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!(({ "type": "READ_PURSES" }, *boxCh)) |
 
   for (purses <- boxCh) {
     match *purses.get(`rho:id:REGISTRY_URI`).get("PURSE_ID") {
