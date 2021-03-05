@@ -16,7 +16,7 @@ const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const sendPurse = require('../tests-fungible/05_sendPurse.js').main;
 
-const PURSES_TO_CREATE = 50;
+const PURSES_TO_CREATE = 10;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';

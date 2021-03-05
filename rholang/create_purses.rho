@@ -48,9 +48,7 @@ in {
                     for (properties <- readReturnCh) {
                       @(*entry, "PUBLIC_RECEIVE_PURSE")!(({
                         "registryUri": `rho:id:REGISTRY_URI`,
-                        "purse": last,
-                        "fungible": payload.get("fungible"),
-                        "type": *properties.get("type")
+                        "purse": last
                       }, *receivePurseReturnCh))
                     } |
                     for (r <- receivePurseReturnCh) {
@@ -73,9 +71,7 @@ in {
                     for (properties <- readReturnCh) {
                       @(*entry, "PUBLIC_RECEIVE_PURSE")!(({
                         "registryUri": `rho:id:REGISTRY_URI`,
-                        "purse": first,
-                        "fungible": payload.get("fungible"),
-                        "type": *properties.get("type")
+                        "purse": first
                       }, *receivePurseReturnCh))
                     } |
                     for (r <- receivePurseReturnCh) {

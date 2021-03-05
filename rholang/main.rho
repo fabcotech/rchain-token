@@ -89,7 +89,7 @@ in {
               idAndQuantityCh!({ "id": "${n}" %% { "n": *counter }, "quantity": properties.get("quantity") })
             }
           }
-          _ => {
+          false => {
             for (ids <<- pursesIds) {
               match *ids.contains(properties.get("id")) {
                 true => { @return!("error: purse ID already exists") }
@@ -277,8 +277,6 @@ in {
                                     {
                                       "registryUri": *current.get("registryUri"),
                                       "purse": *purse,
-                                      "fungible": *current.get("fungible"),
-                                      "type": *properties.get("type")
                                     },
                                     *receivePursesReturnCh
                                   )) |
@@ -364,7 +362,7 @@ in {
                         }
                         _ => {
                           for (createdPurses <- createdPursesesCh) {
-                            @return!((true, { "fungible": current.get("fungible"), "purses": *createdPurses ++ [*purse] }))
+                            @return!((true, { "purses": *createdPurses ++ [*purse] }))
                           }
                         }
                       }
@@ -508,6 +506,124 @@ in {
       } |
       tmpCh!(Set()) |
       itCh!((*tmpCh, payload))
+    }
+  } |
+
+  /*
+    (payload) => String | (true, purse)
+    purchase with REV from a purse that has .price
+    property not Nil
+    see payload below
+  */
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_PURCHASE")) {
+    match payload {
+      { "quantity": Int, "purseId": String, "publicKey": String,
+      "purseRevAddr": _, "purseAuthKey": _ } => {
+        for (@properties <<-@(*purses, payload.get("id"))) {
+          match (
+            properties.get("price"),
+            properties.get("quantity") > 0,
+            payload.get("quantity") > 0,
+            properties.get("quantity") >= payload.get("quantity")
+          ) {
+            (Int, true, true, true) => {
+              new revVaultCh, ownerRevAddressCh, purseVaultCh in {
+
+                registryLookup!(`rho:rchain:revVault`, *revVaultCh) |
+                revAddress!("fromPublicKey", properties.get("publicKey").hexToBytes(), *ownerRevAddressCh) |
+
+                for (@(_, RevVault) <- revVaultCh; @ownerRevAddress <- ownerRevAddressCh) {
+                  match (
+                    payload.get("purseRevAddr"),
+                    ownerRevAddress,
+                    payload.get("quantity") * properties.get("price")
+                  ) {
+                    (from, to, amount) => {
+                      @RevVault!("findOrCreate", from, *purseVaultCh) |
+                      for (@(true, purseVault) <- purseVaultCh) {
+                        new makePurseReturnCh, transferReturnCh, performRefundCh in {                        
+                          // refund
+                          for (@message <- performRefundCh) {
+                            new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
+                              @purseVault!("balance", *refundPurseBalanceCh) |
+                              revAddress!("fromPublicKey", payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
+                              for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
+                                @purseVault!("transfer", revAddress, balance, payload.get("purseAuthKey"), *refundResultCh) |
+                                for (@refundResult <- refundResultCh) {
+                                  match refundResult {
+                                    (true, Nil) => {
+                                      stdout!(message ++ ", issuer was refunded") |
+                                      @return!(message ++ ", issuer was refunded")
+                                    }
+                                    _ => {
+                                      stdout!(message ++ ", issuer was NOT refunded") |
+                                      @return!(message ++ ", issuer was NOT refunded")
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          } |
+                          @purseVault!("transfer", to, amount, payload.get("purseAuthKey"), *transferReturnCh) |
+                          for (@result <- transferReturnCh) {
+                            match result {
+                              (true, Nil) => {
+                                for (@properties2 <- @(*purses, payload.get("id"))) {
+                                  /*
+                                    Check if the purse must be removed because quantity 0
+                                    if fungible: false, we always match 0
+                                  */
+                                  match properties2.get("quantity") - payload.get("quantity") {
+                                    0 => {
+                                      for (ids <- pursesIds) {
+                                        pursesIds!(*ids.delete(properties2.get("id"))) |
+                                        for (_ <- @(*pursesData, properties2.get("id"))) {
+                                          for (_ <- @(*purses, properties2.get("id"))) {
+                                            makePurseCh!((
+                                              properties2.set("quantity", payload.get("quantity")), Nil, *makePurseReturnCh
+                                            )) |
+                                            for (newPurse <- makePurseReturnCh) {
+                                              @return!((true, *newPurse))
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                    _ => {
+                                      @(*purses, properties2.get("id"))!(
+                                        properties2.set("quantity", properties2.get("quantity") - payload.get("quantity"))
+                                      ) |
+                                      makePurseCh!((
+                                        properties2.set("quantity", payload.get("quantity")), Nil, *makePurseReturnCh
+                                      )) |
+                                      for (newPurse <- makePurseReturnCh) {
+                                        @return!((true, *newPurse))
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                              _ => {
+                                performRefundCh!("error: REV transfer went wrong")
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            _=> {
+               @return!("error: quantity not available or purse not for sale")
+            }
+          }
+        }
+      }
+      _ => {
+        @return!("error: invalid payloads")
+      }
     }
   } |
 

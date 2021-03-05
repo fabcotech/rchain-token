@@ -68,7 +68,7 @@ in {
 
   // PUBLIC capabilities
   /*
-    (payload: { registryUri: URI, purse: *purse, fungible: boolean, type: string }) => String | (true, Nil)
+    (payload: { registryUri: URI, purse: *purse }) => String | (true, Nil)
     Receives a purse, checks it, find a purse with same type
     if fungible
       SWAP
@@ -78,36 +78,39 @@ in {
   */
   // todo, if this operation fails, remove empty key in boxPurses ?
   for (@(payload, return) <= @(*entryCh, "PUBLIC_RECEIVE_PURSE")) {
-    new return1Ch, itCh, it2Ch, doDepositOrSwapCh in {
-      /*
-        1: validate payload and check/createregistry URI
-      */
-      createKeyInBoxPurseIfNotExistCh!((payload.get("registryUri"), *return1Ch)) |
+    new lookupReturnCh, checkReturnCh, readReturnCh, readPropertiesReturnCh, return1Ch,
+    itCh, doDepositOrSwapCh in {
 
-      for (@purses <- return1Ch) {
-        match purses {
-          String => {
-            @return!(purses)
-          }
-          _ => {
-            match payload.get("fungible") {
-              false => {
-                doDepositOrSwapCh!((
-                  payload.get("purse"),
-                  payload.get("registryUri"),
-                  "swap",
-                  Nil
-                ))
-              }
-              true => {
-                /*
-                  Must find a purse to deposit to with same .type, and .price Nil
-                  if not found, then swap
-                */
-                new tmpCh, itCh in {
-                  for (pursesIds <= itCh) {
-                    match *pursesIds {
-                      Set() => {
+      /*
+        1: check the purses received by asking
+        the contract at payload.get("registryUri")
+      */
+      lookup!(payload.get("registryUri"), *lookupReturnCh) |
+      for (contractEntry <- lookupReturnCh) {
+        @(*contractEntry, "PUBLIC_CHECK_PURSES")!(([payload.get("purse")], *checkReturnCh)) |
+        @(*contractEntry, "PUBLIC_READ")!((Nil, *readReturnCh)) |
+        @(payload.get("purse"), "READ")!((Nil, *readPropertiesReturnCh)) |
+        for (checkReturn <- checkReturnCh; current <- readReturnCh; receivedPurseProperties <- readPropertiesReturnCh) {
+          stdout!(("PUBLIC_RECEIVE_PURSE 2", *checkReturn, *current, *receivedPurseProperties)) |
+          match *checkReturn {
+            String => {
+              @return!(*checkReturn)
+            }
+            (true, _) => {
+              /*
+                2: create key for registry URI in boxPurses if it does
+                nto exist
+              */
+              createKeyInBoxPurseIfNotExistCh!((payload.get("registryUri"), *return1Ch)) |
+
+              for (@purses <- return1Ch) {
+                match purses {
+                  String => {
+                    @return!(purses)
+                  }
+                  _ => {
+                    match *current.get("fungible") {
+                      false => {
                         doDepositOrSwapCh!((
                           payload.get("purse"),
                           payload.get("registryUri"),
@@ -115,23 +118,15 @@ in {
                           Nil
                         ))
                       }
-                      Set(last) => {
-                        new readReturnCh in {
-                          @(purses.get(last), "READ")!((Nil, *readReturnCh)) |
-                          for (properties <- readReturnCh) {
-                            match (
-                              *properties.get("type") == payload.get("type"),
-                              *properties.get("price") == Nil
-                            ) {
-                              (true, true) => {
-                                doDepositOrSwapCh!((
-                                  payload.get("purse"),
-                                  payload.get("registryUri"),
-                                  "deposit",
-                                  purses.get(last)
-                                ))
-                              }
-                              _ => {
+                      true => {
+                        /*
+                          Must find a purse to deposit to with same .type, and .price Nil
+                          if not found, then swap
+                        */
+                        new tmpCh, itCh in {
+                          for (pursesIds <= itCh) {
+                            match *pursesIds {
+                              Set() => {
                                 doDepositOrSwapCh!((
                                   payload.get("purse"),
                                   payload.get("registryUri"),
@@ -139,94 +134,104 @@ in {
                                   Nil
                                 ))
                               }
-                            }
-                          }
-                        }
-                      }
-                      Set(first ... rest) => {
-                        new readReturnCh in {
-                          @(purses.get(first), "READ")!((Nil, *readReturnCh)) |
-                          for (properties <- readReturnCh) {
-                            match (
-                              *properties.get("type") == payload.get("type"),
-                              *properties.get("price") == Nil
-                            ) {
-                              (true, true) => {
-                                doDepositOrSwapCh!((
-                                  payload.get("purse"),
-                                  payload.get("registryUri"),
-                                  "deposit",
-                                  purses.get(first)
-                                ))
+                              Set(last) => {
+                                new readReturnCh in {
+                                  @(purses.get(last), "READ")!((Nil, *readReturnCh)) |
+                                  for (properties <- readReturnCh) {
+                                    match (
+                                      *properties.get("type") == *receivedPurseProperties.get("type"),
+                                      *properties.get("price") == Nil
+                                    ) {
+                                      (true, true) => {
+                                        doDepositOrSwapCh!((
+                                          payload.get("purse"),
+                                          payload.get("registryUri"),
+                                          "deposit",
+                                          purses.get(last)
+                                        ))
+                                      }
+                                      _ => {
+                                        doDepositOrSwapCh!((
+                                          payload.get("purse"),
+                                          payload.get("registryUri"),
+                                          "swap",
+                                          Nil
+                                        ))
+                                      }
+                                    }
+                                  }
+                                }
                               }
-                              _ => {
-                                itCh!(rest)
+                              Set(first ... rest) => {
+                                new readReturnCh in {
+                                  @(purses.get(first), "READ")!((Nil, *readReturnCh)) |
+                                  for (properties <- readReturnCh) {
+                                    match (
+                                      *properties.get("type") == *receivedPurseProperties.get("type"),
+                                      *properties.get("price") == Nil
+                                    ) {
+                                      (true, true) => {
+                                        doDepositOrSwapCh!((
+                                          payload.get("purse"),
+                                          payload.get("registryUri"),
+                                          "deposit",
+                                          purses.get(first)
+                                        ))
+                                      }
+                                      _ => {
+                                        itCh!(rest)
+                                      }
+                                    }
+                                  }
+                                }
                               }
                             }
-                          }
+                          } |
+                          itCh!(purses.keys())
                         }
                       }
                     }
-                  } |
-                  itCh!(purses.keys())
+                  }
                 }
-              }
-            }
-          }
-        }
-      } |
+              } |
 
-      /*
-        2: check keys and then swap
-        This way we are sure they correspond to
-        real keys in the contract
-        then save to boxPursesCh
-      */
-      for (@(purse, registryUri, operation, purseToDepositTo) <- doDepositOrSwapCh) {
-        new lookupReturnCh, checkReturnCh in {
-          lookup!(registryUri, *lookupReturnCh) |
-          for (entry <- lookupReturnCh) {
-            @(*entry, "PUBLIC_CHECK_PURSES")!(([purse], *checkReturnCh)) |
-            for (r <- checkReturnCh) {
-              match *r {
-                String => {
-                  @return!(*r)
-                }
-                (true, payload) => {
-                  match operation {
-                    "swap" => {
-                      new returnSwapCh, returnPropertiesCh in {
-                        @(purse, "SWAP")!((Nil, *returnSwapCh)) |
-                        for (swappedPurse <- returnSwapCh) {
-                          @(*swappedPurse, "READ")!((Nil, *returnPropertiesCh)) |
-                          for (properties <- returnPropertiesCh) {
-                            for (boxPurses <- boxPursesCh) {
-                              boxPursesCh!(
-                                *boxPurses.set(
-                                  registryUri,
-                                  *boxPurses.get(registryUri).set(
-                                    *properties.get("id"),
-                                    *swappedPurse
-                                  )
+              /*
+                3: SWAP or DEPOSIT then save to boxPursesCh
+              */
+              for (@(purse, registryUri, operation, purseToDepositTo) <- doDepositOrSwapCh) {
+                match operation {
+                  "swap" => {
+                    new returnSwapCh, returnPropertiesCh in {
+                      @(purse, "SWAP")!((Nil, *returnSwapCh)) |
+                      for (swappedPurse <- returnSwapCh) {
+                        @(*swappedPurse, "READ")!((Nil, *returnPropertiesCh)) |
+                        for (properties <- returnPropertiesCh) {
+                          for (boxPurses <- boxPursesCh) {
+                            boxPursesCh!(
+                              *boxPurses.set(
+                                registryUri,
+                                *boxPurses.get(registryUri).set(
+                                  *properties.get("id"),
+                                  *swappedPurse
                                 )
-                              ) |
-                              @return!((true, Nil))
-                            }
+                              )
+                            ) |
+                            @return!((true, Nil))
                           }
                         }
                       }
                     }
-                    "deposit" => {
-                      new returnDepositCh, returnPropertiesCh in {
-                        @(purseToDepositTo, "DEPOSIT")!((purse, *returnDepositCh)) |
-                        for (r <- returnDepositCh) {
-                          match *r {
-                            String => {
-                              @return!(*r)
-                            }
-                            (true, Nil) => {
-                              @return!((true, Nil))
-                            }
+                  }
+                  "deposit" => {
+                    new returnDepositCh, returnPropertiesCh in {
+                      @(purseToDepositTo, "DEPOSIT")!((purse, *returnDepositCh)) |
+                      for (r <- returnDepositCh) {
+                        match *r {
+                          String => {
+                            @return!(*r)
+                          }
+                          (true, Nil) => {
+                            @return!((true, Nil))
                           }
                         }
                       }

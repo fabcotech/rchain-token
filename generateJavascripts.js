@@ -36,15 +36,6 @@ const replaceEverything = (a) => {
       .replace('BAG_ID', '${payload.bagId}')
       .replace('BAGS_IDS', '${payload.bagsIds}')
       .replace('TOKEN_ID', '${payload.tokenId}')
-      // some function name end with BAG_DATA
-      .replace(
-        ': BAG_DATA',
-        ': ${payload.data ? \'"\' + payload.data + \'"\' : "Nil"}'
-      )
-      .replace(
-        '(BAG_DATA)',
-        '(${payload.data ? \'"\' + payload.data + \'"\' : "Nil"})'
-      )
       // some function name end with _DATA
       .replace(
         ': DATA',
@@ -63,6 +54,18 @@ fs.writeFileSync(
   payload
 ) => {
   return \`${replaceEverything(createPursesFile)}\`;
+};
+`
+);
+
+const purchaseFile = fs.readFileSync('./rholang/purchase.rho').toString('utf8');
+fs.writeFileSync(
+  './src/purchaseTerm.js',
+  `module.exports.purchaseTerm = (
+  registryUri,
+  payload
+) => {
+  return \`${replaceEverything(purchaseFile)}\`;
 };
 `
 );
