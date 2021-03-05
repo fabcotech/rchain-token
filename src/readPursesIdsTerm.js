@@ -6,7 +6,7 @@ module.exports.readPursesIdsTerm = (
   lookup!(\`rho:id:${registryUri}\`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
-      @(*entry, "READ_PURSES_IDS")!((Nil, *x)) |
+      @(*entry, "PUBLIC_READ_PURSES_IDS")!((Nil, *x)) |
       for (y <- x) {
         return!(*y)
       }

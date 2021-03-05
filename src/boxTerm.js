@@ -79,9 +79,7 @@ in {
       else: SWAP and save new purse
   */
   // todo, if this operation fails, remove empty key in boxPurses ?
-  for (@(payload, return) <= @(*entryCh, "RECEIVE_PURSE")) {
-    stdout!("RECEIVE_PURSE") |
-    stdout!(payload) |
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_RECEIVE_PURSE")) {
     new return1Ch, itCh, it2Ch, doDepositOrSwapCh in {
       /*
         1: validate payload and check/createregistry URI
@@ -188,12 +186,10 @@ in {
         then save to boxPursesCh
       */
       for (@(purse, registryUri, operation, purseToDepositTo) <- doDepositOrSwapCh) {
-        stdout!("doDepositOrSwapCh") |
-        stdout!((purse, registryUri, operation, purseToDepositTo)) |
         new lookupReturnCh, checkReturnCh in {
           lookup!(registryUri, *lookupReturnCh) |
           for (entry <- lookupReturnCh) {
-            @(*entry, "CHECK_PURSES")!(([purse], *checkReturnCh)) |
+            @(*entry, "PUBLIC_CHECK_PURSES")!(([purse], *checkReturnCh)) |
             for (r <- checkReturnCh) {
               match *r {
                 String => {
@@ -248,19 +244,19 @@ in {
     }
   } |
 
-  for (@(Nil, return) <= @(*entryCh, "READ")) {
+  for (@(Nil, return) <= @(*entryCh, "PUBLIC_READ")) {
     for (main <<- mainCh) {
       @return!(*main)
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "READ_SUPER_KEYS")) {
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_SUPER_KEYS")) {
     for (superKeys <<- superKeysCh) {
       @return!(*superKeys.keys())
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "READ_PURSES")) {
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES")) {
     for (purses <<- boxPursesCh) {
       match *purses.keys().size() {
         0 => {
@@ -283,7 +279,6 @@ in {
 
     // OWNER / PRIVATE capabilities
     for (@(action, return) <= @(*deployerId, "\${n}" %% { "n": *entryUri })) {
-      stdout!(action) |
       match action.get("type") {
         "READ" => {
           for (main <<- mainCh) {

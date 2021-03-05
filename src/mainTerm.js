@@ -161,7 +161,7 @@ in {
 
                         /*
                           UPDATE_DATA
-                          (int[]) => string | (true, purse[])
+                          (any) => string | (true, purse[])
                         */
                         for (@(payload, returnUpdateData) <= @(*purse, "UPDATE_DATA")) {
                           new readReturnCh in {
@@ -274,7 +274,7 @@ in {
                               registryLookup!(payload, *boxEntryCh) |
                               for (boxEntry <- boxEntryCh) {
                                 for (current <<- mainCh) {
-                                  @(*boxEntry, "RECEIVE_PURSE")!((
+                                  @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
                                     {
                                       "registryUri": *current.get("registryUri"),
                                       "purse": *purse,
@@ -399,8 +399,8 @@ in {
   } |
 
   /*
-    Returns values corresponding to ids, "READ_PURSES"
-    and "READ_PURSES_DATA" call this channel
+    Returns values corresponding to ids, "PUBLIC_READ_PURSES"
+    and "PUBLIC_PUBLIC_READ_PURSES_DATA" call this channel
 
     channelToReadFrom: *pursesData or *purses
     ids: Set purse ids (they must all exist)
@@ -438,15 +438,13 @@ in {
   // ===== ANY USER / PUBLIC capabilities
   // ====================================
 
-  for (@(payload, return) <= @(*entryCh, "READ_PURSES_IDS")) {
-    stdout!("READ_PURSES_IDS") |
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES_IDS")) {
     for (ids <<- pursesIds) {
       @return!(*ids)
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "READ_PURSES")) {
-    stdout!("READ_PURSES") |
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES")) {
     match payload.size() < 100 {
       true => {
         iterateCh!((*purses, payload, return))
@@ -457,8 +455,7 @@ in {
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "READ_PURSES_DATA")) {
-    stdout!("READ_PURSES_DATA") |
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES_DATA")) {
     match payload.size() < 100 {
       true => {
         iterateCh!((*pursesData, payload, return))
@@ -469,8 +466,7 @@ in {
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "READ")) {
-    stdout!("READ") |
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ")) {
     for (current <<- mainCh) {
       @return!(*current)
     }
@@ -481,7 +477,7 @@ in {
     receives a list of purse, check that (they exist + no duplicate)
     and returns the corresponding list of ids
   */
-  for (@(payload, return) <= @(*entryCh, "CHECK_PURSES")) {
+  for (@(payload, return) <= @(*entryCh, "PUBLIC_CHECK_PURSES")) {
     new tmpCh, itCh in {
       for (@(tmpCh, keys) <= itCh) {
         for (tmp <- @tmpCh) {

@@ -1,27 +1,23 @@
-module.exports.splitPurseTerm = (
-    registryUri,
-  payload
-) => {
-  return `new basket,
+new basket,
   splitReturnCh,
   savePurseReturnCh,
   boxCh,
   readReturnCh,
-  stdout(\`rho:io:stdout\`),
-  deployerId(\`rho:rchain:deployerId\`),
-  registryLookup(\`rho:registry:lookup\`)
+  stdout(`rho:io:stdout`),
+  deployerId(`rho:rchain:deployerId`),
+  registryLookup(`rho:registry:lookup`)
 in {
 
-  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(({ "type": "READ_PURSES" }, *boxCh)) |
+  @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!(({ "type": "READ_PURSES" }, *boxCh)) |
 
   for (purses <- boxCh) {
-    match *purses.get(\`rho:id:${registryUri}\`).get("${payload.purseId}") {
+    match *purses.get(`rho:id:REGISTRY_URI`).get("PURSE_ID") {
       Nil => {
         basket!({ "status": "failed", "message": "purse not found" }) |
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "SPLIT")!((${payload.quantityInNewPurse}, *splitReturnCh)) |
+        @(purse, "SPLIT")!((SPLIT_PURSE_QUANTITY, *splitReturnCh)) |
         for (r <- splitReturnCh) {
           match *r {
             String => {
@@ -34,8 +30,8 @@ in {
                 /*
                   Save new purse without joining it (DEPOSIT) to a purse with same type
                 */
-                @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
-                  { "type": "SAVE_PURSE_SEPARATELY", "payload": { "registryUri": \`rho:id:${registryUri}\`, "purse": newPurse } },
+                @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!((
+                  { "type": "SAVE_PURSE_SEPARATELY", "payload": { "registryUri": `rho:id:REGISTRY_URI`, "purse": newPurse } },
                   *savePurseReturnCh
                 )) |
                 for (r2 <- savePurseReturnCh) {
@@ -58,5 +54,3 @@ in {
     }
   }
 }
-`;
-};

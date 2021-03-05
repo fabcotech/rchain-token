@@ -145,7 +145,7 @@ const main = async () => {
     5
   );
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log(`✓ 06 send one purse (5 tokens) from box 1 to box 2̀`);
+  console.log(`✓ 06 send one purse (5 tokens) from box 1 to box 2`);
   console.log(
     '  06 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
