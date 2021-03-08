@@ -1,41 +1,31 @@
 const rchainToolkit = require('rchain-toolkit');
-const uuidv4 = require('uuid/v4');
 
-const { sendTokensTerm } = require('../src/');
+const { sendPurseTerm } = require('../src/');
 
 const {
-  getFromBagId,
-  getQuantity,
+  getBoxRegistryUri,
   getRegistryUri,
-  getNonce,
-  generateSignature,
-  getPublicKey,
+  getPurseId,
+  getToBoxId,
   log,
   validAfterBlockNumber,
 } = require('./utils');
 
-module.exports.sendTokens = async () => {
+module.exports.sendPurse = async () => {
   const registryUri = getRegistryUri();
-  const quantity = getQuantity();
-  const publicKey = getPublicKey();
-  const bagId = getFromBagId();
-  const bagNonce = uuidv4().replace(/-/g, '');
-  const bagNonce2 = uuidv4().replace(/-/g, '');
+  const to = getToBoxId();
+  const boxRegistryUri = getBoxRegistryUri();
   const timestamp = new Date().getTime();
-
+  const purseId = getPurseId();
+  if (!purseId) {
+    throw new Error('please provide --purse option');
+  }
   const payload = {
-    nonce: getNonce(),
-    bagNonce: bagNonce,
-    bagNonce2: bagNonce2,
-    bagId: bagId,
-    quantity: quantity,
-    publicKey: publicKey,
-    data: undefined,
+    fromBoxRegistryUri: boxRegistryUri,
+    toBoxRegistryUri: to,
+    purseId: purseId,
   };
-
-  const ba = rchainToolkit.utils.toByteArray(payload);
-  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
-  const term = sendTokensTerm(registryUri, payload, signature);
+  const term = sendPurseTerm(registryUri, payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rchainToolkit.utils.getDeployOptions(

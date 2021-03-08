@@ -102,6 +102,10 @@ module.exports.getPursesFile = () => {
   return getProcessArgv('--purses-file');
 };
 
+module.exports.getPurseId = () => {
+  return getProcessArgv('--purse');
+};
+
 module.exports.getType = () => {
   const type = getProcessArgv('--type');
   return type;
@@ -156,12 +160,12 @@ module.exports.getPublicKey = () => {
   return publicKey;
 };
 
-module.exports.getFromBagId = () => {
-  const bagId = getProcessArgv('--from-bag');
-  if (!bagId) {
-    throw new Error('Missing arguments --from-bag');
+module.exports.getToBoxId = () => {
+  const boxId = getProcessArgv('--to-box');
+  if (!boxId) {
+    throw new Error('Missing arguments --to-box');
   }
-  return bagId;
+  return boxId;
 };
 
 module.exports.getBoxRegistryUri = () => {
