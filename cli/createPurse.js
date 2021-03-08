@@ -41,6 +41,7 @@ module.exports.createPurse = async () => {
       [`newbag1`]: {
         id: newId || '', // will be ignored if fungible = true
         type: type,
+        price: null,
         publicKey: publicKey,
         quantity: quantity,
       },
