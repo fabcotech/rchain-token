@@ -1,15 +1,13 @@
 const rc = require('rchain-toolkit');
 
-const { splitPurseTerm } = require('../src');
+const { purchaseTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (
   contractRegistryUri,
   privateKey,
   publicKey,
-  fromBoxRegistryUri,
-  quantityInNewPurse,
-  purseId
+  payload
 ) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
@@ -18,13 +16,7 @@ module.exports.main = async (
     timestamp
   );
 
-  const payload = {
-    fromBoxRegistryUri: fromBoxRegistryUri,
-    quantityInNewPurse: quantityInNewPurse,
-    purseId: purseId,
-  };
-
-  const term = splitPurseTerm(contractRegistryUri, payload);
+  const term = purchaseTerm(contractRegistryUri, payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -34,7 +26,7 @@ module.exports.main = async (
     privateKey,
     publicKey,
     1,
-    10000000,
+    100000000,
     vab
   );
   try {

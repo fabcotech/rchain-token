@@ -1,14 +1,15 @@
 const rc = require('rchain-toolkit');
 
-const { sendPurseTerm } = require('../src');
+const { splitPurseTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
+const waitForUnforgeable = require('./waitForUnforgeable').main;
 
 module.exports.main = async (
   contractRegistryUri,
   privateKey,
   publicKey,
   fromBoxRegistryUri,
-  toBoxRegistryUri,
+  quantityInNewPurse,
   purseId
 ) => {
   const timestamp = new Date().getTime();
@@ -20,11 +21,11 @@ module.exports.main = async (
 
   const payload = {
     fromBoxRegistryUri: fromBoxRegistryUri,
-    toBoxRegistryUri: toBoxRegistryUri,
+    quantityInNewPurse: quantityInNewPurse,
     purseId: purseId,
   };
 
-  const term = sendPurseTerm(contractRegistryUri, payload);
+  const term = splitPurseTerm(contractRegistryUri, payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -53,39 +54,7 @@ module.exports.main = async (
 
   let dataAtNameResponse;
   try {
-    dataAtNameResponse = await new Promise((resolve, reject) => {
-      const interval = setInterval(() => {
-        try {
-          rc.http
-            .dataAtName(process.env.VALIDATOR_HOST, {
-              name: {
-                UnforgPrivate: { data: JSON.parse(pd).names[0] },
-              },
-              depth: 3,
-            })
-            .then((dataAtNameResponse) => {
-              if (
-                dataAtNameResponse &&
-                JSON.parse(dataAtNameResponse) &&
-                JSON.parse(dataAtNameResponse).exprs &&
-                JSON.parse(dataAtNameResponse).exprs.length
-              ) {
-                resolve(dataAtNameResponse);
-                clearInterval(interval);
-              } else {
-                console.log('  .');
-              }
-            })
-            .catch((err) => {
-              console.log(err);
-              throw new Error('07_updateBagData 03');
-            });
-        } catch (err) {
-          console.log(err);
-          throw new Error('07_updateBagData 04');
-        }
-      }, 4000);
-    });
+    dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     console.log(err);
     throw new Error('07_updateBagData 05');

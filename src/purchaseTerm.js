@@ -9,6 +9,7 @@ new
   priceCh,
   quantityCh,
   publicKeyCh,
+  newIdCh,
   returnCh,
   purseIdCh,
   registryUriCh,
@@ -25,6 +26,8 @@ in {
   registryUriCh!!(\`rho:id:${registryUri}\`) |
   // Unique ID of the token you want to purchase
   purseIdCh!!("${payload.purseId}") |
+  // New ID only used if fungible = false
+  newIdCh!!("${payload.newId ? payload.newId : "Nil"}") |
   // Per token price, make sure it is accurate
   priceCh!!(${payload.price || "Nil"}) |
   // Quantity you want to purchase, make sure enough are available
@@ -54,7 +57,8 @@ in {
           @purseId <- purseIdCh;
           @registryUri <- registryUriCh;
           @price <- priceCh;
-          @quantity <- quantityCh
+          @quantity <- quantityCh;
+          @newId <- newIdCh
         ) {
 
           revAddress!("fromPublicKey", publicKey.hexToBytes(), *revAddressCh) |
@@ -94,53 +98,55 @@ in {
                               registryLookup!(registryUri, *entryCh) |
 
                               for(entry <- entryCh) {
-                                @(*entryCh, "PUBLIC_PURCHASE")!((
+                                stdout!("PUBLIC_PURCHASE") |
+                                stdout!(*entry) |
+                                @(*entry, "PUBLIC_PURCHASE")!((
                                   {
                                     "quantity": quantity,
                                     "purseId": purseId,
+                                    "newId": newId,
                                     "publicKey": publicKey,
                                     "purseRevAddr": purseRevAddr,
                                     "purseAuthKey": purseAuthKey
                                   },
                                   *returnCh
-                                ))
+                                )) |
                                 for (resp <- returnCh) {
+                                  stdout!(*resp) |
                                   match *resp {
                                     (true, purse) => {
-                                      new readReturnCh in {
-                                        @(*entryCh, "PUBLIC_READ")!((Nil, readReturnCh)) |
-                                        for (current <- readReturnCh) {
+                                      stdout!("yep") |
+                                      new readReturnCh, boxEntryCh, receivePursesReturnCh in {
+                                        @(*entry, "PUBLIC_READ")!((Nil, *readReturnCh)) |
+                                        for (@current <- readReturnCh) {
+                                          stdout!(("current", current)) |
                                           registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
                                           for (boxEntry <- boxEntryCh) {
-                                            for (current <<- mainCh) {
-                                              @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
-                                                {
-                                                  "registryUri": *current.get("registryUri"),
-                                                  "purse": purse,
-                                                  "fungible": *current.get("fungible"),
-                                                  "type": *properties.get("type")
-                                                },
-                                                *receivePursesReturnCh
-                                              )) |
-                                              for (r <- receivePursesReturnCh) {
-                                                match *r {
-                                                  String => {
-                                                    basket!({ "status": "failed", "message": *resp }) |
-                                                    stdout!(("failed", *resp))
-                                                  }
-                                                  _ => {
-                                                    basket!({ "status": "completed" }) |
-                                                    stdout!("purchase went well")
-                                                  }
+                                            @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                                              {
+                                                "registryUri": current.get("registryUri"),
+                                                "purse": purse,
+                                              },
+                                              *receivePursesReturnCh
+                                            )) |
+                                            for (r <- receivePursesReturnCh) {
+                                              match *r {
+                                                String => {
+                                                  basket!({ "status": "failed", "message": *resp }) |
+                                                  stdout!(("failed", *resp))
+                                                }
+                                                _ => {
+                                                  basket!({ "status": "completed" }) |
+                                                  stdout!("purchase went well")
                                                 }
                                               }
                                             }
                                           }
-
                                         }
                                       }
                                     }
-                                    String => {
+                                    _ => {
+                                      stdout!(*resp) |
                                       basket!({ "status": "failed", "message": *resp }) |
                                       stdout!(("failed", *resp))
                                     }

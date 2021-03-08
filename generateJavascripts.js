@@ -11,7 +11,9 @@ const replaceEverything = (a) => {
       .replace(/BOX_REGISTRY_URI/g, '${boxRegistryUri}')
       .replace(/REGISTRY_URI/g, '${registryUri}')
       .replace(/PURSE_ID/g, '${payload.purseId}')
+      .replace(/NEW_ID/g, '${payload.newId ? payload.newId : "Nil"}')
       .replace(/SPLIT_PURSE_QUANTITY/g, '${payload.quantityInNewPurse}')
+      .replace(/WITHDRAW_PURSE_QUANTITY/g, '${payload.quantityToWithdraw}')
       .replace('SIGNATURE', '${signature}')
       .replace(
         'TOKEN_ID',
@@ -45,7 +47,7 @@ const replaceEverything = (a) => {
 };
 
 const createPursesFile = fs
-  .readFileSync('./rholang/create_purses.rho')
+  .readFileSync('./rholang/op_create_purses.rho')
   .toString('utf8');
 fs.writeFileSync(
   './src/createPursesTerm.js',
@@ -58,7 +60,9 @@ fs.writeFileSync(
 `
 );
 
-const purchaseFile = fs.readFileSync('./rholang/purchase.rho').toString('utf8');
+const purchaseFile = fs
+  .readFileSync('./rholang/op_purchase.rho')
+  .toString('utf8');
 fs.writeFileSync(
   './src/purchaseTerm.js',
   `module.exports.purchaseTerm = (
@@ -70,8 +74,21 @@ fs.writeFileSync(
 `
 );
 
-const readFile = fs.readFileSync('./rholang/read.rho').toString('utf8');
+const setPriceFile = fs
+  .readFileSync('./rholang/op_set_price.rho')
+  .toString('utf8');
+fs.writeFileSync(
+  './src/setPriceTerm.js',
+  `module.exports.setPriceTerm = (
+  registryUri,
+  payload
+) => {
+  return \`${replaceEverything(setPriceFile)}\`;
+};
+`
+);
 
+const readFile = fs.readFileSync('./rholang/read.rho').toString('utf8');
 fs.writeFileSync(
   './src/readTerm.js',
   `
@@ -163,7 +180,7 @@ module.exports.boxTerm = () => {
 );
 
 const sendPurseFile = fs
-  .readFileSync('./rholang/send_purse.rho')
+  .readFileSync('./rholang/op_send_purse.rho')
   .toString('utf8');
 
 fs.writeFileSync(
@@ -178,9 +195,8 @@ fs.writeFileSync(
 );
 
 const splitPurseFile = fs
-  .readFileSync('./rholang/split_purse.rho')
+  .readFileSync('./rholang/op_split_purse.rho')
   .toString('utf8');
-
 fs.writeFileSync(
   './src/splitPurseTerm.js',
   `module.exports.splitPurseTerm = (
@@ -192,8 +208,23 @@ fs.writeFileSync(
 `
 );
 
+const withdrawFile = fs
+  .readFileSync('./rholang/op_withdraw.rho')
+  .toString('utf8');
+
+fs.writeFileSync(
+  './src/withdrawTerm.js',
+  `module.exports.withdrawTerm = (
+    registryUri,
+  payload
+) => {
+  return \`${replaceEverything(withdrawFile)}\`;
+};
+`
+);
+
 const updatePurseDataFile = fs
-  .readFileSync('./rholang/update_purse_data.rho')
+  .readFileSync('./rholang/op_update_purse_data.rho')
   .toString('utf8');
 
 fs.writeFileSync(

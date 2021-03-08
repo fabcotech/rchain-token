@@ -1,8 +1,4 @@
-module.exports.sendPurseTerm = (
-    registryUri,
-  payload
-) => {
-  return `new basket,
+new basket,
   sendReturnCh,
   deletePurseReturnCh,
   boxCh,
@@ -10,25 +6,25 @@ module.exports.sendPurseTerm = (
   boxEntry2Ch,
   receivePursesReturnCh,
   receivePursesReturn2Ch,
-  stdout(\`rho:io:stdout\`),
-  deployerId(\`rho:rchain:deployerId\`),
-  registryLookup(\`rho:registry:lookup\`)
+  stdout(`rho:io:stdout`),
+  deployerId(`rho:rchain:deployerId`),
+  registryLookup(`rho:registry:lookup`)
 in {
 
-  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(({ "type": "READ_PURSES" }, *boxCh)) |
+  @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!(({ "type": "READ_PURSES" }, *boxCh)) |
 
   for (purses <- boxCh) {
-    match *purses.get(\`rho:id:${registryUri}\`).get("${payload.purseId}") {
+    match *purses.get(`rho:id:REGISTRY_URI`).get("PURSE_ID") {
       Nil => {
         basket!({ "status": "failed", "message": "purse not found" }) |
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
+        registryLookup!(`rho:id:TO_BOX_REGISTRY_URI`, *boxEntryCh) |
         for (boxEntry <- boxEntryCh) {
           @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
             {
-              "registryUri": \`rho:id:${registryUri}\`,
+              "registryUri": `rho:id:REGISTRY_URI`,
               "purse": purse,
             },
             *receivePursesReturnCh
@@ -39,8 +35,8 @@ in {
                 /*
                   Remove the purse from emitter's box now that it is worthless
                 */
-                @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
-                  { "type": "DELETE_PURSE", "payload": { "registryUri": \`rho:id:${registryUri}\`, "id": "${payload.purseId}" } },
+                @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!((
+                  { "type": "DELETE_PURSE", "payload": { "registryUri": `rho:id:REGISTRY_URI`, "id": "PURSE_ID" } },
                   *deletePurseReturnCh
                 )) |
                 for (r2 <- deletePurseReturnCh) {
@@ -57,11 +53,11 @@ in {
                 }
               }
               _ => {
-                registryLookup!(\`rho:id:${payload.fromBoxRegistryUri}\`, *boxEntry2Ch) |
+                registryLookup!(`rho:id:FROM_BOX_REGISTRY_URI`, *boxEntry2Ch) |
                 for (boxEntry2 <- boxEntry2Ch) {
                   @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
                     {
-                      "registryUri": \`rho:id:${registryUri}\`,
+                      "registryUri": `rho:id:REGISTRY_URI`,
                       "purse": purse,
                     },
                     *receivePursesReturn2Ch
@@ -87,5 +83,3 @@ in {
     }
   }
 }
-`;
-};

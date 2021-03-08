@@ -3,7 +3,7 @@ module.exports.splitPurseTerm = (
   payload
 ) => {
   return `new basket,
-  splitReturnCh,
+  withdrawReturnCh,
   savePurseReturnCh,
   boxCh,
   readReturnCh,
@@ -21,8 +21,8 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "SPLIT")!((${payload.quantityInNewPurse}, *splitReturnCh)) |
-        for (r <- splitReturnCh) {
+        @(purse, "WITHDRAW")!((${payload.quantityInNewPurse}, *withdrawReturnCh)) |
+        for (r <- withdrawReturnCh) {
           match *r {
             String => {
               basket!({ "status": "failed", "message": *r }) |

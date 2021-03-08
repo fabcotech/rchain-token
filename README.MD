@@ -20,7 +20,9 @@ node cli deploy-box
 
 **non-fungible tokens**
 
-Non-fungibles tokens are identified by an ID like "pikachu", "amazon" or "cat123". They are still represented by purses, all purses have quantity 1, a purse cannot be divided.
+Non-fungibles tokens are identified by an ID like "pikachu", "amazon" or "cat123". They are still represented by purses, all purses have `quantity: 1`, a purse cannot be divided. Purse `"0"` is a special mint purse from which you can purchase, and give a `newId` of your choice (See `./tests-fungibles/index.js:L220`).
+
+As the owner, be very careful to only give `quantity: 1` when you create purses (except for special purse `"0"`).
 
 ```
 # deploy contract and save super key to box

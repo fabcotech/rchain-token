@@ -9,6 +9,9 @@ const { readTerm } = require('./readTerm');
 const { updatePurseDataTerm } = require('./updatePurseDataTerm');
 const { readPursesDataTerm } = require('./readPursesDataTerm');
 const { splitPurseTerm } = require('./splitPurseTerm');
+const { setPriceTerm } = require('./setPriceTerm');
+const { purchaseTerm } = require('./purchaseTerm');
+const { withdrawTerm } = require('./withdrawTerm');
 
 module.exports = {
   version: '5.0.0',
@@ -23,4 +26,7 @@ module.exports = {
   updatePurseDataTerm,
   readPursesDataTerm,
   splitPurseTerm,
+  setPriceTerm,
+  purchaseTerm,
+  withdrawTerm,
 };

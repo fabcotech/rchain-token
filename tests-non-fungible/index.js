@@ -4,17 +4,22 @@ require('dotenv').config();
 const getBalance = require('../tests-fungible/getBalance').main;
 const getRandomName = require('./getRandomName').main;
 const getAllBoxData = require('../tests-fungible/getAllBoxData').main;
-const deployBox = require('../tests-fungible/00_deployBox').main;
-const deploy = require('../tests-fungible/01_deploy').main;
-const checkDefaultPurses = require('../tests-fungible/01_checkDefaultPurses')
+const deployBox = require('../tests-fungible/test_deployBox').main;
+const deploy = require('../tests-fungible/test_deploy').main;
+const purchase = require('../tests-fungible/test_purchase').main;
+const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
   .main;
 const checkPurseDataInContract = require('../tests-fungible/checkPurseDataInContract.js')
   .main;
-const createPurses = require('./03_createPurses.js').main;
-const updatePurseData = require('../tests-fungible/06_updatePurseData.js').main;
+const checkPursePriceInContract = require('../tests-fungible/checkPursePriceInContract.js')
+  .main;
+const setPrice = require('../tests-fungible/test_setPrice.js').main;
+const createPurses = require('./test_createPurses.js').main;
+const updatePurseData = require('../tests-fungible/test_updatePurseData.js')
+  .main;
 const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
-const sendPurse = require('../tests-fungible/05_sendPurse.js').main;
+const sendPurse = require('../tests-fungible/test_sendPurse.js').main;
 
 const PURSES_TO_CREATE = 10;
 
@@ -83,8 +88,12 @@ const main = async () => {
       (new Date().getTime() - t) / 1000 +
       's'
   );
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, ids);
-  await checkPursesInContract(contractRegistryUri, ids);
+  await checkPursesInBox(
+    boxRegistryUri,
+    contractRegistryUri,
+    ['0'].concat(ids)
+  );
+  await checkPursesInContract(contractRegistryUri, ['0'].concat(ids));
   console.log(
     `✓ 04 check the presence of ${PURSES_TO_CREATE} purses with the right ids`
   );
@@ -99,7 +108,7 @@ const main = async () => {
     ids[0] // ID of the purse to send
   );
 
-  await checkPursesInContract(contractRegistryUri, ids);
+  await checkPursesInContract(contractRegistryUri, ['0'].concat(ids));
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 05 send one purse from box 1 to box 2');
   console.log(
@@ -109,7 +118,7 @@ const main = async () => {
   await checkPursesInBox(
     boxRegistryUri,
     contractRegistryUri,
-    ids.filter((a, i) => i !== 0)
+    ['0'].concat(ids.filter((a, i) => i !== 0))
   );
   await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, [ids[0]]);
   // send from box 2 to box 1
@@ -121,8 +130,12 @@ const main = async () => {
     boxRegistryUri,
     ids[0] // ID of the purse to send
   );
-  await checkPursesInContract(contractRegistryUri, ids);
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, ids);
+  await checkPursesInContract(contractRegistryUri, ['0'].concat(ids));
+  await checkPursesInBox(
+    boxRegistryUri,
+    contractRegistryUri,
+    ['0'].concat(ids)
+  );
   await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, []);
   balances2.push(await getBalance(PUBLIC_KEY_2));
   console.log('✓ 06 send one purse from box 2 to box 1');
@@ -136,84 +149,98 @@ const main = async () => {
     PRIVATE_KEY,
     PUBLIC_KEY,
     boxRegistryUri,
-    ids[0], // bag 11 that probably has not been sent
+    ids[0],
     'aaa'
   );
   await checkPurseDataInContract(contractRegistryUri, ids[0], 'aaa');
-  process.exit();
-  const lastBag = await checkBagsAndTokens3(
-    data.registryUri.replace('rho:id:', ''),
-    PURSES_TO_CREATE,
-    PUBLIC_KEY_2
-  );
-  console.log(`✓ 06 check the presence of ${PURSES_TO_CREATE + 1} bags`);
-  await updateBagData(
-    data.registryUri.replace('rho:id:', ''),
-    lastBag.nonce,
-    PURSES_TO_CREATE,
-    PRIVATE_KEY_2,
-    PUBLIC_KEY_2
-  );
-  balances2.push(await getBalance(PUBLIC_KEY_2));
-  console.log(`✓ 07 update data associated with bag ${PURSES_TO_CREATE}`);
+  console.log(`✓ 07 update data associated to purse`);
   console.log(
     '  07 dust cost: ' +
-      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
-  );
-  const bagPurchased = await checkBagData(
-    data.registryUri.replace('rho:id:', ''),
-    PURSES_TO_CREATE
-  );
-  console.log(`✓ 08 check data associated with bag ${PURSES_TO_CREATE}`);
-  const allData = await getAllBoxData(data.registryUri.replace('rho:id:', ''));
-  await sendTokens(
-    data.registryUri.replace('rho:id:', ''),
-    allData.bags['1'].nonce,
-    PRIVATE_KEY,
-    PUBLIC_KEY
-  );
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log(`✓ 09 send 1 token from bag 1`);
-  console.log(
-    '  09 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
-  await checkBagsAndTokens4(
-    data.registryUri.replace('rho:id:', ''),
-    PURSES_TO_CREATE
-  );
-  console.log(`✓ 10 check the presence of ${PURSES_TO_CREATE + 2} bags`);
-  await changePrice(
-    data.registryUri.replace('rho:id:', ''),
-    bagPurchased.nonce,
-    PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
-    PURSES_TO_CREATE
-  );
-  balances2.push(await getBalance(PUBLIC_KEY_2));
-  await checkBagPrice(
-    data.registryUri.replace('rho:id:', ''),
-    PURSES_TO_CREATE
-  );
-  console.log('✓ 11 changed price of a bag');
-  console.log(
-    '  11 dust cost: ' +
-      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
-  );
-  await tryPurchase(
-    data.registryUri.replace('rho:id:', ''),
+
+  await setPrice(
+    contractRegistryUri,
     PRIVATE_KEY,
     PUBLIC_KEY,
-    PURSES_TO_CREATE
+    boxRegistryUri,
+    10,
+    ids[0]
   );
   balances1.push(await getBalance(PUBLIC_KEY));
+  await checkPursePriceInContract(contractRegistryUri, ids[0], 10);
+  console.log(`✓ 08 set a price to a purse`);
   console.log(
-    '✓ 12 try to purchase with insuffiscient REV, fails and is refunded'
-  );
-  console.log(
-    '  12 dust cost: ' +
+    '  08 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
+
+  const balance1BeforePurchase = balances1[balances1.length - 1];
+  await purchase(contractRegistryUri, PRIVATE_KEY_2, PUBLIC_KEY_2, {
+    toBoxRegistryUri: secondBoxRegistryUri,
+    newId: null,
+    purseId: ids[0],
+    quantity: 1,
+    price: 10,
+    publicKey: PUBLIC_KEY_2,
+  });
+
+  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, [ids[0]]);
+  await checkPursesInBox(
+    boxRegistryUri,
+    contractRegistryUri,
+    ['0'].concat(ids.filter((a, i) => i !== 0))
+  );
+  await checkPursesInContract(contractRegistryUri, ['0'].concat(ids));
+
+  console.log(`✓ 10 purchase`);
+  console.log(`✓ 10 balance of purse's owner checked and has +10 dust`);
+  const balance1AfterPurchase = await getBalance(PUBLIC_KEY);
+  if (balance1BeforePurchase + 10 !== balance1AfterPurchase) {
+    throw new Error('owner of box 1 did not receive payment from purchase');
+  }
+
+  balances1.push(await getBalance(PUBLIC_KEY_2));
+  console.log(
+    '  10 dust cost: ' +
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+  );
+
+  await setPrice(
+    contractRegistryUri,
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    boxRegistryUri,
+    1000,
+    '0'
+  );
+  balances1.push(await getBalance(PUBLIC_KEY));
+  await checkPursePriceInContract(contractRegistryUri, '0', 1000);
+
+  await purchase(contractRegistryUri, PRIVATE_KEY_2, PUBLIC_KEY_2, {
+    toBoxRegistryUri: secondBoxRegistryUri,
+    newId: 'amazoon',
+    purseId: '0',
+    quantity: 1,
+    price: 1000,
+    publicKey: PUBLIC_KEY_2,
+  });
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+
+  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, [
+    ids[0],
+    'amazoon',
+  ]);
+  await checkPursesInContract(
+    contractRegistryUri,
+    ['0', 'amazoon'].concat(ids)
+  );
+  if (
+    balances1[balances1.length - 1] + 1000 !==
+    (await getBalance(PUBLIC_KEY))
+  ) {
+    throw new Error("owner of purse '0' did not receive payment from purchase");
+  }
 };
 
 main();

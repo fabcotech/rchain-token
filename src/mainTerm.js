@@ -78,7 +78,7 @@ in {
 
     depending on if .fungible is true or false, it decides
     which id to give to the new purse, then it instantiates
-    the purse with SEND, SPLIT, SWAP, BURN "instance channels"
+    the purse with WITHDRAW, SWAP, BURN "instance channels"
   */
   for (@(properties, data, return) <= makePurseCh) {
     new idAndQuantityCh in {
@@ -93,8 +93,24 @@ in {
           false => {
             for (ids <<- pursesIds) {
               match *ids.contains(properties.get("id")) {
-                true => { @return!("error: purse ID already exists") }
-                false => { idAndQuantityCh!({ "id": properties.get("id"), "quantity": 1 }) }
+                true => {
+                  match properties.get("id") {
+                    "0" => {
+                      match (properties.get("newId"), *ids.contains(properties.get("newId"))) {
+                        (String, false) => {
+                          idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
+                        }
+                        _ => {
+                          @return!("error: no .newId in payload or .newId already exists")
+                        }
+                      }
+                    }
+                    _ => {
+                      @return!("error: purse ID already exists")
+                    }
+                  }
+                }
+                false => { idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") }) }
               }
             }
           }
@@ -104,6 +120,7 @@ in {
         match properties
           .set("id", *idAndQuantity.get("id"))
           .set("quantity", *idAndQuantity.get("quantity"))
+          .delete("newId")
         {
           purseProperties => {
             match purseProperties {
@@ -113,7 +130,8 @@ in {
                 // only useful for dumping data
                 "publicKey": String,
                 "type": String,
-                "id": String
+                "id": String,
+                "price": Nil \\/ Int
               } => {
                 for (ids <- pursesIds) {
                   match *ids.contains(purseProperties.get("id")) {
@@ -146,14 +164,15 @@ in {
                         */
                         for (@(Nil, returnSwap) <= @(*purse, "SWAP")) {
                           for (id <- @(*vault, *purse)) {
+                            stdout!(("SWAP asked, current id is", *id)) |
                             for (ids <- pursesIds) {
-                              pursesIds!(*ids.delete(*id))
-                            } |
-                            for (data <- @(*pursesData, *id)) {
-                              for (props <- @(*purses, *id)) {
-                                makePurseCh!((
-                                  *props, *data, returnSwap
-                                ))
+                              pursesIds!(*ids.delete(*id)) |
+                              for (data <- @(*pursesData, *id)) {
+                                for (props <- @(*purses, *id)) {
+                                  makePurseCh!((
+                                    *props, *data, returnSwap
+                                  ))
+                                }
                               }
                             }
                           }
@@ -176,16 +195,45 @@ in {
                         } |
 
                         /*
-                          SPLIT
+                          SET_PRICE
+                          (payload: Int or Nil) => string | (true, Nil)
+                        */
+                        for (@(payload, returnSetPrice) <= @(*purse, "SET_PRICE")) {
+                          match payload {
+                            Int \\/ Nil => {
+                              new boxEntryCh, receivePursesReturnCh, readReturnCh, makePurseReturnCh in {
+                                @(*purse, "READ")!((Nil, *readReturnCh)) |
+                                for (@properties1 <- readReturnCh) {
+                                  for (@properties2 <- @(*purses, properties1.get("id"))) {
+                                    @(*purses, properties1.get("id"))!(
+                                      properties2.set("price", payload)
+                                    ) |
+                                    @returnSetPrice!((true, Nil))
+                                  }
+                                }
+                              }
+                            }
+                            _ => {
+                              @returnSetPrice!("error: payload must be an integer or Nil")
+                            }
+                          }
+                        } |
+
+                        /*
+                          WITHDRAW
                           (payload: Int) => string | (true, purse)
                         */
-                        for (@(payload, returnSplit) <= @(*purse, "SPLIT")) {
+                        for (@(payload, returnWithdraw) <= @(*purse, "WITHDRAW")) {
                           match payload {
                             Int => {
                               new boxEntryCh, receivePursesReturnCh, readReturnCh, makePurseReturnCh in {
                                 @(*purse, "READ")!((Nil, *readReturnCh)) |
                                 for (@properties1 <- readReturnCh) {
                                   match (
+                                    /*
+                                      The remaining cannot be 0, if you want to send
+                                      the whole purse, just hand the *purse object to someone's box
+                                    */
                                     properties1.get("quantity") > payload,
                                     payload > 0
                                   ) {
@@ -199,15 +247,15 @@ in {
                                           properties2.set("quantity", properties2.get("quantity") - payload)
                                         ) |
                                         makePurseCh!((
-                                          properties2.set("quantity", payload), Nil, *makePurseReturnCh
+                                          properties2.set("quantity", payload).set("price", Nil), Nil, *makePurseReturnCh
                                         )) |
                                         for (newPurse <- makePurseReturnCh) {
-                                          @returnSplit!((true, *newPurse))
+                                          @returnWithdraw!((true, *newPurse))
                                         }
                                       }
                                     }
                                     _ => {
-                                      @returnSplit!("error: quantity invalid")
+                                      @returnWithdraw!("error: quantity invalid, remaining cannot be zero")
                                     }
                                   }
                                 }
@@ -215,7 +263,7 @@ in {
 
                             }
                             _ => {
-                              @returnSplit!("error: payload must be an integer")
+                              @returnWithdraw!("error: payload must be an integer")
                             }
                           }
                         } |
@@ -260,44 +308,6 @@ in {
                                 }
                               }
                             }
-                          }
-                        } |
-
-                        /*
-                          SEND
-                          (boxRegistryUri: URI) => string | (true, Nil)
-                        */
-                        for (@(payload, returnSend) <= @(*purse, "SEND")) {
-                          new boxEntryCh, receivePursesReturnCh, readReturnCh in {
-                            @(*purse, "READ")!((Nil, *readReturnCh)) |
-                            for (properties <- readReturnCh) {
-                              registryLookup!(payload, *boxEntryCh) |
-                              for (boxEntry <- boxEntryCh) {
-                                for (current <<- mainCh) {
-                                  @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
-                                    {
-                                      "registryUri": *current.get("registryUri"),
-                                      "purse": *purse,
-                                    },
-                                    *receivePursesReturnCh
-                                  )) |
-                                  for (r <- receivePursesReturnCh) {
-                                    match *r {
-                                      String => { @returnSend!(*r) }
-                                      _ => {
-                                        /*
-                                          at this point *purse has been swapped/deposited,
-                                          nothing in @(*vault, *purse), or pursesIds,
-                                          *purse is worthless
-                                        */
-                                        @returnSend!((true, Nil))
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-
                           }
                         }
                       }
@@ -519,8 +529,8 @@ in {
   for (@(payload, return) <= @(*entryCh, "PUBLIC_PURCHASE")) {
     match payload {
       { "quantity": Int, "purseId": String, "publicKey": String,
-      "purseRevAddr": _, "purseAuthKey": _ } => {
-        for (@properties <<-@(*purses, payload.get("id"))) {
+      "newId": Nil \\/ String, "purseRevAddr": _, "purseAuthKey": _ } => {
+        for (@properties <<- @(*purses, payload.get("purseId"))) {
           match (
             properties.get("price"),
             properties.get("quantity") > 0,
@@ -569,7 +579,7 @@ in {
                           for (@result <- transferReturnCh) {
                             match result {
                               (true, Nil) => {
-                                for (@properties2 <- @(*purses, payload.get("id"))) {
+                                for (@properties2 <- @(*purses, payload.get("purseId"))) {
                                   /*
                                     Check if the purse must be removed because quantity 0
                                     if fungible: false, we always match 0
@@ -579,13 +589,17 @@ in {
                                       for (ids <- pursesIds) {
                                         pursesIds!(*ids.delete(properties2.get("id"))) |
                                         for (_ <- @(*pursesData, properties2.get("id"))) {
-                                          for (_ <- @(*purses, properties2.get("id"))) {
-                                            makePurseCh!((
-                                              properties2.set("quantity", payload.get("quantity")), Nil, *makePurseReturnCh
-                                            )) |
-                                            for (newPurse <- makePurseReturnCh) {
-                                              @return!((true, *newPurse))
-                                            }
+                                          makePurseCh!((
+                                            properties2
+                                              .set("price", Nil)
+                                              .set("newId", payload.get("newId"))
+                                              .set("quantity", payload.get("quantity"))
+                                              .set("publicKey", payload.get("publicKey")),
+                                            Nil,
+                                            *makePurseReturnCh
+                                          )) |
+                                          for (newPurse <- makePurseReturnCh) {
+                                            @return!((true, *newPurse))
                                           }
                                         }
                                       }
@@ -595,9 +609,16 @@ in {
                                         properties2.set("quantity", properties2.get("quantity") - payload.get("quantity"))
                                       ) |
                                       makePurseCh!((
-                                        properties2.set("quantity", payload.get("quantity")), Nil, *makePurseReturnCh
+                                        properties2
+                                          .set("price", Nil)
+                                          .set("newId", payload.get("newId"))
+                                          .set("quantity", payload.get("quantity"))
+                                          .set("publicKey", payload.get("publicKey")),
+                                        Nil,
+                                        *makePurseReturnCh
                                       )) |
                                       for (newPurse <- makePurseReturnCh) {
+                                        stdout!(*newPurse) |
                                         @return!((true, *newPurse))
                                       }
                                     }
@@ -617,7 +638,7 @@ in {
               }
             }
             _=> {
-               @return!("error: quantity not available or purse not for sale")
+              @return!("error: quantity not available or purse not for sale")
             }
           }
         }

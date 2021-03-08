@@ -1,5 +1,5 @@
 new basket,
-  splitReturnCh,
+  withdrawReturnCh,
   savePurseReturnCh,
   boxCh,
   readReturnCh,
@@ -17,8 +17,8 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "SPLIT")!((SPLIT_PURSE_QUANTITY, *splitReturnCh)) |
-        for (r <- splitReturnCh) {
+        @(purse, "WITHDRAW")!((SPLIT_PURSE_QUANTITY, *withdrawReturnCh)) |
+        for (r <- withdrawReturnCh) {
           match *r {
             String => {
               basket!({ "status": "failed", "message": *r }) |
