@@ -36,23 +36,32 @@ in {
           for (r <- receivePursesReturnCh) {
             match *r {
               (true, Nil) => {
-                /*
-                  Remove the purse from emitter's box now that it is worthless
-                */
-                @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
-                  { "type": "DELETE_PURSE", "payload": { "registryUri": \`rho:id:${registryUri}\`, "id": "${payload.purseId}" } },
-                  *deletePurseReturnCh
-                )) |
-                for (r2 <- deletePurseReturnCh) {
-                  match *r2 {
-                    String => {
-                      stdout!("WARNING completed, purse sent but could not remove from box") |
-                      basket!({ "status": "completed" })
+                match "rho:id:${payload.toBoxRegistryUri}" == "rho:id:${payload.fromBoxRegistryUri}" {
+                  true => {
+                    stdout!("completed, purse sent") |
+                    basket!({ "status": "completed" })
+                  }
+                  false => {
+                    /*
+                      Remove the purse from emitter's box now that it is worthless
+                    */
+                    @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
+                      { "type": "DELETE_PURSE", "payload": { "registryUri": \`rho:id:${registryUri}\`, "id": "${payload.purseId}" } },
+                      *deletePurseReturnCh
+                    )) |
+                    for (r2 <- deletePurseReturnCh) {
+                      match *r2 {
+                        String => {
+                          stdout!("WARNING completed, purse sent but could not remove from box") |
+                          basket!({ "status": "completed" })
+                        }
+                        _ => {
+                          stdout!("completed, purse sent and removed from box") |
+                          basket!({ "status": "completed" })
+                        }
+                      }
                     }
-                    _ => {
-                      stdout!("completed, purse sent and removed from box") |
-                      basket!({ "status": "completed" })
-                    }
+
                   }
                 }
               }

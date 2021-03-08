@@ -1,6 +1,6 @@
 const rchainToolkit = require('rchain-toolkit');
 
-const { sendPurseTerm } = require('../src/');
+const { sendPurseTerm } = require('../src');
 
 const {
   getBoxRegistryUri,

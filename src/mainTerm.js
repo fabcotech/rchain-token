@@ -169,6 +169,8 @@ in {
                               pursesIds!(*ids.delete(*id)) |
                               for (data <- @(*pursesData, *id)) {
                                 for (props <- @(*purses, *id)) {
+                                  stdout!("will makePurse ") |
+                                  stdout!(*props) |
                                   makePurseCh!((
                                     *props, *data, returnSwap
                                   ))
