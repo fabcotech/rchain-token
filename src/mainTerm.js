@@ -602,7 +602,7 @@ in {
                                               .set("newId", payload.get("newId"))
                                               .set("quantity", payload.get("quantity"))
                                               .set("publicKey", payload.get("publicKey")),
-                                            Nil,
+                                            payload.get("data"),
                                             *makePurseReturnCh
                                           )) |
                                           for (newPurse <- makePurseReturnCh) {

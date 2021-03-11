@@ -127,7 +127,7 @@ in {
                                           stdout!(("current", current)) |
                                           registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
                                           for (boxEntry <- boxEntryCh) {
-                                            @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                                            @(*boxEntry, "${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}")!((
                                               {
                                                 "registryUri": current.get("registryUri"),
                                                 "purse": purse,

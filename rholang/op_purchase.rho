@@ -123,7 +123,7 @@ in {
                                           stdout!(("current", current)) |
                                           registryLookup!(`rho:id:TO_BOX_REGISTRY_URI`, *boxEntryCh) |
                                           for (boxEntry <- boxEntryCh) {
-                                            @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                                            @(*boxEntry, "ACTION_AFTER_PURCHASE")!((
                                               {
                                                 "registryUri": current.get("registryUri"),
                                                 "purse": purse,

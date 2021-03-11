@@ -23,6 +23,10 @@ const replaceEverything = (a) => {
       .replace('UPDATE_PURSE_DATA', `\${payload.data}`)
       .replace('PURCHASE_PURSE_DATA', `\${payload.data}`)
       .replace(
+        'ACTION_AFTER_PURCHASE',
+        `\${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}`
+      )
+      .replace(
         'CREATE_PURSESS_DATA',
         `\${JSON.stringify(payload.data).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
       )
