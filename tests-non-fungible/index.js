@@ -180,6 +180,7 @@ const main = async () => {
     toBoxRegistryUri: secondBoxRegistryUri,
     newId: null,
     purseId: ids[0],
+    data: 'bbb',
     quantity: 1,
     price: 10,
     publicKey: PUBLIC_KEY_2,

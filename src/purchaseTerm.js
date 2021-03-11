@@ -10,6 +10,7 @@ new
   quantityCh,
   publicKeyCh,
   newIdCh,
+  dataCh,
   returnCh,
   purseIdCh,
   registryUriCh,
@@ -35,6 +36,8 @@ in {
   // Your public key
   // If the transfer fails, refund will go to the corresponding REV address
   publicKeyCh!!("${payload.publicKey}") |
+  // data
+  dataCh!("${payload.data}") |
 
   registryLookup!(\`rho:rchain:revVault\`, *revVaultPurseCh) |
 
@@ -58,7 +61,8 @@ in {
           @registryUri <- registryUriCh;
           @price <- priceCh;
           @quantity <- quantityCh;
-          @newId <- newIdCh
+          @newId <- newIdCh;
+          @data <- dataCh
         ) {
 
           revAddress!("fromPublicKey", publicKey.hexToBytes(), *revAddressCh) |
@@ -105,6 +109,7 @@ in {
                                     "quantity": quantity,
                                     "purseId": purseId,
                                     "newId": newId,
+                                    "data": data,
                                     "publicKey": publicKey,
                                     "purseRevAddr": purseRevAddr,
                                     "purseAuthKey": purseAuthKey

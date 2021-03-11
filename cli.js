@@ -67,6 +67,8 @@ const main = async () => {
 
   const lockArg = process.argv.findIndex((arg) => arg === 'lock') !== -1;
   if (lockArg) {
+    console.log('not implemented');
+    process.exit();
     lock();
     return;
   }
@@ -81,6 +83,8 @@ const main = async () => {
   const purchaseTokensArg =
     process.argv.findIndex((arg) => arg === 'purchase-tokens') !== -1;
   if (purchaseTokensArg) {
+    console.log('not implemented');
+    process.exit();
     purchaseTokens();
     return;
   }
@@ -95,6 +99,8 @@ const main = async () => {
   const updateBagDataArg =
     process.argv.findIndex((arg) => arg === 'update-bag-data') !== -1;
   if (updateBagDataArg) {
+    console.log('not implemented');
+    process.exit();
     updateBagData();
     return;
   }
@@ -102,6 +108,8 @@ const main = async () => {
   const updateTokenDataArg =
     process.argv.findIndex((arg) => arg === 'update-token-data') !== -1;
   if (updateTokenDataArg) {
+    console.log('not implemented');
+    process.exit();
     updateTokenData();
     return;
   }
@@ -109,6 +117,8 @@ const main = async () => {
   const changePriceArg =
     process.argv.findIndex((arg) => arg === 'change-price') !== -1;
   if (changePriceArg) {
+    console.log('not implemented');
+    process.exit();
     changePrice();
     return;
   }

@@ -1,9 +1,9 @@
 node_modules
 .directory
 .env
-bags-*
+purses-*
 .metals
-bag-*
+purse-*
 token-*
 dist
-bags.json
+purses.json

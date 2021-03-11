@@ -9,6 +9,7 @@ const {
   getRegistryUri,
   getType,
   getNewId,
+  getPrice,
   log,
   validAfterBlockNumber,
   getPursesFile,
@@ -21,27 +22,41 @@ module.exports.createPurse = async () => {
   log('Make sure the contract is not locked');
   const registryUri = getRegistryUri();
   const boxRegistryUri = getBoxRegistryUri();
+
   const type = getType();
-  if (!type) {
-    throw new Error('Please provide a type with --type option');
-  }
   const newId = getNewId();
-  if (!newId) {
-    console.log(
-      'No --new-id option found. If your contract deals with non-fungible, please provide a --new-id'
-    );
-  }
-  const quantity = getQuantity();
 
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
+
+  const pursesFile = getPursesFile()
+    ? fs.readFileSync(getPursesFile(), 'utf8')
+    : '';
+
+  let quantity;
+  let price;
+  if (pursesFile === '') {
+    quantity = getQuantity();
+    price = getPrice();
+    if (!type) {
+      throw new Error('Please provide a type with --type option');
+    }
+    if (!quantity) {
+      throw new Error('Please provide a quantity with --quantity option');
+    }
+    if (!newId) {
+      console.log(
+        'No --new-id option found. If your contract deals with non-fungible, please provide a --new-id'
+      );
+    }
+  }
   let payload = {
     purses: {
       [`newbag1`]: {
         id: newId || '', // will be ignored if fungible = true
         type: type,
-        price: null,
+        price: price,
         publicKey: publicKey,
         quantity: quantity,
       },
@@ -52,9 +67,6 @@ module.exports.createPurse = async () => {
     fromBoxRegistryUri: boxRegistryUri,
   };
 
-  const pursesFile = getPursesFile()
-    ? fs.readFileSync(getPursesFile(), 'utf8')
-    : '';
   const defaultPursesData = {};
   const defaultPurses = {};
 
@@ -65,6 +77,7 @@ module.exports.createPurse = async () => {
       delete bags[purseId].data;
       defaultPurses[purseId] = bags[purseId];
       defaultPurses[purseId].publicKey = publicKey;
+      defaultPurses[purseId].price = null;
     });
     log(Object.keys(defaultPurses).length + ' purse found in json file');
     log(

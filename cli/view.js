@@ -45,7 +45,7 @@ module.exports.view = async () => {
     );
     logData(data);
     if (Object.keys(purses).length === 0) {
-      console.log('\n no bags');
+      console.log('\n no purses');
       return;
     }
 
@@ -63,7 +63,7 @@ module.exports.view = async () => {
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
     console.log(
-      '\n Bags [0-99]\n bag ID            type       owner         quantity           price (dust) \n'
+      '\n Bags [0-99]\n purse ID          type       owner         quantity           price (dust) \n'
     );
     Object.keys(purses).forEach((bagId) => {
       let s = '';
@@ -86,9 +86,9 @@ module.exports.view = async () => {
       }
     });
     fs.writeFileSync(
-      path.join(`./bags-${registryUri}.json`),
+      path.join(`./purses-${registryUri}.json`),
       JSON.stringify(purses, null, 2)
     );
-    console.log('\x1b[0m', `\n✓ wrote bags-${registryUri}.json file`);
+    console.log('\x1b[0m', `\n✓ wrote purses-${registryUri}.json file`);
   });
 };

@@ -21,6 +21,7 @@ const replaceEverything = (a) => {
       )
       .replace('NEW_NONCE', '${payload.newNonce}')
       .replace('UPDATE_PURSE_DATA', `\${payload.data}`)
+      .replace('PURCHASE_PURSE_DATA', `\${payload.data}`)
       .replace(
         'CREATE_PURSESS_DATA',
         `\${JSON.stringify(payload.data).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
@@ -173,7 +174,7 @@ const boxFile = fs.readFileSync('./rholang/box.rho').toString('utf8');
 fs.writeFileSync(
   './src/boxTerm.js',
   `
-module.exports.boxTerm = () => {
+module.exports.boxTerm = (payload) => {
   return \`${replaceEverything(boxFile)}\`;
 };
 `

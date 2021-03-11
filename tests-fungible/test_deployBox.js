@@ -3,8 +3,8 @@ const rc = require('rchain-toolkit');
 
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (privateKey1, publicKey1) => {
-  const term = boxTerm();
+module.exports.main = async (privateKey, publicKey) => {
+  const term = boxTerm({ publicKey: publicKey });
   console.log(
     '  00 deploy box is ' + Buffer.from(term).length / 1000000 + 'mb'
   );
@@ -12,7 +12,7 @@ module.exports.main = async (privateKey1, publicKey1) => {
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
-    publicKey1,
+    publicKey,
     timestamp
   );
 
@@ -20,8 +20,8 @@ module.exports.main = async (privateKey1, publicKey1) => {
     'secp256k1',
     timestamp,
     term,
-    privateKey1,
-    publicKey1,
+    privateKey,
+    publicKey,
     1,
     1000000,
     vab || -1

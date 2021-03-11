@@ -1,5 +1,5 @@
 
-module.exports.boxTerm = () => {
+module.exports.boxTerm = (payload) => {
   return `new 
   mainCh,
   entryCh,
@@ -7,6 +7,8 @@ module.exports.boxTerm = () => {
   returnBagsWithoutKeys,
   createKeyInBoxPurseIfNotExistCh,
   superKeysCh,
+  readyCh,
+  readyCounterCh,
   boxPursesCh,
   deployerId(\`rho:rchain:deployerId\`),
   stdout(\`rho:io:stdout\`),
@@ -208,22 +210,24 @@ in {
       for (@(purse, registryUri, operation, purseToDepositTo) <- doDepositOrSwapCh) {
         match operation {
           "swap" => {
-            new returnSwapCh, returnPropertiesCh in {
-              @(purse, "SWAP")!((Nil, *returnSwapCh)) |
-              for (swappedPurse <- returnSwapCh) {
-                @(*swappedPurse, "READ")!((Nil, *returnPropertiesCh)) |
-                for (properties <- returnPropertiesCh) {
-                  for (boxPurses <- boxPursesCh) {
-                    boxPursesCh!(
-                      *boxPurses.set(
-                        registryUri,
-                        *boxPurses.get(registryUri).set(
-                          *properties.get("id"),
-                          *swappedPurse
+            new returnSwapCh, returnReadMainCh, returnPropertiesCh in {
+              for (main <<- mainCh) {
+                @(purse, "SWAP")!((*main.get("publicKey"), *returnSwapCh)) |
+                for (swappedPurse <- returnSwapCh) {
+                  @(*swappedPurse, "READ")!((Nil, *returnPropertiesCh)) |
+                  for (properties <- returnPropertiesCh) {
+                    for (boxPurses <- boxPursesCh) {
+                      boxPursesCh!(
+                        *boxPurses.set(
+                          registryUri,
+                          *boxPurses.get(registryUri).set(
+                            *properties.get("id"),
+                            *swappedPurse
+                          )
                         )
-                      )
-                    ) |
-                    @return!((true, Nil))
+                      ) |
+                      @return!((true, Nil))
+                    }
                   }
                 }
               }
@@ -274,10 +278,6 @@ in {
     }
   } |
 
-  /*
-    todo: secure with bundle- (*entryCh -> bundle-{*entryCh}) , but we must
-    do it after all the listens are active
-  */
   insertArbitrary!(*entryCh, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
@@ -400,6 +400,7 @@ in {
     stdout!("box deployed, private channel is @(*deployerId, '\${n}')" %% { "n": *entryUri }  ) |
     mainCh!({
       "registryUri": *entryUri,
+      "publicKey": "${payload.publicKey}",
       "version": "5.0.0",
       "status": "completed"
     })

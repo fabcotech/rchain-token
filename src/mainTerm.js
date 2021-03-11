@@ -162,20 +162,24 @@ in {
                           Useful when you receive purse from unknown source, swap it
                           to make sure emitter did not keep a copy
                         */
-                        for (@(Nil, returnSwap) <= @(*purse, "SWAP")) {
-                          for (id <- @(*vault, *purse)) {
-                            stdout!(("SWAP asked, current id is", *id)) |
-                            for (ids <- pursesIds) {
-                              pursesIds!(*ids.delete(*id)) |
-                              for (data <- @(*pursesData, *id)) {
-                                for (props <- @(*purses, *id)) {
-                                  stdout!("will makePurse ") |
-                                  stdout!(*props) |
-                                  makePurseCh!((
-                                    *props, *data, returnSwap
-                                  ))
+                        for (@(publicKey, returnSwap) <= @(*purse, "SWAP")) {
+                          match publicKey {
+                            String => {
+                              for (id <- @(*vault, *purse)) {
+                                for (ids <- pursesIds) {
+                                  pursesIds!(*ids.delete(*id)) |
+                                  for (data <- @(*pursesData, *id)) {
+                                    for (props <- @(*purses, *id)) {
+                                      makePurseCh!((
+                                        *props.set("publicKey", publicKey), *data, returnSwap
+                                      ))
+                                    }
+                                  }
                                 }
                               }
+                            }
+                            _ => {
+                              @returnSwap!("error: public key must be a string")
                             }
                           }
                         } |
@@ -528,10 +532,11 @@ in {
     property not Nil
     see payload below
   */
+  // todo limitation total payload size ??
   for (@(payload, return) <= @(*entryCh, "PUBLIC_PURCHASE")) {
     match payload {
       { "quantity": Int, "purseId": String, "publicKey": String,
-      "newId": Nil \\/ String, "purseRevAddr": _, "purseAuthKey": _ } => {
+      "newId": Nil \\/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
         for (@properties <<- @(*purses, payload.get("purseId"))) {
           match (
             properties.get("price"),
@@ -616,7 +621,7 @@ in {
                                           .set("newId", payload.get("newId"))
                                           .set("quantity", payload.get("quantity"))
                                           .set("publicKey", payload.get("publicKey")),
-                                        Nil,
+                                        payload.get("data"),
                                         *makePurseReturnCh
                                       )) |
                                       for (newPurse <- makePurseReturnCh) {

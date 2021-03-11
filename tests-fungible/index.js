@@ -269,6 +269,7 @@ const main = async () => {
     toBoxRegistryUri: secondBoxRegistryUri,
     purseId: `${PURSES_TO_CREATE}`,
     quantity: 1,
+    data: 'bbb',
     newId: null,
     price: 10,
     publicKey: PUBLIC_KEY_2,
