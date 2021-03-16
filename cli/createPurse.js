@@ -101,7 +101,7 @@ module.exports.createPurse = async () => {
     process.env.PRIVATE_KEY,
     publicKey,
     1,
-    10000000,
+    100000000,
     vab
   );
 

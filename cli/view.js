@@ -23,7 +23,7 @@ module.exports.view = async () => {
 
   const term1 = readTerm(registryUri);
   const term2 = readPursesTerm(registryUri, {
-    pursesIds: purseId === undefined ? ids.slice(0, 99) : [purseId],
+    pursesIds: purseId === undefined ? ids.slice(0, 100) : [purseId],
   });
   const publicKey = process.env.PRIVATE_KEY
     ? rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY)

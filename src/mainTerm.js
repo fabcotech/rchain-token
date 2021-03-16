@@ -459,7 +459,7 @@ in {
   } |
 
   for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES")) {
-    match payload.size() < 100 {
+    match payload.size() < 101 {
       true => {
         iterateCh!((*purses, payload, return))
       }
@@ -470,7 +470,7 @@ in {
   } |
 
   for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES_DATA")) {
-    match payload.size() < 100 {
+    match payload.size() < 101 {
       true => {
         iterateCh!((*pursesData, payload, return))
       }
