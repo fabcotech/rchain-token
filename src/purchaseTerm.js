@@ -16,6 +16,7 @@ new
   registryUriCh,
   revAddressCh,
   registryLookup(\`rho:registry:lookup\`),
+  deployerId(\`rho:rchain:deployerId\`),
   stdout(\`rho:io:stdout\`),
   revAddress(\`rho:rev:address\`)
 in {
@@ -84,7 +85,7 @@ in {
               ) {
                 (from, to, amount) => {
 
-                  new vaultCh, revVaultkeyCh, deployerId(\`rho:rchain:deployerId\`) in {
+                  new vaultCh, revVaultkeyCh in {
                     @RevVault!("findOrCreate", from, *vaultCh) |
                     @RevVault!("deployerAuthKey", *deployerId, *revVaultkeyCh) |
                     for (@(true, vault) <- vaultCh; key <- revVaultkeyCh) {
@@ -98,9 +99,7 @@ in {
                           stdout!(("Finished transfer of ", amount, "REV to", to, "result was:", result)) |
                           match result {
                             (true, Nil) => {
-                              stdout!("yes") |
                               registryLookup!(registryUri, *entryCh) |
-
                               for(entry <- entryCh) {
                                 stdout!("PUBLIC_PURCHASE") |
                                 stdout!(*entry) |
@@ -117,33 +116,46 @@ in {
                                   *returnCh
                                 )) |
                                 for (resp <- returnCh) {
-                                  stdout!(*resp) |
                                   match *resp {
                                     (true, purse) => {
-                                      stdout!("yep") |
                                       new readReturnCh, boxEntryCh, receivePursesReturnCh in {
                                         @(*entry, "PUBLIC_READ")!((Nil, *readReturnCh)) |
                                         for (@current <- readReturnCh) {
-                                          stdout!(("current", current)) |
-                                          registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
-                                          for (boxEntry <- boxEntryCh) {
-                                            @(*boxEntry, "${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}")!((
-                                              {
-                                                "registryUri": current.get("registryUri"),
-                                                "purse": purse,
-                                              },
-                                              *receivePursesReturnCh
-                                            )) |
-                                            for (r <- receivePursesReturnCh) {
-                                              match *r {
-                                                String => {
-                                                  basket!({ "status": "failed", "message": *resp }) |
-                                                  stdout!(("failed", *resp))
-                                                }
-                                                _ => {
-                                                  basket!({ "status": "completed" }) |
-                                                  stdout!("purchase went well")
-                                                }
+                                          match "${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}" {
+                                            "PUBLIC_RECEIVE_PURSE" => {
+                                              registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
+                                              for (boxEntry <- boxEntryCh) {
+                                                @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                                                  {
+                                                    "registryUri": current.get("registryUri"),
+                                                    "purse": purse,
+                                                  },
+                                                  *receivePursesReturnCh
+                                                ))
+                                              }
+                                            }
+                                            "SAVE_PURSE_SEPARATELY" => {
+                                              @(*deployerId, "rho:id:${payload.toBoxRegistryUri}")!((
+                                                {
+                                                  "type": "SAVE_PURSE_SEPARATELY",
+                                                  "payload": {
+                                                    "registryUri": current.get("registryUri"),
+                                                    "purse": purse,
+                                                  } 
+                                                },
+                                                *receivePursesReturnCh
+                                              ))
+                                            }
+                                          } |
+                                          for (r <- receivePursesReturnCh) {
+                                            match *r {
+                                              String => {
+                                                basket!({ "status": "failed", "message": *resp }) |
+                                                stdout!(("failed", *resp))
+                                              }
+                                              _ => {
+                                                basket!({ "status": "completed" }) |
+                                                stdout!("purchase went well")
                                               }
                                             }
                                           }
