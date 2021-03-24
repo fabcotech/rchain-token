@@ -451,13 +451,13 @@ in {
   // ===== ANY USER / PUBLIC capabilities
   // ====================================
 
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES_IDS")) {
+  for (@("PUBLIC_READ_PURSES_IDS", payload, return) <= entryCh) {
     for (ids <<- pursesIds) {
       @return!(*ids)
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES")) {
+  for (@("PUBLIC_READ_PURSES", payload, return) <= entryCh) {
     match payload.size() < 101 {
       true => {
         iterateCh!((*purses, payload, return))
@@ -468,7 +468,7 @@ in {
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES_DATA")) {
+  for (@("PUBLIC_READ_PURSES_DATA", payload, return) <= entryCh) {
     match payload.size() < 101 {
       true => {
         iterateCh!((*pursesData, payload, return))
@@ -479,7 +479,7 @@ in {
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ")) {
+  for (@("PUBLIC_READ", payload, return) <= entryCh) {
     for (current <<- mainCh) {
       @return!(*current)
     }
@@ -490,7 +490,7 @@ in {
     receives a list of purse, check that (they exist + no duplicate)
     and returns the corresponding list of ids
   */
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_CHECK_PURSES")) {
+  for (@("PUBLIC_CHECK_PURSES", payload, return) <= entryCh) {
     new tmpCh, itCh in {
       for (@(tmpCh, keys) <= itCh) {
         for (tmp <- @tmpCh) {
@@ -532,7 +532,7 @@ in {
     see payload below
   */
   // todo limitation total payload size ??
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_PURCHASE")) {
+  for (@("PUBLIC_PURCHASE", payload, return) <= entryCh) {
     match payload {
       { "quantity": Int, "purseId": String, "publicKey": String,
       "newId": Nil \/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
@@ -661,11 +661,7 @@ in {
   // save superKeyCh to a box
   // ====================================
 
-  /*
-    todo: secure with bundle- (*entryCh -> bundle-{*entryCh}) , but we must
-    do it after all the listens are active
-  */
-  insertArbitrary!(*entryCh, *entryUriCh) |
+  insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
     new boxDataCh, boxReturnCh in {

@@ -31,7 +31,7 @@ in {
             (true, newPurse) => {
               registryLookup!(`rho:id:TO_BOX_REGISTRY_URI`, *boxEntryCh) |
               for (boxEntry <- boxEntryCh) {
-                @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                boxEntry!(("PUBLIC_RECEIVE_PURSE", 
                   {
                     "registryUri": `rho:id:REGISTRY_URI`,
                     "purse": newPurse,
@@ -48,7 +48,7 @@ in {
                   _ => {
                     registryLookup!(`rho:id:FROM_BOX_REGISTRY_URI`, *boxEntry2Ch) |
                     for (boxEntry2 <- boxEntry2Ch) {
-                      @(*boxEntry2, "PUBLIC_RECEIVE_PURSE")!((
+                      boxEntry2!(("PUBLIC_RECEIVE_PURSE", 
                         {
                           "registryUri": `rho:id:REGISTRY_URI`,
                           "purse": newPurse,

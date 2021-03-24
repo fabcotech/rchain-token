@@ -79,7 +79,7 @@ in {
       else: SWAP and save new purse
   */
   // todo, if this operation fails, remove empty key in boxPurses ?
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_RECEIVE_PURSE")) {
+  for (@("PUBLIC_RECEIVE_PURSE", payload, return) <= entryCh) {
     new lookupReturnCh, checkReturnCh, readReturnCh, readPropertiesReturnCh, return1Ch,
     itCh, doDepositOrSwapCh, decideToDepositOrSwpaCh in {
 
@@ -89,8 +89,8 @@ in {
       */
       lookup!(payload.get("registryUri"), *lookupReturnCh) |
       for (contractEntry <- lookupReturnCh) {
-        @(*contractEntry, "PUBLIC_CHECK_PURSES")!(([payload.get("purse")], *checkReturnCh)) |
-        @(*contractEntry, "PUBLIC_READ")!((Nil, *readReturnCh)) |
+        contractEntry!(("PUBLIC_CHECK_PURSES", [payload.get("purse")], *checkReturnCh)) |
+        contractEntry!(("PUBLIC_READ", Nil, *readReturnCh)) |
         @(payload.get("purse"), "READ")!((Nil, *readPropertiesReturnCh)) |
         for (checkReturn <- checkReturnCh; current <- readReturnCh; receivedPurseProperties <- readPropertiesReturnCh) {
           match *checkReturn {
@@ -251,19 +251,19 @@ in {
     }
   } |
 
-  for (@(Nil, return) <= @(*entryCh, "PUBLIC_READ")) {
+  for (@("PUBLIC_READ", Nil, return) <= entryCh) {
     for (main <<- mainCh) {
       @return!(*main)
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_SUPER_KEYS")) {
+  for (@("PUBLIC_READ_SUPER_KEYS", payload, return) <= entryCh) {
     for (superKeys <<- superKeysCh) {
       @return!(*superKeys.keys())
     }
   } |
 
-  for (@(payload, return) <= @(*entryCh, "PUBLIC_READ_PURSES")) {
+  for (@("PUBLIC_READ_PURSES", payload, return) <= entryCh) {
     for (purses <<- boxPursesCh) {
       match *purses.keys().size() {
         0 => {
@@ -276,7 +276,7 @@ in {
     }
   } |
 
-  insertArbitrary!(*entryCh, *entryUriCh) |
+  insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
 

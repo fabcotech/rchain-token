@@ -40,9 +40,10 @@ module.exports.view = async () => {
   ]).then((results) => {
     const data = rchainToolkit.utils.rhoValToJs(JSON.parse(results[0]).expr[0]);
 
-    const purses = rchainToolkit.utils.rhoValToJs(
-      JSON.parse(results[1]).expr[0]
-    );
+    const purses =
+      ids.length > 0
+        ? rchainToolkit.utils.rhoValToJs(JSON.parse(results[1]).expr[0])
+        : [];
     logData(data);
     if (Object.keys(purses).length === 0) {
       console.log('\n no purses');

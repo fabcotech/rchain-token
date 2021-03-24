@@ -7,13 +7,13 @@ module.exports.readBoxTerm = (
   for(entry <- entryCh) {
     stdout!(*entry) |
     new a in {
-      @(*entry, "PUBLIC_READ")!((Nil, *a)) |
+      entry!(("PUBLIC_READ", Nil, *a)) |
       for (current <- a) {
         new b in {
-          @(*entry, "PUBLIC_READ_SUPER_KEYS")!((Nil, *b)) |
+          entry!(("PUBLIC_READ_SUPER_KEYS", Nil, *b)) |
           for (superKeys <- b) {
             new c in {
-              @(*entry, "PUBLIC_READ_PURSES")!((Nil, *c)) |
+              entry!(("PUBLIC_READ_PURSES", Nil, *c)) |
               for (purses <- c) {
                 return!(
                   *current

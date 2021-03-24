@@ -101,10 +101,7 @@ in {
                             (true, Nil) => {
                               registryLookup!(registryUri, *entryCh) |
                               for(entry <- entryCh) {
-                                stdout!("PUBLIC_PURCHASE") |
-                                stdout!(*entry) |
-                                @(*entry, "PUBLIC_PURCHASE")!((
-                                  {
+                                entry!(("PUBLIC_PURCHASE", {
                                     "quantity": quantity,
                                     "purseId": purseId,
                                     "newId": newId,
@@ -119,13 +116,13 @@ in {
                                   match *resp {
                                     (true, purse) => {
                                       new readReturnCh, boxEntryCh, receivePursesReturnCh in {
-                                        @(*entry, "PUBLIC_READ")!((Nil, *readReturnCh)) |
+                                        entry!(("PUBLIC_READ", Nil, *readReturnCh)) |
                                         for (@current <- readReturnCh) {
                                           match "${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}" {
                                             "PUBLIC_RECEIVE_PURSE" => {
                                               registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
                                               for (boxEntry <- boxEntryCh) {
-                                                @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                                                boxEntry!(("PUBLIC_RECEIVE_PURSE", 
                                                   {
                                                     "registryUri": current.get("registryUri"),
                                                     "purse": purse,

@@ -6,7 +6,7 @@ module.exports.readTerm = (
   lookup!(\`rho:id:${registryUri}\`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
-      @(*entry, "PUBLIC_READ")!((Nil, *x)) |
+      entry!(("PUBLIC_READ", Nil, *x)) |
       for (y <- x) {
         return!(*y)
       }

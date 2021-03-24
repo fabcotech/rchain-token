@@ -26,7 +26,7 @@ in {
       purse => {
         registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
         for (boxEntry <- boxEntryCh) {
-          @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+          boxEntry!(("PUBLIC_RECEIVE_PURSE", 
             {
               "registryUri": \`rho:id:${registryUri}\`,
               "purse": purse,
@@ -68,7 +68,7 @@ in {
               _ => {
                 registryLookup!(\`rho:id:${payload.fromBoxRegistryUri}\`, *boxEntry2Ch) |
                 for (boxEntry2 <- boxEntry2Ch) {
-                  @(*boxEntry, "PUBLIC_RECEIVE_PURSE")!((
+                  boxEntry!(("PUBLIC_RECEIVE_PURSE", 
                     {
                       "registryUri": \`rho:id:${registryUri}\`,
                       "purse": purse,

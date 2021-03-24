@@ -50,10 +50,11 @@ in {
                   new readReturnCh, receivePurseReturnCh in {
                     @(last, "READ")!((Nil, *readReturnCh)) |
                     for (properties <- readReturnCh) {
-                      @(*entry, "PUBLIC_RECEIVE_PURSE")!(({
-                        "registryUri": \`rho:id:${registryUri}\`,
-                        "purse": last
-                      }, *receivePurseReturnCh))
+                      entry!((
+                        "PUBLIC_RECEIVE_PURSE", {
+                          "registryUri": \`rho:id:${registryUri}\`,
+                          "purse": last
+                        }, *receivePurseReturnCh))
                     } |
                     for (r <- receivePurseReturnCh) {
                       match *r {
@@ -73,7 +74,7 @@ in {
                   new readReturnCh, receivePurseReturnCh in {
                     @(first, "READ")!((Nil, *readReturnCh)) |
                     for (properties <- readReturnCh) {
-                      @(*entry, "PUBLIC_RECEIVE_PURSE")!(({
+                      entry!(("PUBLIC_RECEIVE_PURSE", {
                         "registryUri": \`rho:id:${registryUri}\`,
                         "purse": first
                       }, *receivePurseReturnCh))

@@ -7,7 +7,7 @@ module.exports.readPursesTerm = (
   lookup!(\`rho:id:${registryUri}\`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
-      @(*entry, "PUBLIC_READ_PURSES")!((Set(${payload.pursesIds
+      entry!(("PUBLIC_READ_PURSES", Set(${payload.pursesIds
   .map((id) => '"' + id + '"')
   .join(',')}), *x)) |
       for (y <- x) {
