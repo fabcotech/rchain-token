@@ -670,7 +670,7 @@ in {
       for (r <- boxDataCh) {
       stdout!(*r) |
         match (*r.get("version")) {
-          "5.0.0" => {
+          "5.0.1" => {
             @(*deployerId, "rho:id:${fromBoxRegistryUri}")!((
               {
                 "type": "SAVE_SUPER_KEY",
@@ -690,14 +690,14 @@ in {
                     "registryUri": *entryUri,
                     "locked": false,
                     "fungible": ${payload.fungible},
-                    "version": "5.0.0"
+                    "version": "5.0.1"
                   }) |
                   stdout!({
                     "status": "completed",
                     "registryUri": *entryUri,
                     "locked": false,
                     "fungible": ${payload.fungible},
-                    "version": "5.0.0"
+                    "version": "5.0.1"
                   }) |
                   stdout!("completed, contract deployed")
                 }
@@ -707,11 +707,11 @@ in {
           _ => {
             mainCh!({
               "status": "failed",
-              "message": "box has not the same version number 5.0.0",
+              "message": "box has not the same version number 5.0.1",
             }) |
             stdout!({
               "status": "failed",
-              "message": "box has not the same version number 5.0.0",
+              "message": "box has not the same version number 5.0.1",
             })
           }
         }

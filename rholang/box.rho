@@ -399,7 +399,7 @@ in {
     mainCh!({
       "registryUri": *entryUri,
       "publicKey": "PUBLIC_KEY",
-      "version": "5.0.0",
+      "version": "5.0.1",
       "status": "completed"
     })
   }

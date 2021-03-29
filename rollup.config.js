@@ -7,7 +7,7 @@ export default {
   output: {
     format: 'umd',
     name: 'RChainToken',
-    file: 'dist/rchain-token@5.0.0.js',
+    file: 'dist/rchain-token@5.0.1.js',
   },
   plugins: [resolve(), commonjs(), json()],
 };
