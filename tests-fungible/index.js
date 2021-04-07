@@ -35,7 +35,6 @@ const balances1 = [];
 const balances2 = [];
 
 const main = async () => {
-  console.log(process.env.READ_ONLY_HOST);
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
 

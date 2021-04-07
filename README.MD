@@ -1,4 +1,4 @@
-### Rholang (RChain) token (v 5.0.1)
+### Rholang (RChain) token (v 5.0.2)
 
 Fungibles and non-fungibles tokens on the RChain blockchain.
 

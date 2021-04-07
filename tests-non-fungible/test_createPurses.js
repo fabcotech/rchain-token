@@ -22,6 +22,7 @@ module.exports.main = async (
     purses: {
       ['0']: {
         id: '0',
+        box: `$BQrho:id:${boxRegistryUri}$BQ`,
         publicKey: publicKey1,
         type: '0',
         quantity: 1000000,
@@ -35,6 +36,7 @@ module.exports.main = async (
     payload.purses[ids[i]] = {
       id: ids[i], // will be checked and use as id if available (non-fungible)
       publicKey: publicKey1,
+      box: `$BQrho:id:${boxRegistryUri}$BQ`,
       type: '0',
       quantity: 1,
       price: null,

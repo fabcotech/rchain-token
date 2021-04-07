@@ -28,7 +28,7 @@ in {
   registryUriCh!!(\`rho:id:${registryUri}\`) |
   // Unique ID of the token you want to purchase
   purseIdCh!!("${payload.purseId}") |
-  // New ID only used if fungible = false
+  // New ID only used if fungible = false, if fungible = true set to Nil
   newIdCh!!("${payload.newId ? payload.newId : "Nil"}") |
   // Per token price, make sure it is accurate
   priceCh!!(${payload.price || "Nil"}) |
@@ -106,6 +106,7 @@ in {
                                     "purseId": purseId,
                                     "newId": newId,
                                     "data": data,
+                                    "box": \`rho:id:${payload.toBoxRegistryUri}\`,
                                     "publicKey": publicKey,
                                     "purseRevAddr": purseRevAddr,
                                     "purseAuthKey": purseAuthKey

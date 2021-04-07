@@ -14,7 +14,7 @@ in {
         @(ch, "CREATE_PURSES")!((
           {
             // example
-            // "purses": { "0": { "publicKey": "abc", "type": "gold", "quantity": 3, "data": Nil }}
+            // "purses": { "0": { "publicKey": "abc", "box": `rho:id:abc`, "type": "gold", "quantity": 3, "data": Nil }}
             "purses": CREATE_PURSESS,
             // example
             // "data": { "0": "this bag is mine" }

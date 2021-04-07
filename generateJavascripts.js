@@ -32,7 +32,9 @@ const replaceEverything = (a) => {
       )
       .replace(
         'CREATE_PURSESS',
-        `\${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
+        `\${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')
+        .split('"$BQ').join('\`')
+        .split('$BQ"').join('\`')}`
       )
       .replace('BAG_NONCE', '${payload.bagNonce}')
       .replace('BAG_NONCE_2', '${payload.bagNonce2}')

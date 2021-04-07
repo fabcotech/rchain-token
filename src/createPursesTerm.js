@@ -18,8 +18,10 @@ in {
         @(ch, "CREATE_PURSES")!((
           {
             // example
-            // "purses": { "0": { "publicKey": "abc", "type": "gold", "quantity": 3, "data": Nil }}
-            "purses": ${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')},
+            // "purses": { "0": { "publicKey": "abc", "box": \`rho:id:abc\`, "type": "gold", "quantity": 3, "data": Nil }}
+            "purses": ${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')
+        .split('"$BQ').join('`')
+        .split('$BQ"').join('`')},
             // example
             // "data": { "0": "this bag is mine" }
             "data": ${JSON.stringify(payload.data).replace(new RegExp(': null|:null', 'g'), ': Nil')},

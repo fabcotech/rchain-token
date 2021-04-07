@@ -58,6 +58,7 @@ module.exports.createPurse = async () => {
         type: type,
         price: price,
         publicKey: publicKey,
+        box: '$BQrho:id:${boxRegistryUri}$BQ',
         quantity: quantity,
       },
     },

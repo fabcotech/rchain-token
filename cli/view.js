@@ -19,6 +19,8 @@ module.exports.view = async () => {
   let ids = [];
   if (purseId === undefined) {
     ids = rchainToolkit.utils.rhoValToJs(JSON.parse(result0).expr[0]);
+  } else {
+    ids = [purseId];
   }
 
   const term1 = readTerm(registryUri);
@@ -57,14 +59,15 @@ module.exports.view = async () => {
       }
       console.log('\n purse ID ' + purseId + '\n');
       console.log(` Public key : ${purses[purseId].publicKey}`);
-      console.log(` Type   : ${purses[purseId].type}`);
+      console.log(` Box        : ${purses[purseId].box}`);
+      console.log(` Type       : ${purses[purseId].type}`);
       console.log(` Quantity   : ${purses[purseId].quantity}`);
       console.log(` Price      : ${purses[purseId].price || 'not for sale'}`);
       return;
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
     console.log(
-      '\n Bags [0-99]\n purse ID          type       owner         quantity           price (dust) \n'
+      `\n Purses [0-99] / ${ids.length}\n purse ID          type       box           owner         quantity         price (dust) \n`
     );
     Object.keys(purses).forEach((bagId) => {
       let s = '';
@@ -72,10 +75,12 @@ module.exports.view = async () => {
       s = s.padEnd(18, ' ');
       s += purses[bagId].type;
       s = s.padEnd(29, ' ');
-      s += purses[bagId].publicKey.slice(0, 9) + '...';
+      s += purses[bagId].box.replace('rho:id:', '').slice(0, 8) + '...';
       s = s.padEnd(43, ' ');
+      s += purses[bagId].publicKey.slice(0, 8) + '...';
+      s = s.padEnd(57, ' ');
       s += purses[bagId].quantity;
-      s = s.padEnd(62, ' ');
+      s = s.padEnd(74, ' ');
       s +=
         typeof purses[bagId].price === 'number'
           ? purses[bagId].price

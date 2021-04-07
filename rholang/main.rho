@@ -19,19 +19,19 @@ new
       // "12"
       for (purse <- @(*purses, "12")) {
         out!(*purse)
-        // { "quantity": 100, "type": "GOLD", "publicKey": "aaa" }
+        // { "quantity": 100, "type": "GOLD", "box": `rho:id:aaa`, "publicKey": "aaa", }
       }
     }
   */
   vault,
 
   /*
-    A purse's properties is a Map {"quantity", "type", "price", "publicKey"}
+    A purse's properties is a Map {"quantity", "type", "price", "box", "publicKey"}
     stored in the channel *purses. Anyone can read it through
     "READ_PURSES" public channel.
 
     // create purse "12" (it must not exist)
-    @(*purses, "12")!({ "publicKey": "aaa", etc... }) |
+    @(*purses, "12")!({ "publicKey": "aaa", "box": `rho:id:aaa`, etc... }) |
 
     // receive purse "12"
     for (purse <- @(*purses, "12")) {
@@ -73,11 +73,11 @@ in {
   /*
     MAKE PURSE
     only place where new purses are created
-    "MINT", "SWAP", "CREATE_PURSES" call this channel
+    "WITHDRAW", "PURCHASE", "SWAP", "CREATE_PURSES" call this channel
 
     depending on if .fungible is true or false, it decides
-    which id to give to the new purse, then it instantiates
-    the purse with WITHDRAW, SWAP, BURN "instance channels"
+    which id to give to the new purse, then it creates
+    the purse with SWAP, UPDATE_DATA, SET_PRICE, WITHDRAW, DEPOSIT instance methods
   */
   for (@(properties, data, return) <= makePurseCh) {
     new idAndQuantityCh in {
@@ -125,8 +125,10 @@ in {
             match purseProperties {
               {
                 "quantity": Int,
-                // not used in main contract or box contract
-                // only useful for dumping data
+                // .box may is used to deploy other contracts
+                // and send purses to existing owners
+                "box": URI,
+                // .publicKey is used if purse is sold
                 "publicKey": String,
                 "type": String,
                 "id": String,
@@ -144,7 +146,7 @@ in {
 
                         /*
                           READ
-                          Returns prperties "id", "quantity", "type", "publicKey" and "price"(not implemented)
+                          Returns properties "id", "quantity", "type", "box" and "price"
                           (Nil) => propertie
                         */
                         for (@(Nil, returnRead) <= @(*purse, "READ")) {
@@ -161,16 +163,20 @@ in {
                           Useful when you receive purse from unknown source, swap it
                           to make sure emitter did not keep a copy
                         */
-                        for (@(publicKey, returnSwap) <= @(*purse, "SWAP")) {
-                          match publicKey {
-                            String => {
+                        for (@(payload, returnSwap) <= @(*purse, "SWAP")) {
+                          match (payload.get("box"), payload.get("publicKey")) {
+                            (URI, String) => {
                               for (id <- @(*vault, *purse)) {
                                 for (ids <- pursesIds) {
                                   pursesIds!(*ids.delete(*id)) |
                                   for (data <- @(*pursesData, *id)) {
                                     for (props <- @(*purses, *id)) {
                                       makePurseCh!((
-                                        *props.set("publicKey", publicKey), *data, returnSwap
+                                        *props
+                                          .set("box", payload.get("box"))
+                                          .set("publicKey", payload.get("publicKey")),
+                                        *data,
+                                        returnSwap
                                       ))
                                     }
                                   }
@@ -178,7 +184,7 @@ in {
                               }
                             }
                             _ => {
-                              @returnSwap!("error: public key must be a string")
+                              @returnSwap!("error: payload must be box: URI, publicKey: String")
                             }
                           }
                         } |
@@ -534,8 +540,7 @@ in {
   // todo limitation total payload size ??
   for (@("PUBLIC_PURCHASE", payload, return) <= entryCh) {
     match payload {
-      { "quantity": Int, "purseId": String, "publicKey": String,
-      "newId": Nil \/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
+      { "quantity": Int, "purseId": String, "publicKey": String, "box": URI, "newId": Nil \/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
         for (@properties <<- @(*purses, payload.get("purseId"))) {
           match (
             properties.get("price"),
@@ -600,7 +605,8 @@ in {
                                               .set("price", Nil)
                                               .set("newId", payload.get("newId"))
                                               .set("quantity", payload.get("quantity"))
-                                              .set("publicKey", payload.get("publicKey")),
+                                              .set("publicKey", payload.get("publicKey"))
+                                              .set("box", payload.get("box")),
                                             payload.get("data"),
                                             *makePurseReturnCh
                                           )) |
@@ -619,12 +625,12 @@ in {
                                           .set("price", Nil)
                                           .set("newId", payload.get("newId"))
                                           .set("quantity", payload.get("quantity"))
-                                          .set("publicKey", payload.get("publicKey")),
+                                          .set("publicKey", payload.get("publicKey"))
+                                          .set("box", payload.get("box")),
                                         payload.get("data"),
                                         *makePurseReturnCh
                                       )) |
                                       for (newPurse <- makePurseReturnCh) {
-                                        stdout!(*newPurse) |
                                         @return!((true, *newPurse))
                                       }
                                     }
@@ -669,7 +675,7 @@ in {
       for (r <- boxDataCh) {
       stdout!(*r) |
         match (*r.get("version")) {
-          "5.0.1" => {
+          "5.0.2" => {
             @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!((
               {
                 "type": "SAVE_SUPER_KEY",
@@ -689,14 +695,14 @@ in {
                     "registryUri": *entryUri,
                     "locked": false,
                     "fungible": FUNGIBLE,
-                    "version": "5.0.1"
+                    "version": "5.0.2"
                   }) |
                   stdout!({
                     "status": "completed",
                     "registryUri": *entryUri,
                     "locked": false,
                     "fungible": FUNGIBLE,
-                    "version": "5.0.1"
+                    "version": "5.0.2"
                   }) |
                   stdout!("completed, contract deployed")
                 }
@@ -706,11 +712,11 @@ in {
           _ => {
             mainCh!({
               "status": "failed",
-              "message": "box has not the same version number 5.0.1",
+              "message": "box has not the same version number 5.0.2",
             }) |
             stdout!({
               "status": "failed",
-              "message": "box has not the same version number 5.0.1",
+              "message": "box has not the same version number 5.0.2",
             })
           }
         }

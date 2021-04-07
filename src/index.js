@@ -14,7 +14,7 @@ const { purchaseTerm } = require('./purchaseTerm');
 const { withdrawTerm } = require('./withdrawTerm');
 
 module.exports = {
-  version: '5.0.1',
+  version: '5.0.2',
   boxTerm,
   mainTerm,
   createPursesTerm,

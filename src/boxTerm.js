@@ -212,7 +212,7 @@ in {
           "swap" => {
             new returnSwapCh, returnReadMainCh, returnPropertiesCh in {
               for (main <<- mainCh) {
-                @(purse, "SWAP")!((*main.get("publicKey"), *returnSwapCh)) |
+                @(purse, "SWAP")!(({ "box": *main.get("registryUri"), "publicKey": *main.get("publicKey") }, *returnSwapCh)) |
                 for (swappedPurse <- returnSwapCh) {
                   @(*swappedPurse, "READ")!((Nil, *returnPropertiesCh)) |
                   for (properties <- returnPropertiesCh) {
@@ -401,7 +401,7 @@ in {
     mainCh!({
       "registryUri": *entryUri,
       "publicKey": "${payload.publicKey}",
-      "version": "5.0.1",
+      "version": "5.0.2",
       "status": "completed"
     })
   }

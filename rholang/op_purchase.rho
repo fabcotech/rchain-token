@@ -24,7 +24,7 @@ in {
   registryUriCh!!(`rho:id:REGISTRY_URI`) |
   // Unique ID of the token you want to purchase
   purseIdCh!!("PURSE_ID") |
-  // New ID only used if fungible = false
+  // New ID only used if fungible = false, if fungible = true set to Nil
   newIdCh!!("NEW_ID") |
   // Per token price, make sure it is accurate
   priceCh!!(PRICEE) |
@@ -102,6 +102,7 @@ in {
                                     "purseId": purseId,
                                     "newId": newId,
                                     "data": data,
+                                    "box": `rho:id:TO_BOX_REGISTRY_URI`,
                                     "publicKey": publicKey,
                                     "purseRevAddr": purseRevAddr,
                                     "purseAuthKey": purseAuthKey
