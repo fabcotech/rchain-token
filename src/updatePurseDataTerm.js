@@ -20,7 +20,7 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "UPDATE_DATA")!(("${payload.data}", *returnCh)) |
+        @purse!(("UPDATE_DATA", "${payload.data}", *returnCh)) |
         for (r <- returnCh) {
           match *r {
             String => {

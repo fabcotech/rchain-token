@@ -14,6 +14,10 @@ const replaceEverything = (a) => {
       .replace(/NEW_ID/g, '${payload.newId ? payload.newId : "Nil"}')
       .replace(/SPLIT_PURSE_QUANTITY/g, '${payload.quantityInNewPurse}')
       .replace(/WITHDRAW_PURSE_QUANTITY/g, '${payload.quantityToWithdraw}')
+      .replace(
+        /FEE/g,
+        '${payload.fee ? "(" + payload.fee.join(\',\') + ")" : "Nil"}'
+      )
       .replace('SIGNATURE', '${signature}')
       .replace(
         'TOKEN_ID',
@@ -253,6 +257,10 @@ fs.writeFileSync(
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')
       .replace(/\$\{/g, '\\${')
+      .replace(
+        /FEE/g,
+        '${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
+      )
       .replace(/FUNGIBLE/g, '${payload.fungible}')
       .replace(/FROM_BOX_REGISTRY_URI/g, '${fromBoxRegistryUri}')}\`;
 };

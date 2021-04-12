@@ -25,7 +25,7 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "WITHDRAW")!((${payload.quantityToWithdraw}, *withdrawReturnCh)) |
+        @purse!(("WITHDRAW", ${payload.quantityToWithdraw}, *withdrawReturnCh)) |
         for (r <- withdrawReturnCh) {
           match *r {
             String => {

@@ -20,8 +20,8 @@ in {
   // { [URI]: key }
   superKeysCh!({}) |
 
-  // keys
-  // { [URI]: { [bagId: string]: key } }
+  // purses
+  // { [URI]: { [bagId: string]: purse } }
   boxPursesCh!({}) |
 
   // returns { [URI]: Set[BagId] }
@@ -93,7 +93,7 @@ in {
       for (contractEntry <- lookupReturnCh) {
         contractEntry!(("PUBLIC_CHECK_PURSES", [payload.get("purse")], *checkReturnCh)) |
         contractEntry!(("PUBLIC_READ", Nil, *readReturnCh)) |
-        @(payload.get("purse"), "READ")!((Nil, *readPropertiesReturnCh)) |
+        @payload.get("purse")!(("READ", Nil, *readPropertiesReturnCh)) |
         for (checkReturn <- checkReturnCh; current <- readReturnCh; receivedPurseProperties <- readPropertiesReturnCh) {
           match *checkReturn {
             String => {
@@ -141,7 +141,7 @@ in {
                               }
                               Set(last) => {
                                 new readReturnCh in {
-                                  @(purses.get(last), "READ")!((Nil, *readReturnCh)) |
+                                  @purses.get(last)!(("READ", Nil, *readReturnCh)) |
                                   for (properties <- readReturnCh) {
                                     match (
                                       *properties.get("type") == *receivedPurseProperties.get("type"),
@@ -169,7 +169,7 @@ in {
                               }
                               Set(first ... rest) => {
                                 new readReturnCh in {
-                                  @(purses.get(first), "READ")!((Nil, *readReturnCh)) |
+                                  @purses.get(first)!(("READ", Nil, *readReturnCh)) |
                                   for (properties <- readReturnCh) {
                                     match (
                                       *properties.get("type") == *receivedPurseProperties.get("type"),
@@ -212,21 +212,28 @@ in {
           "swap" => {
             new returnSwapCh, returnReadMainCh, returnPropertiesCh in {
               for (main <<- mainCh) {
-                @(purse, "SWAP")!(({ "box": *main.get("registryUri"), "publicKey": *main.get("publicKey") }, *returnSwapCh)) |
-                for (swappedPurse <- returnSwapCh) {
-                  @(*swappedPurse, "READ")!((Nil, *returnPropertiesCh)) |
-                  for (properties <- returnPropertiesCh) {
-                    for (boxPurses <- boxPursesCh) {
-                      boxPursesCh!(
-                        *boxPurses.set(
-                          registryUri,
-                          *boxPurses.get(registryUri).set(
-                            *properties.get("id"),
-                            *swappedPurse
-                          )
-                        )
-                      ) |
-                      @return!((true, Nil))
+                @purse!(("SWAP", { "box": *main.get("registryUri"), "publicKey": *main.get("publicKey") }, *returnSwapCh)) |
+                for (returnSwap <- returnSwapCh) {
+                  match *returnSwap {
+                    String => {
+                      @return!("error: CRITICAL check was successful but failed to swap")
+                    }
+                    (true, swappedPurse) => {
+                      @swappedPurse!(("READ", Nil, *returnPropertiesCh)) |
+                      for (properties <- returnPropertiesCh) {
+                        for (boxPurses <- boxPursesCh) {
+                          boxPursesCh!(
+                            *boxPurses.set(
+                              registryUri,
+                              *boxPurses.get(registryUri).set(
+                                *properties.get("id"),
+                                swappedPurse
+                              )
+                            )
+                          ) |
+                          @return!((true, Nil))
+                        }
+                      }
                     }
                   }
                 }
@@ -235,7 +242,7 @@ in {
           }
           "deposit" => {
             new returnDepositCh, returnPropertiesCh in {
-              @(purseToDepositTo, "DEPOSIT")!((purse, *returnDepositCh)) |
+              @purseToDepositTo!(("DEPOSIT", purse, *returnDepositCh)) |
               for (r <- returnDepositCh) {
                 match *r {
                   String => {
@@ -285,11 +292,6 @@ in {
     // OWNER / PRIVATE capabilities
     for (@(action, return) <= @(*deployerId, "\${n}" %% { "n": *entryUri })) {
       match action.get("type") {
-        "READ" => {
-          for (main <<- mainCh) {
-            @return!(*main)
-          }
-        }
         "READ_SUPER_KEYS" => {
           for (superKeys <<- superKeysCh) {
             @return!(*superKeys)
@@ -306,29 +308,56 @@ in {
             action.get("payload").get("purse"),
           ) {
             (URI, _) => {
-              new createKeyReturnCh, readReturnCh in {
-                createKeyInBoxPurseIfNotExistCh!((action.get("payload").get("registryUri"), *createKeyReturnCh)) |
-                for (purses <- createKeyReturnCh) {
-                  match *purses {
-                    String => {
-                      @return!("error: invalid payload")
-                    }
-                    _ => {
-                      @(action.get("payload").get("purse"), "READ")!((Nil, *readReturnCh)) |
-                      for (@properties <- readReturnCh) {
-                        for (boxPurses <- boxPursesCh) {
-                          boxPursesCh!(
-                            *boxPurses.set(
-                              action.get("payload").get("registryUri"),
-                              *purses.set(
-                                properties.get("id"),
-                                action.get("payload").get("purse")
-                              )
-                            )
-                          ) |
-                          @return!((true, Nil))
+              new createKeyReturnCh, lookupReturnCh, readReturnCh, checkReturnCh,
+              returnSwapCh, returnReadMainCh, returnPropertiesCh in {
+                lookup!(payload.get("registryUri"), *lookupReturnCh) |
+                for (contractEntry <- lookupReturnCh) {
+                  contractEntry!(("PUBLIC_CHECK_PURSES", [payload.get("purse")], *checkReturnCh)) |
+                } |
+                for (checkReturn <- checkReturnCh) {
+                  match *checkReturn => {
+                    (true, Nil) => {
+                      for (main <<- mainCh) {
+                        @payload.get("purse")!(("SWAP", { "box": *main.get("registryUri"), "publicKey": *main.get("publicKey") }, *returnSwapCh)) |
+                        for (returnSwap <- returnSwapCh) {
+                          match *returnSwap {
+                            String => {
+                              @return!("error: CRITICAL check was successful but failed to swap")
+                            }
+                            (true, swappedPurse) => {
+                              createKeyInBoxPurseIfNotExistCh!((action.get("payload").get("registryUri"), *createKeyReturnCh)) |
+                              for (purses <- createKeyReturnCh) {
+                                match *purses {
+                                  String => {
+                                    @return!("error: invalid payload")
+                                  }
+                                  _ => {
+                                    swappedPurse!(("READ", Nil, *readReturnCh)) |
+                                    for (@properties <- readReturnCh) {
+                                      for (boxPurses <- boxPursesCh) {
+                                        boxPursesCh!(
+                                          *boxPurses.set(
+                                            action.get("payload").get("registryUri"),
+                                            *purses.set(
+                                              properties.get("id"),
+                                              *swappedPurse
+                                            )
+                                          )
+                                        ) |
+                                        @return!((true, Nil))
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+
+                            }
+                          }
                         }
                       }
+                    }
+                    String => {
+                      @return!("error: invalid purse, check failed")
                     }
                   }
                 }

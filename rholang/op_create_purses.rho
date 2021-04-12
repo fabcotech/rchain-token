@@ -44,7 +44,7 @@ in {
                 }
                 [last] => {
                   new readReturnCh, receivePurseReturnCh in {
-                    @(last, "READ")!((Nil, *readReturnCh)) |
+                    @last!(("READ", Nil, *readReturnCh)) |
                     for (properties <- readReturnCh) {
                       entry!((
                         "PUBLIC_RECEIVE_PURSE", {
@@ -68,7 +68,7 @@ in {
                 }
                 [first ... rest] => {
                   new readReturnCh, receivePurseReturnCh in {
-                    @(first, "READ")!((Nil, *readReturnCh)) |
+                    @first!(("READ", Nil, *readReturnCh)) |
                     for (properties <- readReturnCh) {
                       entry!(("PUBLIC_RECEIVE_PURSE", {
                         "registryUri": `rho:id:REGISTRY_URI`,

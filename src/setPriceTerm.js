@@ -20,7 +20,7 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "SET_PRICE")!((${payload.price || "Nil"}, *sendReturnCh)) |
+        @purse!(("SET_PRICE", ${payload.price || "Nil"}, *sendReturnCh)) |
         for (r <- sendReturnCh) {
           match *r {
             String => {

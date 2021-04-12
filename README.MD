@@ -47,6 +47,20 @@ node cli create-purse --quantity 12 --type "GOLD"
 node cli create-purse --quantity 24 --type "SILVER"
 ```
 
+**Methods/operations available**
+
+**_Box_**
+
+- `PUBLIC_RECEIVE_PURSE: (payload: { registryUri: URI, purse: Purse }) => String | (true, Nil)`
+- `PUBLIC_READ: () => main values`
+- `PUBLIC_READ_PURSES: () => { [URI]: Set(String)}`
+- `PUBLIC_READ_SUPER_KEYS: () => Set(URI)`
+- `READ_SUPER_KEYS: () => { [URI]: SuperKey }`
+- `READ_PURSES: () => { [URI]: { [bagId: string]: purse } }`
+- `SAVE_PURSE_SEPARATELY: (payload: { registryUri: URI, purse: Purse }) => String | (true, Nil)`
+- `DELETE_PURSE: (payload: { registryUri: URI, id: String }) => String | (true, Nil)`
+- `SAVE_SUPER_KEY: (payload: { registryUri: URI, superKey: SuperKey }) => String | (true, Nil)`
+
 **View**
 
 ```

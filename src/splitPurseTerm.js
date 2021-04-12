@@ -21,7 +21,7 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        @(purse, "WITHDRAW")!((${payload.quantityInNewPurse}, *withdrawReturnCh)) |
+        @purse!(("WITHDRAW", ${payload.quantityInNewPurse}, *withdrawReturnCh)) |
         for (r <- withdrawReturnCh) {
           match *r {
             String => {
@@ -29,7 +29,7 @@ in {
               stdout!(("failed", *r))
             }
             (true, newPurse) => {
-              @(newPurse, "READ")!((Nil, *readReturnCh)) |
+              @newPurse!(("READ", Nil, *readReturnCh)) |
               for (@properties <- readReturnCh) {
                 /*
                   Save new purse without joining it (DEPOSIT) to a purse with same type

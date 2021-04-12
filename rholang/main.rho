@@ -7,6 +7,9 @@ new
   iteratePropertiesCh,
   makePurseCh,
   superKeyCh,
+  calculateFeeCh,
+  pursesTreeHashMapCh,
+  pursesForSaleTreeHashMapCh,
 
   /*
     vault stores the id for each purse unforgeable name, you
@@ -27,6 +30,7 @@ new
   vault,
 
   /*
+    purses / thm
     A purse's properties is a Map {"quantity", "type", "price", "box", "publicKey"}
     stored in the tree hash map *purses. Anyone can read it through
     "READ_PURSES" public channel.
@@ -41,8 +45,14 @@ new
     }
 
   */
-  thmReturnCh,
   pursesReadyCh,
+
+  /*
+    pursesForSale / thm2
+    TreeHashMap of purses currently for sale
+    @pursesForSale!("set", thm2, "12", purse, *setReturnCh) |
+  */
+  pursesForSaleReadyCh,
 
 
   /*
@@ -62,19 +72,24 @@ in {
 
   counterCh!(0) |
 
-  pursesIds!(Set()) |
-
-  registryLookup!(`rho:lang:treeHashMap`, *treeHashMapCh) |
-  for(purses <- treeHashMapCh) {
-    purses!("init", 3, *thmReturnCh) |
-    new thmReturnCh in {
-      for (thm <- thmReturnCh) {
-        
+  registryLookup!(`rho:lang:treeHashMap`, *pursesTreeHashMapCh) |
+  registryLookup!(`rho:lang:treeHashMap`, *pursesForSaleTreeHashMapCh) |
+  for(purses <- pursesTreeHashMapCh; pursesForSale <- pursesForSaleTreeHashMapCh) {
+    stdout!(("ok1", *purses)) |
+    stdout!(("ok2", *pursesForSale)) |
+    new thmReturnCh, thm2ReturnCh in {
+      purses!("init", 3, *thmReturnCh) |
+      pursesForSale!("init", 3, *thm2ReturnCh) |
+      for (thm <- thmReturnCh; thm2 <- thm2ReturnCh) {
+        stdout!(("init1", *thm)) |
+        stdout!(("init2", *thm2)) |
+        pursesReadyCh!((*purses, *thm)) |
+        pursesForSaleReadyCh!((*pursesForSale, *thm2))
       }
     }
   } |
-  for (@(purses, thm) <- pursesReadyCh) {
-
+  for (@(purses, thm) <- pursesReadyCh; @(pursesForSale, thm2) <- pursesForSaleReadyCh) {
+    stdout!(("pursesReadyCh", "pursesForSaleReadyCh")) |
     /*
       MAKE PURSE
       only place where new purses are created
@@ -87,34 +102,31 @@ in {
     for (@(properties, data, return) <= makePurseCh) {
       new idAndQuantityCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch in {
         for (current <<- mainCh) {
-          match *current.get("fungible") {
-            true => {
-              for (counter <- counterCh) {
-                counterCh!(*counter + 1) |
-                idAndQuantityCh!({ "id": "${n}" %% { "n": *counter }, "quantity": properties.get("quantity") })
-              }
+          if (*current.get("fungible") == true) {
+            for (counter <- counterCh) {
+              counterCh!(*counter + 1) |
+              idAndQuantityCh!({ "id": "${n}" %% { "n": *counter }, "quantity": properties.get("quantity") })
             }
-            false => {
-              purses!("get", thm, properties.get("id"), *thmGetReturnCh) |
-              for (@properties <- thmGetReturnCh) {
-                if (properties == Nil) {
-                  idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
-                } else {
-                  if (properties.get("id") == "0") {
-                    purses!("get", thm, properties.get("newId"), *thmGetReturn2Ch) |
-                    for (properties2 <- thmGetReturn2Ch) {
-                      match (properties.get("newId"), properties2) {
-                        (String, Nil) => {
-                          idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
-                        }
-                        _ => {
-                          @return!("error: no .newId in payload or .newId already exists")
-                        }
+          } else {
+            @purses!("get", thm, properties.get("id"), *thmGetReturnCh) |
+            for (@properties <- thmGetReturnCh) {
+              if (properties == Nil) {
+                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
+              } else {
+                if (properties.get("id") == "0") {
+                  @purses!("get", thm, properties.get("newId"), *thmGetReturn2Ch) |
+                  for (properties2 <- thmGetReturn2Ch) {
+                    match (properties.get("newId"), *properties2) {
+                      (String, Nil) => {
+                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
+                      }
+                      _ => {
+                        @return!("error: no .newId in payload or .newId already exists")
                       }
                     }
-                  } else {
-                    @return!("error: purse ID already exists")
                   }
+                } else {
+                  @return!("error: purse ID already exists")
                 }
               }
             }
@@ -139,213 +151,64 @@ in {
                   "id": String,
                   "price": Nil \/ Int
                 } => {
-                  purses!("get", thm, purseProperties.get("id"), *thmGetReturn3Ch) |
-                  for (properties <- thmGetReturn3Ch) {
-                    if (properties == Nil) {
-                      new purse, setReturnCh in {
-                        purses!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
-                        for (_ <- setReturnCh) {
+                  new purse, setReturnCh in {
+                    @purses!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
+                    for (_ <- setReturnCh) {
 
-                          @(*pursesData, purseProperties.get("id"))!(data) |
-                          @(*vault, *purse)!(purseProperties.get("id")) |
-                          @return!(*purse) |
+                      @(*pursesData, purseProperties.get("id"))!(data) |
+                      @(*vault, *purse)!(purseProperties.get("id")) |
+                      @return!(bundle+{*purse}) |
 
-                          /*
-                            READ
-                            Returns properties "id", "quantity", "type", "box" and "price"
-                            (Nil) => propertie
-                          */
-                          for (@(Nil, returnRead) <= @(*purse, "READ")) {
-                            for (id <<- @(*vault, *purse)) {
-                              purses!("get", thm, *id, *returnRead) |
-                            }
-                          } |
+                      /*
+                        READ
+                        Returns properties "id", "quantity", "type", "box" and "price"
+                        (Nil) => propertie
+                      */
+                      for (@("READ", Nil, returnRead) <= purse) {
+                        for (id <<- @(*vault, *purse)) {
+                          @purses!("get", thm, *id, returnRead)
+                        }
+                      } |
 
-                          /*
-                            SWAP
-                            (Nil) => purse
-                            Useful when you receive purse from unknown source, swap it
-                            to make sure emitter did not keep a copy
-                          */
-                          for (@(payload, returnSwap) <= @(*purse, "SWAP")) {
-                            match (payload.get("box"), payload.get("publicKey")) {
-                              (URI, String) => {
-                                for (id <- @(*vault, *purse)) {
-                                  new setReturnCh, getReturnCh in {
-                                    purses!("get", thm, *id, *getReturnCh) |
-                                    for (properties <- getReturnCh) {
-                                      if (*properties == Nil) {
-                                        @returnSwap!("error: purse is worthless")
-                                      } else {
-                                        // todo remove key in treeHashMap instead of set Nil
-                                        // not implemented in rnode yet
-                                        purses!("set", thm, *id, Nil, *setReturnCh) |
-                                        for (_ <- setReturnCh) {
-                                          for (data <- @(*pursesData, *id)) {
-                                            makePurseCh!((
-                                              *properties
-                                                .set("box", payload.get("box"))
-                                                .set("publicKey", payload.get("publicKey")),
-                                              *data,
-                                              returnSwap
-                                            ))
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                              _ => {
-                                @returnSwap!("error: payload must be box: URI, publicKey: String")
-                              }
-                            }
-                          } |
-
-                          /*
-                            UPDATE_DATA
-                            (any) => string | (true, purse[])
-                          */
-                          for (@(payload, returnUpdateData) <= @(*purse, "UPDATE_DATA")) {
-                            new readReturnCh in {
-                              for (id <<- @(*vault, *purse)) {
-                                for (_ <- @(*pursesData, *id)) {
-                                  @(*pursesData, *id)!(payload) |
-                                  @returnUpdateData!((true, Nil))
-                                }
-                              }
-                            }
-                          } |
-
-                          /*
-                            SET_PRICE
-                            (payload: Int or Nil) => string | (true, Nil)
-                          */
-                          for (@(payload, returnSetPrice) <= @(*purse, "SET_PRICE")) {
-                            match payload {
-                              Int \/ Nil => {
-                                new setReturnCh, getReturnCh, readReturnCh in {
-                                  for (id <<- @(*vault, *purse)) {
-                                    purses!("get", thm, *id, *getReturnCh) |
-                                    for (properties <- getReturnCh) {
-                                      if (*properties == Nil) {
-                                        @returnSwap!("error: purse is worthless")
-                                      } else {
-                                        purses!("set", thm, *id, *properties.set("price", payload), *setReturnCh) |
-                                        for (_ <- setReturnCh) {
-                                          @returnSetPrice!((true, Nil))
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                              _ => {
-                                @returnSetPrice!("error: payload must be an integer or Nil")
-                              }
-                            }
-                          } |
-
-                          /*
-                            WITHDRAW
-                            (payload: Int) => string | (true, purse)
-                          */
-                          for (@(payload, returnWithdraw) <= @(*purse, "WITHDRAW")) {
-                            match payload {
-                              Int => {
-                                new getReturnCh, makePurseReturnCh, setReturnCh in {
-                                  for (id <<- @(*vault, *purse)) {
-                                    purses!("get", thm, *id, *getReturnCh) |
-                                    for (@properties <- getReturnCh) {
-                                      if (properties == Nil) {
-                                        @returnWithdraw!("error: purse is worthless")
-                                      } else {
-                                        match (
-                                          /*
-                                            The remaining cannot be 0, if you want to send
-                                            the whole purse, just hand the *purse object to someone's box
-                                          */
-                                          properties.get("quantity") > payload,
-                                          payload > 0
-                                        ) {
-                                          (true, true) => {
-                                            /*
-                                              change quantity in *purse, and create a new purse
-                                              with [payload] quantity
-                                            */
-                                            purses!("set", thm, properties.get("id"), properties.set("quantity", properties.get("quantity") - payload), *setReturnCh) |
-                                            for (_ <- setReturnCh) {
-                                              makePurseCh!((
-                                                properties.set("quantity", payload).set("price", Nil), Nil, *makePurseReturnCh
-                                              )) |
-                                              for (newPurse <- makePurseReturnCh) {
-                                                @returnWithdraw!((true, *newPurse))
-                                              }
-                                            }
+                      /*
+                        SWAP
+                        (payload: { box: URI, publicKey: String }) => String | (true, purse)
+                        Useful when you receive purse from unknown source, swap it
+                        to make sure emitter did not keep a copy
+                      */
+                      for (@("SWAP", payload, returnSwap) <= purse) {
+                        match (payload.get("box"), payload.get("publicKey")) {
+                          (URI, String) => {
+                            for (id <- @(*vault, *purse)) {
+                              stdout!(("purse.SWAP", *id)) |
+                              new setReturnCh, setForSaleReturnCh, getReturnCh, makePurseReturnCh in {
+                                @purses!("get", thm, *id, *getReturnCh) |
+                                for (properties <- getReturnCh) {
+                                  if (*properties == Nil) {
+                                    @returnSwap!("error: purse is worthless")
+                                  } else {
+                                    // todo remove key in treeHashMap instead of set Nil
+                                    // not implemented in rnode yet
+                                    @purses!("set", thm, *id, Nil, *setReturnCh) |
+                                    @pursesForSale!("set", thm2, *id, Nil, *setForSaleReturnCh) |
+                                    for (_ <- setReturnCh; _ <- setForSaleReturnCh; data <- @(*pursesData, *id)) {
+                                      stdout!(("purse.SWAP successful", *id)) |
+                                      makePurseCh!((
+                                        *properties
+                                          .set("box", payload.get("box"))
+                                          .set("publicKey", payload.get("publicKey")),
+                                        *data,
+                                        makePurseReturnCh
+                                      )) |
+                                      for (newPurse <- makePurseReturnCh) {
+                                        match *newPurse {
+                                          String => {
+                                            @returnSwap!("error: makePurse went wrong " ++ *newPurse)
                                           }
                                           _ => {
-                                            @returnWithdraw!("error: quantity invalid, remaining cannot be zero")
+                                             @returnSwap!((true, *newPurse))
                                           }
                                         }
-
-                                      }
-                                    }
-                                  }
-                                }
-
-                              }
-                              _ => {
-                                @returnWithdraw!("error: payload must be an integer")
-                              }
-                            }
-                          } |
-
-
-                          /*
-                            DEPOSIT
-                            (payload: purse) => string | (true, Nil)
-                          */
-                          for (@(payload, returnDeposit) <= @(*purse, "DEPOSIT")) {
-                            new proceedCh, receivePursesReturnCh, getReturnCh, getReturn2Ch, setReturnCh, setReturn2Ch in {
-                              for (current <<- mainCh) {
-                                if (*current.get("fungible") == true) {
-                                  proceedCh!(Nil)
-                                } else {
-                                  @returnDeposit!("error: cannot deposit in a fungible = false contract")
-                                }
-                              } |
-                              for (_ <- proceedCh) {
-                                for (id <<- @(*vault, *purse); depositedPurseId <<- @(*vault, payload)) {
-                                  purses!("get", thm, *id, *getReturnCh) |
-                                  purses!("get", thm, *depositedPurseId, *getReturn2Ch) |
-                                  for (@properties1 <- getReturnCh; @properties2 <- getReturn2Ch) {
-                                    match (
-                                      properties1 != Nil,
-                                      properties2 != Nil,
-                                      *depositedPurseId != *id,
-                                      properties2.get("quantity"),
-                                      properties2.get("quantity") > 0,
-                                      properties1.get("type") == properties2.get("type"),
-                                      properties1.get("price")
-                                    ) {
-                                      (true, true, true, Int, true, true, Nil) => {
-                                        // delete purse [payload], and remove data
-                                        purses!("set", thm, *depositedPurseId, Nil, *setReturnCh) |
-                                        for (_ <- @(*vault, payload); _ <- @(*pursesData, *depositedPurseId); _ <- setReturnCh) {
-
-                                          // set new quantity in purse
-                                          purses!("set", thm, *id, properties1.set(
-                                              "quantity",
-                                              properties1.get("quantity") + properties2.get("quantity")
-                                            ), *setReturn2Ch) |
-                                          for (_ <- setReturn2Ch) {
-                                            @returnDeposit!((true, Nil))
-                                          }
-                                        }
-
-                                      }
-                                      _ => {
-                                        @returnDeposit!("error: cannot deposit to a purse with .price not Nil")
                                       }
                                     }
                                   }
@@ -353,10 +216,191 @@ in {
                               }
                             }
                           }
+                          _ => {
+                            @returnSwap!("error: payload must be box: URI, publicKey: String")
+                          }
+                        }
+                      } |
+
+                      /*
+                        UPDATE_DATA
+                        (payload: any) => String | (true, Nil)
+                      */
+                      for (@("UPDATE_DATA", payload, returnUpdateData) <= purse) {
+                        new getReturnCh in {
+                          for (id <<- @(*vault, *purse)) {
+                            stdout!(("purse.UPDATE_DATA", *id)) |
+                            @purses!("get", thm, *id, *getReturnCh) |
+                            for (properties <- getReturnCh) {
+                              if (*properties == Nil) {
+                                @returnUpdateData!("error: purse is worthless")
+                              } else {
+                                for (_ <- @(*pursesData, *id)) {
+                                  stdout!(("purse.UPDATE_DATA successful", *id)) |
+                                  @(*pursesData, *id)!(payload) |
+                                  @returnUpdateData!((true, Nil))
+                                }
+                              }
+                            }
+                          }
+                        }
+                      } |
+
+                      /*
+                        SET_PRICE
+                        (payload: Int or Nil) => String | (true, Nil)
+                      */
+                      for (@("SET_PRICE", payload, returnSetPrice) <= purse) {
+                        match payload {
+                          Int \/ Nil => {
+                            new setReturnCh, getReturnCh, setForSaleReturnCh in {
+                              for (id <<- @(*vault, *purse)) {
+                                stdout!(("purse.SET_PRICE", *id)) |
+                                @purses!("get", thm, *id, *getReturnCh) |
+                                for (properties <- getReturnCh) {
+                                  if (*properties == Nil) {
+                                    @returnSetPrice!("error: purse is worthless")
+                                  } else {
+                                    @purses!("set", thm, *id, *properties.set("price", payload), *setReturnCh) |
+                                    for (_ <- setReturnCh) {
+                                      stdout!(("purse.SET_PRICE successful", *id)) |
+                                      match payload {
+                                        Int => {
+                                          @pursesForSale!("set", thm2, *id, *purse, *setForSaleReturnCh) |
+                                          for (_ <- setForSaleReturnCh) {
+                                            @returnSetPrice!((true, Nil))
+                                          }
+                                        }
+                                        Nil => {
+                                          @pursesForSale!("set", thm2, *id, Nil, *setForSaleReturnCh) |
+                                          for (_ <- setForSaleReturnCh) {
+                                            @returnSetPrice!((true, Nil))
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                          _ => {
+                            @returnSetPrice!("error: payload must be an integer or Nil")
+                          }
+                        }
+                      } |
+
+                      /*
+                        WITHDRAW
+                        (payload: Int) => String | (true, purse)
+                      */
+                      for (@("WITHDRAW", payload, returnWithdraw) <= purse) {
+                        match payload {
+                          Int => {
+                            new getReturnCh, makePurseReturnCh, setReturnCh in {
+                              for (id <<- @(*vault, *purse)) {
+                                stdout!(("purse.WITHDRAW", *id)) |
+                                @purses!("get", thm, *id, *getReturnCh) |
+                                for (@properties <- getReturnCh) {
+                                  if (properties == Nil) {
+                                    @returnWithdraw!("error: purse is worthless")
+                                  } else {
+                                    match (
+                                      /*
+                                        The remaining cannot be 0, if you want to send
+                                        the whole purse, just hand the *purse object to someone's box
+                                      */
+                                      properties.get("quantity") > payload,
+                                      payload > 0
+                                    ) {
+                                      (true, true) => {
+                                        /*
+                                          change quantity in *purse, and create a new purse
+                                          with [payload] quantity
+                                        */
+                                        @purses!("set", thm, properties.get("id"), properties.set("quantity", properties.get("quantity") - payload), *setReturnCh) |
+                                        for (_ <- setReturnCh) {
+                                          makePurseCh!((
+                                            properties.set("quantity", payload).set("price", Nil), Nil, *makePurseReturnCh
+                                          )) |
+                                          for (newPurse <- makePurseReturnCh) {
+                                            stdout!(("purse.WITHDRAW successful", *id)) |
+                                            @returnWithdraw!((true, *newPurse))
+                                          }
+                                        }
+                                      }
+                                      _ => {
+                                        @returnWithdraw!("error: quantity invalid, remaining cannot be zero")
+                                      }
+                                    }
+
+                                  }
+                                }
+                              }
+                            }
+
+                          }
+                          _ => {
+                            @returnWithdraw!("error: payload must be an integer")
+                          }
+                        }
+                      } |
+
+
+                      /*
+                        DEPOSIT
+                        (payload: purse) => String | (true, Nil)
+                      */
+                      for (@("DEPOSIT", payload, returnDeposit) <= purse) {
+                        new proceedCh, receivePursesReturnCh, getReturnCh, getReturn2Ch, setReturnCh, setReturn2Ch in {
+                          for (current <<- mainCh) {
+                            if (*current.get("fungible") == true) {
+                              proceedCh!(Nil)
+                            } else {
+                              @returnDeposit!("error: cannot deposit in a fungible = false contract")
+                            }
+                          } |
+                          for (_ <- proceedCh) {
+                            for (id <<- @(*vault, *purse); depositedPurseId <<- @(*vault, payload)) {
+                              stdout!(("purse.DEPOSIT", *id)) |
+                              @purses!("get", thm, *id, *getReturnCh) |
+                              @purses!("get", thm, *depositedPurseId, *getReturn2Ch) |
+                              for (@properties1 <- getReturnCh; @properties2 <- getReturn2Ch) {
+                                match (
+                                  properties1 != Nil,
+                                  properties2 != Nil,
+                                  *depositedPurseId != *id,
+                                  properties2.get("quantity"),
+                                  properties2.get("quantity") > 0,
+                                  properties1.get("type") == properties2.get("type"),
+                                  properties1.get("price")
+                                ) {
+                                  (true, true, true, Int, true, true, Nil) => {
+                                    // delete purse [payload], and remove data
+                                    @purses!("set", thm, *depositedPurseId, Nil, *setReturnCh) |
+                                    for (_ <- @(*vault, payload); _ <- @(*pursesData, *depositedPurseId); _ <- setReturnCh) {
+
+                                      // set new quantity in purse
+                                      @purses!("set", thm, *id, properties1.set(
+                                          "quantity",
+                                          properties1.get("quantity") + properties2.get("quantity")
+                                        ), *setReturn2Ch) |
+                                      for (_ <- setReturn2Ch) {
+                                        stdout!(("purse.DEPOSIT successful", *id)) |
+                                        @returnDeposit!((true, Nil))
+                                      }
+                                    }
+
+                                  }
+                                  _ => {
+                                    @returnDeposit!("error: cannot deposit to a purse with .price not Nil")
+                                  }
+                                }
+                              }
+                            }
+                          }
                         }
                       }
-                    } else {
-                      @return!("error: purse ID already exists")
                     }
                   }
                 }
@@ -484,7 +528,7 @@ in {
               }
               Set(last) => {
                 new retCh in {
-                  purses!("get", thm, last, *retCh) |
+                  @purses!("get", thm, last, *retCh) |
                   for (properties <- retCh) {
                     @return!(*tmp.set(last, *properties))
                   }
@@ -492,7 +536,7 @@ in {
               }
               Set(first ... rest) => {
                 new retCh in {
-                  purses!("get", thm, first, *retCh) |
+                  @purses!("get", thm, first, *retCh) |
                   for (properties <- retCh) {
                     @tmpCh!(*tmp.set(first, *properties)) |
                     itCh!((tmpCh, rest))
@@ -513,9 +557,10 @@ in {
 
     // todo .keySet
     for (@("PUBLIC_READ_PURSES_IDS", payload, return) <= entryCh) {
-      for (ids <<- pursesIds) {
+      @return!(Set())
+      /* for (ids <<- pursesIds) {
         @return!(*ids)
-      }
+      } */
     } |
 
     for (@("PUBLIC_READ_PURSES", payload, return) <= entryCh) {
@@ -586,6 +631,21 @@ in {
       }
     } |
 
+
+    for (@(amount, return) <= calculateFeeCh) {
+      for (current <<- mainCh) {
+        if (*current.get("fee") == Nil) {
+          @return!((amount, 0))
+        } else {
+          match amount * *current.get("fee").nth(1) / 100000 {
+            feeAmount => {
+              @return!((amount - feeAmount, feeAmount))
+            }
+          }
+        }
+      }
+    } |
+
     /*
       (payload) => String | (true, purse)
       purchase with REV from a purse that has .price
@@ -596,9 +656,38 @@ in {
     for (@("PUBLIC_PURCHASE", payload, return) <= entryCh) {
       match payload {
         { "quantity": Int, "purseId": String, "publicKey": String, "box": URI, "newId": Nil \/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
-          new getReturnCh, revVaultCh, ownerRevAddressCh, purseVaultCh in {
+          new getReturnCh, revVaultCh, ownerRevAddressCh, purseVaultCh, calculateFeeReturnCh, performRefundCh in {
 
-            purses!("get", thm, payload.get("purseId"), *getReturnCh) |
+            // refund if something went wrong
+            for (@message <- performRefundCh) {
+              new refundPurseBalanceCh, refundRevAddressCh, refundResultCh, refundPurseVaultCh, revVaultRefundReturnCh in {
+                registryLookup!(`rho:rchain:revVault`, *revVaultRefundReturnCh) |
+                for (@(_, RevVault) <- revVaultRefundReturnCh) {
+                  @RevVault!("findOrCreate", payload.get("purseRevAddr"), *refundPurseVaultCh) |
+                  for (@(true, purseVault) <- refundPurseVaultCh) {
+                    @purseVault!("balance", *refundPurseBalanceCh) |
+                    revAddress!("fromPublicKey", payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
+                    for (@balance <- refundPurseBalanceCh; @buyerRevAddress <- refundRevAddressCh) {
+                      @purseVault!("transfer", buyerRevAddress, balance, payload.get("purseAuthKey"), *refundResultCh) |
+                      for (@refundResult <- refundResultCh) {
+                        match refundResult {
+                          (true, Nil) => {
+                            stdout!(message ++ ", issuer was refunded") |
+                            @return!(message ++ ", issuer was refunded")
+                          }
+                          _ => {
+                            stdout!(message ++ ", issuer was NOT refunded") |
+                            @return!(message ++ ", issuer was NOT refunded")
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } |
+
+            @purses!("get", thm, payload.get("purseId"), *getReturnCh) |
             for (@properties <- getReturnCh) {
               match (
                 properties.get("price"),
@@ -610,38 +699,21 @@ in {
                   registryLookup!(`rho:rchain:revVault`, *revVaultCh) |
                   revAddress!("fromPublicKey", properties.get("publicKey").hexToBytes(), *ownerRevAddressCh) |
 
-                  for (@(_, RevVault) <- revVaultCh; @ownerRevAddress <- ownerRevAddressCh) {
+                  calculateFeeCh!((payload.get("quantity") * properties.get("price"), *calculateFeeReturnCh)) |
+                  for (@(_, RevVault) <- revVaultCh; @ownerRevAddress <- ownerRevAddressCh; amountAndFeeAmount <- calculateFeeReturnCh) {
                     match (
                       payload.get("purseRevAddr"),
                       ownerRevAddress,
-                      payload.get("quantity") * properties.get("price")
+                      *amountAndFeeAmount.nth(0),
+                      *amountAndFeeAmount.nth(1)
                     ) {
-                      (from, to, amount) => {
+                      (from, to, amount, feeAmount) => {
+                        stdout!(("amount", amount)) |
+                        stdout!(("feeAmount", feeAmount)) |
                         @RevVault!("findOrCreate", from, *purseVaultCh) |
                         for (@(true, purseVault) <- purseVaultCh) {
-                          new makePurseReturnCh, transferReturnCh, performRefundCh, setReturnCh in {                        
-                            // refund
-                            for (@message <- performRefundCh) {
-                              new refundPurseBalanceCh, refundRevAddressCh, refundResultCh in {
-                                @purseVault!("balance", *refundPurseBalanceCh) |
-                                revAddress!("fromPublicKey", payload.get("publicKey").hexToBytes(), *refundRevAddressCh) |
-                                for (@balance <- refundPurseBalanceCh; @revAddress <- refundRevAddressCh) {
-                                  @purseVault!("transfer", revAddress, balance, payload.get("purseAuthKey"), *refundResultCh) |
-                                  for (@refundResult <- refundResultCh) {
-                                    match refundResult {
-                                      (true, Nil) => {
-                                        stdout!(message ++ ", issuer was refunded") |
-                                        @return!(message ++ ", issuer was refunded")
-                                      }
-                                      _ => {
-                                        stdout!(message ++ ", issuer was NOT refunded") |
-                                        @return!(message ++ ", issuer was NOT refunded")
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            } |
+                          new makePurseReturnCh, transferReturnCh, setReturnCh, getForSaleReturnCh in {
+                            // todo pay transfer fee
                             @purseVault!("transfer", to, amount, payload.get("purseAuthKey"), *transferReturnCh) |
                             for (@result <- transferReturnCh) {
                               match result {
@@ -649,13 +721,30 @@ in {
                                   /*
                                     Check if the purse must be removed because quantity 0
                                     if fungible: false, we always match 0
+                                    if match 0, simply send back the purse, it will probably
+                                    be SWAPed by the buyer
                                   */
                                   match properties.get("quantity") - payload.get("quantity") {
                                     0 => {
                                       // todo remove key in treeHashMap instead of set Nil
                                       // not implemented in rnode yet
-                                      purses!("set", thm, properties.get("id"), Nil, *setReturnCh) |
-                                      for (_ <- setReturnCh; _ <- @(*pursesData, properties.get("id"))) {
+                                      @pursesForSale!("get", thm2, properties.get("id"), *getForSaleReturnCh) |
+                                      for (purse <- getForSaleReturnCh) {
+                                        if (*purse == Nil) {
+                                          performRefundCh!("error: CRITICAL purse was not found in pursesForSale")
+                                        } else {
+                                          @return!((true, *purse))
+
+                                        }
+                                      }
+                                    }
+                                    _ => {
+                                      // change quantity of exiting purse
+                                      @purses!("set", thm, properties.get("id"),
+                                        properties.set("quantity", properties.get("quantity") - payload.get("quantity"))
+                                      , *setReturnCh) |
+                                      // create a new purse
+                                      for (_ <- setReturnCh) {
                                         makePurseCh!((
                                           properties
                                             .set("price", Nil)
@@ -667,27 +756,14 @@ in {
                                           *makePurseReturnCh
                                         )) |
                                         for (newPurse <- makePurseReturnCh) {
-                                          @return!((true, *newPurse))
-                                        }
-                                      }
-                                    }
-                                    _ => {
-                                      purses!("set", thm, properties.get("id"),
-                                        properties.set("quantity", properties.get("quantity") - payload.get("quantity"))
-                                      , *setReturnCh) |
-                                      for (_ <- setReturnCh) {
-                                        makePurseCh!((
-                                          properties2
-                                            .set("price", Nil)
-                                            .set("newId", payload.get("newId"))
-                                            .set("quantity", payload.get("quantity"))
-                                            .set("publicKey", payload.get("publicKey"))
-                                            .set("box", payload.get("box")),
-                                          payload.get("data"),
-                                          *makePurseReturnCh
-                                        )) |
-                                        for (newPurse <- makePurseReturnCh) {
-                                          @return!((true, *newPurse))
+                                          match *newPurse {
+                                            String => {
+                                              performRefundCh!("error: makePurse went wrong " ++ *newPurse)
+                                            }
+                                            _ => {
+                                              @return!((true, *newPurse))
+                                            }
+                                          }
                                         }
                                       }
                                     }
@@ -705,7 +781,7 @@ in {
                   }
                 }
                 _=> {
-                  @return!("error: quantity not available or purse not for sale")
+                  performRefundCh!("error: quantity not available or purse not for sale")
                 }
               }
             }
@@ -726,6 +802,7 @@ in {
     insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
     for (entryUri <- entryUriCh) {
+      stdout!(*entryUri) |
       new boxDataCh, boxReturnCh in {
         @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!(({ "type": "READ" }, *boxDataCh)) |
         for (r <- boxDataCh) {
@@ -748,6 +825,11 @@ in {
                   _ => {
                     mainCh!({
                       "status": "completed",
+                      // fee on each PUBLIC_PURCHASE operation
+                      // .fee: Nil | tuple(publicKey: string, fee: Int)
+                      // .fee is express NOT IN PERCENT but in PER 100.000
+                      // example: 1000 = 1% fee, 200 = 0.2% etc.
+                      "fee": FEE,
                       "registryUri": *entryUri,
                       "locked": false,
                       "fungible": FUNGIBLE,
@@ -755,6 +837,7 @@ in {
                     }) |
                     stdout!({
                       "status": "completed",
+                      "fee": FEE,
                       "registryUri": *entryUri,
                       "locked": false,
                       "fungible": FUNGIBLE,

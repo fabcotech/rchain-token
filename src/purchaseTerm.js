@@ -161,9 +161,29 @@ in {
                                       }
                                     }
                                     _ => {
-                                      stdout!(*resp) |
-                                      basket!({ "status": "failed", "message": *resp }) |
-                                      stdout!(("failed", *resp))
+                                      new refundPurseBalanceCh, refundResultCh in {
+                                        @vault!("balance", *refundPurseBalanceCh) |
+                                        for (balance <- refundPurseBalanceCh) {
+                                          if (balance == 0) {
+                                            basket!({ "status": "failed", "message": *resp }) |
+                                            stdout!(("failed", *resp))
+                                          } else {
+                                            @vault!("transfer", deployerRevAddress, balance, *key, *refundResultCh) |
+                                            for (result <- refundResultCh)  {
+                                              match *result {
+                                                (true, Nil) => {
+                                                  basket!({ "status": "failed", "message": "purchase failed but was able to refund " ++ balance }) |
+                                                  stdout!(("failed", "purchase failed but was able to refund " ++ balance))
+                                                }
+                                                _ => {
+                                                  basket!({ "status": "failed", "message": "purchase failed and was NOT ABLE to refund " ++ balance }) |
+                                                  stdout!(("failed", "purchase failed and was NOT ABLE to refund " ++ balance))
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
                                     }
                                   }
                                 }

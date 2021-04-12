@@ -43,7 +43,8 @@ in {
                   }
                   false => {
                     /*
-                      Remove the purse from emitter's box now that it is worthless
+                      Remove the purse from emitter's box now that it is worthless :
+                      deleted in contract
                     */
                     @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
                       { "type": "DELETE_PURSE", "payload": { "registryUri": \`rho:id:${registryUri}\`, "id": "${payload.purseId}" } },

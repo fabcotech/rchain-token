@@ -37,7 +37,14 @@ module.exports.deploy = async () => {
     timestamp
   );
 
-  const term = mainTerm(boxRegistryUri, { fungible: fungible });
+  const term = mainTerm(boxRegistryUri, {
+    fungible: fungible,
+    fee: [
+      '04be064356846e36e485408df50b877dd99ba406d87208add4c92b3c7d4e4c663c2fbc6a1e6534c7e5c0aec00b26486fad1daf20079423b7c8ebffbbdff3682b58',
+      1000,
+    ],
+  });
+
   //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)
   //   .replace('/*DEFAULT_BAGS*/', defaultBagsRholang)
   //   .replace('/*DEFAULT_BAGS_DATA*/', defaultBagsDataRholang);
