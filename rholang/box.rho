@@ -19,7 +19,7 @@ in {
   superKeysCh!({}) |
 
   // purses
-  // { [URI]: { [bagId: string]: purse } }
+  // { [URI]: { [purseId: string]: purse } }
   boxPursesCh!({}) |
 
   // returns { [URI]: Set[BagId] }

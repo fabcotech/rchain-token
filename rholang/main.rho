@@ -192,21 +192,21 @@ in {
                                     @purses!("set", thm, *id, Nil, *setReturnCh) |
                                     @pursesForSale!("set", thm2, *id, Nil, *setForSaleReturnCh) |
                                     for (_ <- setReturnCh; _ <- setForSaleReturnCh; data <- @(*pursesData, *id)) {
-                                      stdout!(("purse.SWAP successful", *id)) |
                                       makePurseCh!((
                                         *properties
                                           .set("box", payload.get("box"))
                                           .set("publicKey", payload.get("publicKey")),
                                         *data,
-                                        makePurseReturnCh
+                                        *makePurseReturnCh
                                       )) |
                                       for (newPurse <- makePurseReturnCh) {
                                         match *newPurse {
                                           String => {
-                                            @returnSwap!("error: makePurse went wrong " ++ *newPurse)
+                                            @returnSwap!("error: CRITICAL makePurse went wrong " ++ *newPurse)
                                           }
                                           _ => {
-                                             @returnSwap!((true, *newPurse))
+                                            stdout!(("purse.SWAP successful", *id)) |
+                                            @returnSwap!((true, *newPurse))
                                           }
                                         }
                                       }
@@ -633,11 +633,11 @@ in {
 
 
     for (@(amount, return) <= calculateFeeCh) {
-      for (current <<- mainCh) {
-        if (*current.get("fee") == Nil) {
+      for (@current <<- mainCh) {
+        if (current.get("fee") == Nil) {
           @return!((amount, 0))
         } else {
-          match amount * *current.get("fee").nth(1) / 100000 {
+          match amount * current.get("fee").nth(1) / 100000 {
             feeAmount => {
               @return!((amount - feeAmount, feeAmount))
             }
@@ -730,6 +730,7 @@ in {
                                       // not implemented in rnode yet
                                       @pursesForSale!("get", thm2, properties.get("id"), *getForSaleReturnCh) |
                                       for (purse <- getForSaleReturnCh) {
+                                        stdout!(("buyer receives entire purse from seller", *purse)) |
                                         if (*purse == Nil) {
                                           performRefundCh!("error: CRITICAL purse was not found in pursesForSale")
                                         } else {
@@ -758,7 +759,7 @@ in {
                                         for (newPurse <- makePurseReturnCh) {
                                           match *newPurse {
                                             String => {
-                                              performRefundCh!("error: makePurse went wrong " ++ *newPurse)
+                                              performRefundCh!("error: CRITICAL makePurse went wrong " ++ *newPurse)
                                             }
                                             _ => {
                                               @return!((true, *newPurse))
