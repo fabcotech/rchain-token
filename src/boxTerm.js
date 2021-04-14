@@ -21,7 +21,7 @@ in {
   superKeysCh!({}) |
 
   // purses
-  // { [URI]: { [bagId: string]: purse } }
+  // { [URI]: { [purseId: string]: purse } }
   boxPursesCh!({}) |
 
   // returns { [URI]: Set[BagId] }
@@ -93,7 +93,11 @@ in {
       for (contractEntry <- lookupReturnCh) {
         contractEntry!(("PUBLIC_CHECK_PURSES", [payload.get("purse")], *checkReturnCh)) |
         contractEntry!(("PUBLIC_READ", Nil, *readReturnCh)) |
-        @payload.get("purse")!(("READ", Nil, *readPropertiesReturnCh)) |
+        match payload.get("purse") {
+          purse => {
+            @purse!(("READ", Nil, *readPropertiesReturnCh))
+          }
+        } |
         for (checkReturn <- checkReturnCh; current <- readReturnCh; receivedPurseProperties <- readPropertiesReturnCh) {
           match *checkReturn {
             String => {
@@ -141,7 +145,11 @@ in {
                               }
                               Set(last) => {
                                 new readReturnCh in {
-                                  @purses.get(last)!(("READ", Nil, *readReturnCh)) |
+                                  match purses.get(last) {
+                                    purse => {
+                                      @purse!(("READ", Nil, *readReturnCh))
+                                    }
+                                  } |
                                   for (properties <- readReturnCh) {
                                     match (
                                       *properties.get("type") == *receivedPurseProperties.get("type"),
@@ -169,7 +177,11 @@ in {
                               }
                               Set(first ... rest) => {
                                 new readReturnCh in {
-                                  @purses.get(first)!(("READ", Nil, *readReturnCh)) |
+                                  match purses.get(first) {
+                                    purse => {
+                                      @purse!(("READ", Nil, *readReturnCh))
+                                    }
+                                  } |
                                   for (properties <- readReturnCh) {
                                     match (
                                       *properties.get("type") == *receivedPurseProperties.get("type"),
@@ -310,15 +322,19 @@ in {
             (URI, _) => {
               new createKeyReturnCh, lookupReturnCh, readReturnCh, checkReturnCh,
               returnSwapCh, returnReadMainCh, returnPropertiesCh in {
-                lookup!(payload.get("registryUri"), *lookupReturnCh) |
+                lookup!(action.get("payload").get("registryUri"), *lookupReturnCh) |
                 for (contractEntry <- lookupReturnCh) {
-                  contractEntry!(("PUBLIC_CHECK_PURSES", [payload.get("purse")], *checkReturnCh)) |
+                  contractEntry!(("PUBLIC_CHECK_PURSES", [action.get("payload").get("purse")], *checkReturnCh))
                 } |
                 for (checkReturn <- checkReturnCh) {
-                  match *checkReturn => {
-                    (true, Nil) => {
+                  match *checkReturn {
+                    (true, _) => {
                       for (main <<- mainCh) {
-                        @payload.get("purse")!(("SWAP", { "box": *main.get("registryUri"), "publicKey": *main.get("publicKey") }, *returnSwapCh)) |
+                        match action.get("payload").get("purse") {
+                          purse => {
+                            @purse!(("SWAP", { "box": *main.get("registryUri"), "publicKey": *main.get("publicKey") }, *returnSwapCh))
+                          }
+                        } |
                         for (returnSwap <- returnSwapCh) {
                           match *returnSwap {
                             String => {
@@ -332,7 +348,7 @@ in {
                                     @return!("error: invalid payload")
                                   }
                                   _ => {
-                                    swappedPurse!(("READ", Nil, *readReturnCh)) |
+                                    @swappedPurse!(("READ", Nil, *readReturnCh)) |
                                     for (@properties <- readReturnCh) {
                                       for (boxPurses <- boxPursesCh) {
                                         boxPursesCh!(
@@ -340,7 +356,7 @@ in {
                                             action.get("payload").get("registryUri"),
                                             *purses.set(
                                               properties.get("id"),
-                                              *swappedPurse
+                                              swappedPurse
                                             )
                                           )
                                         ) |
@@ -421,6 +437,7 @@ in {
           }
         }
         _ => {
+          stdout!(action.get("type")) |
           @return!("error: unknown action")
         }
       }

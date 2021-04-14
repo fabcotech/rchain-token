@@ -3,6 +3,7 @@ const { mainTerm } = require('./mainTerm');
 const { createPursesTerm } = require('./createPursesTerm');
 const { sendPurseTerm } = require('./sendPurseTerm');
 const { readPursesTerm } = require('./readPursesTerm');
+const { readAllPursesTerm } = require('./readAllPursesTerm');
 const { readPursesIdsTerm } = require('./readPursesIdsTerm');
 const { readBoxTerm } = require('./readBoxTerm');
 const { readTerm } = require('./readTerm');
@@ -20,6 +21,7 @@ module.exports = {
   createPursesTerm,
   sendPurseTerm,
   readPursesTerm,
+  readAllPursesTerm,
   readPursesIdsTerm,
   readBoxTerm,
   readTerm,

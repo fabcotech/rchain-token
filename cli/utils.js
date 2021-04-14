@@ -14,6 +14,7 @@ module.exports.getProcessArgv = getProcessArgv;
 
 module.exports.logData = (data) => {
   console.log(`Registry URI   : ${data.registryUri.replace('rho:id:', '')}`);
+  console.log(`Name           : ${data.name}`);
   if (data.fungible) {
     console.log(`Fungibility    :\x1b[36m`, 'fungible tokens', '\x1b[0m');
   } else {
@@ -182,6 +183,16 @@ module.exports.getFungible = () => {
     throw new Error('Missing arguments --fungible true/false');
   }
   return fungible === 'true';
+};
+
+module.exports.getName = () => {
+  const name = geametProcessArgv('--name');
+  if (typeof name !== 'string') {
+    throw new Error(
+      'Missing arguments --name , please give a name to your contract, ex: "gold tokens", "mytoken", "kitties", "E corp shares"'
+    );
+  }
+  return name;
 };
 
 module.exports.getNewBagId = () => {

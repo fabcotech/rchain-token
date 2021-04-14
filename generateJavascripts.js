@@ -126,6 +126,21 @@ module.exports.readPursesIdsTerm = (
 `
 );
 
+const readAllPursesFile = fs
+  .readFileSync('./rholang/read_all_purses.rho')
+  .toString('utf8');
+
+fs.writeFileSync(
+  './src/readAllPursesTerm.js',
+  `
+module.exports.readAllPursesTerm = (
+  registryUri,
+  payload
+) => {
+  return \`${replaceEverything(readAllPursesFile)}\`;
+    }`
+);
+
 const readPursesFile = fs
   .readFileSync('./rholang/read_purses.rho')
   .toString('utf8');
@@ -250,6 +265,11 @@ fs.writeFileSync(
 );
 
 const mainTerm = fs.readFileSync('./rholang/main.rho').toString('utf8');
+const treeHashMapTerm = fs
+  .readFileSync('./rholang/tree_hash_map.rho')
+  .toString('utf8')
+  .replace(/`/g, '\\`');
+
 fs.writeFileSync(
   './src/mainTerm.js',
   `module.exports.mainTerm = (fromBoxRegistryUri, payload) => {
@@ -259,9 +279,11 @@ fs.writeFileSync(
       .replace(/\$\{/g, '\\${')
       .replace(
         /FEE/g,
-        '${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
+        '${payload.fee ? `["${payload.fee[0]}", ${payload.fee[1]}]` : "Nil"}'
       )
+      .replace(/NAME/g, '"${payload.name}"')
       .replace(/FUNGIBLE/g, '${payload.fungible}')
+      .replace(/TREE_HASH_MAP/g, treeHashMapTerm + ' |')
       .replace(/FROM_BOX_REGISTRY_URI/g, '${fromBoxRegistryUri}')}\`;
 };
 `

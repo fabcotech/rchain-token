@@ -14,8 +14,8 @@ in {
 
   for (superKeys <- boxCh) {
     match *superKeys.get(\`rho:id:${registryUri}\`) {
-      ch => {
-        @(ch, "CREATE_PURSES")!((
+      superKey => {
+        @(superKey, "CREATE_PURSES")!((
           {
             // example
             // "purses": { "0": { "publicKey": "abc", "box": \`rho:id:abc\`, "type": "gold", "quantity": 3, "data": Nil }}
@@ -51,13 +51,12 @@ in {
                 [last] => {
                   new readReturnCh, receivePurseReturnCh in {
                     @last!(("READ", Nil, *readReturnCh)) |
-                    for (properties <- readReturnCh) {
-                      entry!((
-                        "PUBLIC_RECEIVE_PURSE", {
-                          "registryUri": \`rho:id:${registryUri}\`,
-                          "purse": last
-                        }, *receivePurseReturnCh))
-                    } |
+                    entry!((
+                      "PUBLIC_RECEIVE_PURSE", {
+                        "registryUri": \`rho:id:${registryUri}\`,
+                        "purse": last
+                      }, *receivePurseReturnCh)
+                    ) |
                     for (r <- receivePurseReturnCh) {
                       match *r {
                         String => {
@@ -74,13 +73,10 @@ in {
                 }
                 [first ... rest] => {
                   new readReturnCh, receivePurseReturnCh in {
-                    @first!(("READ", Nil, *readReturnCh)) |
-                    for (properties <- readReturnCh) {
-                      entry!(("PUBLIC_RECEIVE_PURSE", {
-                        "registryUri": \`rho:id:${registryUri}\`,
-                        "purse": first
-                      }, *receivePurseReturnCh))
-                    } |
+                    entry!(("PUBLIC_RECEIVE_PURSE", {
+                      "registryUri": \`rho:id:${registryUri}\`,
+                      "purse": first
+                    }, *receivePurseReturnCh)) |
                     for (r <- receivePurseReturnCh) {
                       match *r {
                         String => {

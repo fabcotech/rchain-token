@@ -53,7 +53,13 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  const data = await deploy(PRIVATE_KEY, PUBLIC_KEY, boxRegistryUri, false);
+  const data = await deploy(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    boxRegistryUri,
+    false,
+    'mytoken'
+  );
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy');

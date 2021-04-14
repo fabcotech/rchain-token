@@ -1,34 +1,31 @@
 const {
-  readPursesTerm,
+  readAllPursesTerm,
   readPursesIdsTerm,
   readPursesDataTerm,
 } = require('../src/');
 const rc = require('rchain-toolkit');
 
 module.exports.main = async (contractRegistryUri) => {
-  const term0 = readPursesIdsTerm(contractRegistryUri);
-  const result0 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-    term: term0,
+  const term1 = readAllPursesTerm(contractRegistryUri, {});
+  const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
+    term: term1,
+  });
+  const purses = {};
+
+  rc.utils.rhoValToJs(JSON.parse(result1).expr[0]).forEach((p) => {
+    purses[p.id] = p;
   });
 
-  let ids = [];
-  try {
-    ids = rc.utils.rhoValToJs(JSON.parse(result0).expr[0]);
-  } catch (e) {}
-
-  const term1 = readPursesTerm(contractRegistryUri, { pursesIds: ids });
-  const term2 = readPursesDataTerm(contractRegistryUri, { pursesIds: ids });
-  const results = await Promise.all([
-    rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: term1,
-    }),
-    rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: term2,
-    }),
-  ]);
+  const term2 = readPursesDataTerm(contractRegistryUri, {
+    pursesIds: Object.keys(purses),
+  });
+  const result2 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
+    term: term2,
+  });
+  const pursesData = rc.utils.rhoValToJs(JSON.parse(result2).expr[0]);
 
   return {
-    purses: rc.utils.rhoValToJs(JSON.parse(results[0]).expr[0]),
-    pursesData: rc.utils.rhoValToJs(JSON.parse(results[1]).expr[0]),
+    purses: purses,
+    pursesData: pursesData,
   };
 };

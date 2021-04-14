@@ -18,7 +18,7 @@ Rename the `.env.example` file to `.env` and eventually update the values to con
 node cli deploy-box
 ```
 
-**non-fungible tokens**
+##### non-fungible tokens
 
 Non-fungibles tokens are identified by an ID like "pikachu", "amazon" or "cat123". They are still represented by purses, all purses have `quantity: 1`, a purse cannot be divided. Purse `"0"` is a special mint purse from which you can purchase, and give a `newId` of your choice (See `./tests-fungibles/index.js:L220`).
 
@@ -32,7 +32,7 @@ node cli deploy --fungible false
 node cli create-purse --quantity 1 --type "0" --new-id "cat123"
 ```
 
-**fungible tokens**
+##### fungible tokens
 
 Fungibles tokens are identified mainly by the type property, purses can have a quantity superior to one. For examples 100 gold tokens, 1000 shares that can be exchanged, or any ERC-20 tokens will be fungible. The IDs of purses are automatically incremented (0, 1, 2 etc.), they do not matter that much.
 
@@ -47,19 +47,7 @@ node cli create-purse --quantity 12 --type "GOLD"
 node cli create-purse --quantity 24 --type "SILVER"
 ```
 
-**Methods/operations available**
-
-**_Box_**
-
-- `PUBLIC_RECEIVE_PURSE: (payload: { registryUri: URI, purse: Purse }) => String | (true, Nil)`
-- `PUBLIC_READ: () => main values`
-- `PUBLIC_READ_PURSES: () => { [URI]: Set(String)}`
-- `PUBLIC_READ_SUPER_KEYS: () => Set(URI)`
-- `READ_SUPER_KEYS: () => { [URI]: SuperKey }`
-- `READ_PURSES: () => { [URI]: { [bagId: string]: purse } }`
-- `SAVE_PURSE_SEPARATELY: (payload: { registryUri: URI, purse: Purse }) => String | (true, Nil)`
-- `DELETE_PURSE: (payload: { registryUri: URI, id: String }) => String | (true, Nil)`
-- `SAVE_SUPER_KEY: (payload: { registryUri: URI, superKey: SuperKey }) => String | (true, Nil)`
+##### CLI
 
 **View**
 
@@ -85,7 +73,51 @@ node cli view --purse 0
 CLI NOT IMPLEMENTED YET
 ```
 
-### Using SDK
+##### Methods/operations available
+
+ro = Read only, it does not change the state of box or contract in any wey
+
+The methods prefixed with `PUBLIC_` are accessible by any rholang execution, the others are protected either by `*deployerId` (contract) or simply by the ownership of a purse (OCAP model).
+
+###### Box
+
+4 methods are public, and 5 are private (owner only)
+
+- `PUBLIC_RECEIVE_PURSE: ({ registryUri: URI, purse: Purse }) => String | (true, Nil)`
+- `ro PUBLIC_READ: () => main values`
+- `ro PUBLIC_READ_PURSES: () => { [URI]: Set(String)}`
+- `ro PUBLIC_READ_SUPER_KEYS: () => Set(URI)`
+- `ro READ_SUPER_KEYS: () => { [URI]: SuperKey }`
+- `ro READ_PURSES: () => { [URI]: { [purseId: string]: Purse } }`
+- `SAVE_PURSE_SEPARATELY: ({ registryUri: URI, purse: Purse }) => String | (true, Nil)`
+- `DELETE_PURSE: ({ registryUri: URI, id: String }) => String | (true, Nil)`
+- `SAVE_SUPER_KEY: ({ registryUri: URI, superKey: SuperKey }) => String | (true, Nil)`
+
+###### Purse (stored in box)
+
+All the methods on a purse are private (owner only).
+
+- `ro READ: () => Properties of the purse (quantity, price, box, publicKey, type)`
+- `SWAP: ({ box: URI, publicKey: String }) => String | (true, Purse)`
+- `UPDATE_DATA: (ant) => String | (true, Nil)`
+- `SET_PRICE: (Int or Nil) => String | (true, Nil)`
+- `WITHDRAW: (Int (quantity to withdraw from purse)) => String | (true, Purse)`
+- `DEPOSIT: (Purse) => String | (true, Nil)`
+
+###### Contract
+
+Contract has 6 public methods, only purchase may change the state. And 2 methods for owner only, if the contract is locked, even the owner cannot create purses.
+
+- `ro PUBLIC_READ_PURSES_IDS: () => Set()`
+- `ro PUBLIC_READ_PURSES: (Set(String)) => { [purseId: String]: PurseProperties }`
+- `ro PUBLIC_READ_PURSES_DATA: (Set(String)) => { [purseId: String]: any }`
+- `ro PUBLIC_READ: () => main values of the contract`
+- `ro PUBLIC_CHECK_PURSES: (Purse[]) => String | (true, id[])`
+- `PUBLIC_PURCHASE: (see code) => String | (true, purse)`
+- `LOCK: () => String | (true, Nil)`
+- `CREATE_PURSES: ({ purses: { [purseId: String]: Purse }, data: { [purseId: String]: any } }) => String | (true, Nil)`
+
+##### Using SDK
 
 The SDK files are in `./src`, if you have rchain-token (`fabcotech/rchain-token`) as a dependency of your project, you should be able to use them very easily.
 
@@ -100,17 +132,17 @@ const rholangTerm = mainTerm(boxRegistryUri)
 
 Missing in CLI: changing price of a bag of tokens
 
-### Compile rholang -> javascript (src/)
+##### Compile rholang -> javascript (src/)
 
 \_Generate all javascript source code in `src/` from rholang with `node generateJavascripts.js`
 
-### Token representation on chain
+##### Token representation on chain
 
 The paradigm is OCAP (object capabilities).
 
 See `./rholang/main.rho`
 
-### Testing
+##### Testing
 
 Have a local rnode instance running with the following bonds and wallets file. And automatic propose every x seconds. The private keys used for deployments are in `tests/index.js`.
 
@@ -134,4 +166,5 @@ READ_ONLY_HOST=http://127.0.0.1:40403
 VALIDATOR_HOST=http://127.0.0.1:40403
 ```
 
-`npm run test`
+`npm run test:fungibles`
+`npm run test:non-fungibles`

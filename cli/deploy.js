@@ -8,8 +8,8 @@ const {
   validAfterBlockNumber,
   prepareDeploy,
   getFungible,
+  getName,
   logData,
-  getBagsFile,
   getBoxRegistryUri,
 } = require('./utils');
 
@@ -20,6 +20,7 @@ module.exports.deploy = async () => {
   }
   const boxRegistryUri = getBoxRegistryUri();
   const fungible = getFungible();
+  const name = getName();
   console.log(
     `Will deploy a\x1b[36m`,
     fungible ? 'fungible' : 'non-fungible',
@@ -39,6 +40,7 @@ module.exports.deploy = async () => {
 
   const term = mainTerm(boxRegistryUri, {
     fungible: fungible,
+    name: name,
     fee: [
       '04be064356846e36e485408df50b877dd99ba406d87208add4c92b3c7d4e4c663c2fbc6a1e6534c7e5c0aec00b26486fad1daf20079423b7c8ebffbbdff3682b58',
       1000,

@@ -159,12 +159,12 @@ in {
                                     _ => {
                                       new refundPurseBalanceCh, refundResultCh in {
                                         @vault!("balance", *refundPurseBalanceCh) |
-                                        for (balance <- refundPurseBalanceCh) {
+                                        for (@balance <- refundPurseBalanceCh) {
                                           if (balance == 0) {
                                             basket!({ "status": "failed", "message": *resp }) |
                                             stdout!(("failed", *resp))
                                           } else {
-                                            @vault!("transfer", deployerRevAddress, balance, *key, *refundResultCh) |
+                                            @vault!("transfer", from, balance, *key, *refundResultCh) |
                                             for (result <- refundResultCh)  {
                                               match *result {
                                                 (true, Nil) => {

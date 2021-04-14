@@ -2,26 +2,42 @@ const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 const path = require('path');
 
-const { readTerm, readPursesTerm, readPursesIdsTerm } = require('../src');
+const {
+  readTerm,
+  readPursesTerm,
+  readAllPursesTerm,
+  readPursesIdsTerm,
+} = require('../src');
 const { getProcessArgv, getRegistryUri, logData } = require('./utils');
 
 module.exports.view = async () => {
   const purseId = getProcessArgv('--purse');
   const registryUri = getRegistryUri();
 
-  const term0 = readPursesIdsTerm(registryUri);
-  const result0 = await rchainToolkit.http.exploreDeploy(
-    process.env.READ_ONLY_HOST,
-    {
-      term: term0,
-    }
-  );
-  let ids = [];
+  let term1 = undefined;
+  let purses = {};
   if (purseId === undefined) {
-    ids = rchainToolkit.utils.rhoValToJs(JSON.parse(result0).expr[0]);
+    term1 = readAllPursesTerm(contractRegistryUri, {});
+    const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
+      term: term1,
+    });
+    rc.utils.rhoValToJs(JSON.parse(result1).expr[0]).forEach((p) => {
+      purses[p.id] = p;
+    });
   } else {
-    ids = [purseId];
+    term1 = readPursesTerm(registryUri, {
+      pursesIds: [purseId],
+    });
+    const result1 = await rchainToolkit.http.exploreDeploy(
+      process.env.READ_ONLY_HOST,
+      {
+        term: term1,
+      }
+    );
+    purses = rc.utils.rhoValToJs(JSON.parse(result1));
   }
+  console.log(purses);
+  return;
 
   const term1 = readTerm(registryUri);
   const term2 = readPursesTerm(registryUri, {

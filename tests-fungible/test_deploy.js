@@ -7,9 +7,15 @@ module.exports.main = async (
   privateKey1,
   publicKey1,
   boxRegistryUri,
-  fungible
+  fungible,
+  name,
+  fee
 ) => {
-  const term = mainTerm(boxRegistryUri, { fungible: fungible });
+  const term = mainTerm(boxRegistryUri, {
+    fungible: fungible,
+    name: name,
+    fee: fee ? fee : null,
+  });
   console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
