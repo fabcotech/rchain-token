@@ -1,4 +1,8 @@
 // reimplementation of TreeHashMap
+// Modification (1): line 265, if Nil is sent over "set", wi remove the
+// from map key instead of setting nil
+// Modification (2): line 9, line 69 etc. base 12 instead of base 256
+// Modification (3): "getAllValues" method that iterates and returns values
 // this is from rchain/casper/src/main/resources/Registry.rho
 new MakeNode, ByteArrayToNybbleList,
     TreeHashMapSetter, TreeHashMapGetter, TreeHashMapGetterValues, TreeHashMapContains, TreeHashMapUpdater, HowManyPrefixes, NybbleListForI,
@@ -122,7 +126,6 @@ new MakeNode, ByteArrayToNybbleList,
       } |
 
       contract TreeHashMap(@"get", @map, @key, ret) = {
-        stdout!("TreeHashMap get") |
         new hashCh, nybListCh, keccak256Hash(`rho:crypto:keccak256Hash`) in {
           // Hash the key to get a 256-bit array
           keccak256Hash!(key.toByteArray(), *hashCh) |
@@ -131,7 +134,6 @@ new MakeNode, ByteArrayToNybbleList,
               // Get the bit list
               ByteArrayToNybbleList!(hash, 0, depth, [], *nybListCh) |
               for (@nybList <- nybListCh) {
-                stdout!(("nybList", nybList)) |
                 TreeHashMapGetter!(map, nybList, 0,  depth, hash.slice(depth, 32), *ret)
               }
             }
@@ -320,7 +322,6 @@ new MakeNode, ByteArrayToNybbleList,
       } |
 
       contract TreeHashMap(@"set", @map, @key, @newVal, ret) = {
-        stdout!("TreeHashMap set") |
         new hashCh, nybListCh, keccak256Hash(`rho:crypto:keccak256Hash`) in {
           // Hash the key to get a 256-bit array
           keccak256Hash!(key.toByteArray(), *hashCh) |
@@ -329,7 +330,6 @@ new MakeNode, ByteArrayToNybbleList,
               // Get the bit list
               ByteArrayToNybbleList!(hash, 0, depth, [], *nybListCh) |
               for (@nybList <- nybListCh) {
-                stdout!(("nybList", nybList)) |
                 TreeHashMapSetter!(map, nybList, 0,  depth, newVal, hash.slice(depth, 32), *ret)
               }
             }

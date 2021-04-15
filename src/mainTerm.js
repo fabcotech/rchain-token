@@ -198,7 +198,6 @@ new MakeNode, ByteArrayToNybbleList,
       } |
 
       contract TreeHashMap(@"get", @map, @key, ret) = {
-        stdout!("TreeHashMap get") |
         new hashCh, nybListCh, keccak256Hash(\`rho:crypto:keccak256Hash\`) in {
           // Hash the key to get a 256-bit array
           keccak256Hash!(key.toByteArray(), *hashCh) |
@@ -207,7 +206,6 @@ new MakeNode, ByteArrayToNybbleList,
               // Get the bit list
               ByteArrayToNybbleList!(hash, 0, depth, [], *nybListCh) |
               for (@nybList <- nybListCh) {
-                stdout!(("nybList", nybList)) |
                 TreeHashMapGetter!(map, nybList, 0,  depth, hash.slice(depth, 32), *ret)
               }
             }
@@ -396,7 +394,6 @@ new MakeNode, ByteArrayToNybbleList,
       } |
 
       contract TreeHashMap(@"set", @map, @key, @newVal, ret) = {
-        stdout!("TreeHashMap set") |
         new hashCh, nybListCh, keccak256Hash(\`rho:crypto:keccak256Hash\`) in {
           // Hash the key to get a 256-bit array
           keccak256Hash!(key.toByteArray(), *hashCh) |
@@ -405,7 +402,6 @@ new MakeNode, ByteArrayToNybbleList,
               // Get the bit list
               ByteArrayToNybbleList!(hash, 0, depth, [], *nybListCh) |
               for (@nybList <- nybListCh) {
-                stdout!(("nybList", nybList)) |
                 TreeHashMapSetter!(map, nybList, 0,  depth, newVal, hash.slice(depth, 32), *ret)
               }
             }
@@ -873,13 +869,13 @@ new MakeNode, ByteArrayToNybbleList,
           false => {
             new itCh, createdPursesesCh, saveKeyAndBagCh in {
               createdPursesesCh!([]) |
-              itCh!((payload.get("purses").keys(), payload.get("purses"), payload.get("data"))) |
-              for(@(set, newPurses, newData) <= itCh) {
+              itCh!(payload.get("purses").keys()) |
+              for(@set <= itCh) {
                 match set {
                   Nil => {}
                   Set(last) => {
                     new retCh in {
-                      makePurseCh!((newPurses.get(last), newData.get(last), *retCh)) |
+                      makePurseCh!((payload.get("purses").get(last), payload.get("data").get(last), *retCh)) |
                       for (purse <- retCh) {
                         match *purse {
                           String => {
@@ -896,7 +892,7 @@ new MakeNode, ByteArrayToNybbleList,
                   }
                   Set(first ... rest) => {
                     new retCh in {
-                      makePurseCh!((newPurses.get(first), newData.get(first), *retCh)) |
+                      makePurseCh!((payload.get("purses").get(first), payload.get("data").get(first), *retCh)) |
                       for (purse <- retCh) {
                         match *purse {
                           String => {
@@ -905,7 +901,7 @@ new MakeNode, ByteArrayToNybbleList,
                           _ => {
                             for (createdPurses <- createdPursesesCh) {
                               createdPursesesCh!(*createdPurses ++ [*purse]) |
-                              itCh!((rest, newPurses, newData))
+                              itCh!(rest)
                             }
                           }
                         }

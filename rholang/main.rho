@@ -437,13 +437,13 @@ in {
           false => {
             new itCh, createdPursesesCh, saveKeyAndBagCh in {
               createdPursesesCh!([]) |
-              itCh!((payload.get("purses").keys(), payload.get("purses"), payload.get("data"))) |
-              for(@(set, newPurses, newData) <= itCh) {
+              itCh!(payload.get("purses").keys()) |
+              for(@set <= itCh) {
                 match set {
                   Nil => {}
                   Set(last) => {
                     new retCh in {
-                      makePurseCh!((newPurses.get(last), newData.get(last), *retCh)) |
+                      makePurseCh!((payload.get("purses").get(last), payload.get("data").get(last), *retCh)) |
                       for (purse <- retCh) {
                         match *purse {
                           String => {
@@ -460,7 +460,7 @@ in {
                   }
                   Set(first ... rest) => {
                     new retCh in {
-                      makePurseCh!((newPurses.get(first), newData.get(first), *retCh)) |
+                      makePurseCh!((payload.get("purses").get(first), payload.get("data").get(first), *retCh)) |
                       for (purse <- retCh) {
                         match *purse {
                           String => {
@@ -469,7 +469,7 @@ in {
                           _ => {
                             for (createdPurses <- createdPursesesCh) {
                               createdPursesesCh!(*createdPurses ++ [*purse]) |
-                              itCh!((rest, newPurses, newData))
+                              itCh!(rest)
                             }
                           }
                         }
