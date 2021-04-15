@@ -75,6 +75,10 @@ in {
   counterCh!(0) |
 
   // reimplementation of TreeHashMap
+// Modification (1): line 265, if Nil is sent over "set", wi remove the
+// from map key instead of setting nil
+// Modification (2): line 9, line 69 etc. base 12 instead of base 256
+// Modification (3): "getAllValues" method that iterates and returns values
 // this is from rchain/casper/src/main/resources/Registry.rho
 new MakeNode, ByteArrayToNybbleList,
     TreeHashMapSetter, TreeHashMapGetter, TreeHashMapGetterValues, TreeHashMapContains, TreeHashMapUpdater, HowManyPrefixes, NybbleListForI,

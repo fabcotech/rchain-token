@@ -15,6 +15,11 @@ new
   purseIdCh,
   registryUriCh,
   revAddressCh,
+  boxExistsCh,
+  boxValuesCh,
+  contractExistsCh,
+  contractValuesCh,
+  proceedCh,
   registryLookup(\`rho:registry:lookup\`),
   deployerId(\`rho:rchain:deployerId\`),
   stdout(\`rho:io:stdout\`),
@@ -40,12 +45,30 @@ in {
   // data
   dataCh!("${payload.data}") |
 
+  registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxExistsCh) |
+  registryLookup!(\`rho:id:${registryUri}\`, *contractExistsCh) |
+  for (boxExists <- boxExistsCh; contractExists <- contractExistsCh) {
+    boxExists!(("PUBLIC_READ", Nil, *boxValuesCh)) |
+    contractExists!(("PUBLIC_READ", Nil, *contractValuesCh)) |
+    for (@contractValues <- contractValuesCh; @boxValues <- boxValuesCh ) {
+      match contractValues.get("version") == boxValues.get("version") {
+        true => {
+          proceedCh!(Nil)
+        }
+        true => {
+          basket!({ "status": "failed", "message": "box and contract don't have the same version, cancelled payment" }) |
+          stdout!(("failed", "box and contract don't have the same version, cancelled payment"))
+        }
+      }
+    }
+  } |
+
   registryLookup!(\`rho:rchain:revVault\`, *revVaultPurseCh) |
 
   /*
     Create a vault/purse that is just used once (purse)
   */
-  for(@(_, *RevVaultPurse) <- revVaultPurseCh) {
+  for(@(_, *RevVaultPurse) <- revVaultPurseCh; _ <- proceedCh) {
     new unf, purseRevAddrCh, purseAuthKeyCh, vaultCh, revAddressCh in {
       revAddress!("fromUnforgeable", *unf, *purseRevAddrCh) |
       RevVaultPurse!("unforgeableAuthKey", *unf, *purseAuthKeyCh) |
