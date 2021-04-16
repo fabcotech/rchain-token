@@ -14,35 +14,33 @@ module.exports.view = async () => {
   const purseId = getProcessArgv('--purse');
   const registryUri = getRegistryUri();
 
-  let term1 = undefined;
+  let term0 = undefined;
   let purses = {};
   if (purseId === undefined) {
-    term1 = readAllPursesTerm(contractRegistryUri, {});
-    const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: term1,
-    });
-    rc.utils.rhoValToJs(JSON.parse(result1).expr[0]).forEach((p) => {
+    term0 = readAllPursesTerm(registryUri, {});
+    const result1 = await rchainToolkit.http.exploreDeploy(
+      process.env.READ_ONLY_HOST,
+      {
+        term: term0,
+      }
+    );
+    rchainToolkit.utils.rhoValToJs(JSON.parse(result1).expr[0]).forEach((p) => {
       purses[p.id] = p;
     });
   } else {
-    term1 = readPursesTerm(registryUri, {
+    term0 = readPursesTerm(registryUri, {
       pursesIds: [purseId],
     });
     const result1 = await rchainToolkit.http.exploreDeploy(
       process.env.READ_ONLY_HOST,
       {
-        term: term1,
+        term: term0,
       }
     );
     purses = rc.utils.rhoValToJs(JSON.parse(result1));
   }
-  console.log(purses);
-  return;
 
   const term1 = readTerm(registryUri);
-  const term2 = readPursesTerm(registryUri, {
-    pursesIds: purseId === undefined ? ids.slice(0, 100) : [purseId],
-  });
   const publicKey = process.env.PRIVATE_KEY
     ? rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY)
     : 'é';
@@ -52,18 +50,12 @@ module.exports.view = async () => {
     rchainToolkit.http.exploreDeploy(process.env.READ_ONLY_HOST, {
       term: term1,
     }),
-    rchainToolkit.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: term2,
-    }),
   ]).then((results) => {
     const data = rchainToolkit.utils.rhoValToJs(JSON.parse(results[0]).expr[0]);
 
-    const purses =
-      ids.length > 0
-        ? rchainToolkit.utils.rhoValToJs(JSON.parse(results[1]).expr[0])
-        : [];
     logData(data);
-    if (Object.keys(purses).length === 0) {
+    const ids = Object.keys(purses);
+    if (ids.length === 0) {
       console.log('\n no purses');
       return;
     }
@@ -83,9 +75,11 @@ module.exports.view = async () => {
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
     console.log(
-      `\n Purses [0-99] / ${ids.length}\n purse ID          type       box           owner         quantity         price (dust) \n`
+      `\n Purses [0-${ids.length < 99 ? ids.length : '99'}] / ${
+        ids.length
+      }\n purse ID          type       box           owner         quantity         price (dust) \n`
     );
-    Object.keys(purses).forEach((bagId) => {
+    ids.slice(0, 100).forEach((bagId) => {
       let s = '';
       s += bagId;
       s = s.padEnd(18, ' ');

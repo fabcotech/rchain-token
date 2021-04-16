@@ -185,8 +185,13 @@ module.exports.getFungible = () => {
   return fungible === 'true';
 };
 
+module.exports.getDepth = () => {
+  let depth = getProcessArgv('--depth');
+  return parseInt(depth);
+};
+
 module.exports.getName = () => {
-  const name = geametProcessArgv('--name');
+  const name = getProcessArgv('--name');
   if (typeof name !== 'string') {
     throw new Error(
       'Missing arguments --name , please give a name to your contract, ex: "gold tokens", "mytoken", "kitties", "E corp shares"'

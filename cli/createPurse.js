@@ -58,7 +58,7 @@ module.exports.createPurse = async () => {
         type: type,
         price: price,
         publicKey: publicKey,
-        box: '$BQrho:id:${boxRegistryUri}$BQ',
+        box: `$BQrho:id:${boxRegistryUri}$BQ`,
         quantity: quantity,
       },
     },
@@ -78,6 +78,7 @@ module.exports.createPurse = async () => {
       delete bags[purseId].data;
       defaultPurses[purseId] = bags[purseId];
       defaultPurses[purseId].publicKey = publicKey;
+      defaultPurses[purseId].box = `$BQrho:id:${boxRegistryUri}$BQ`;
       defaultPurses[purseId].price = null;
     });
     log(Object.keys(defaultPurses).length + ' purse found in json file');

@@ -282,6 +282,7 @@ fs.writeFileSync(
         '${payload.fee ? `["${payload.fee[0]}", ${payload.fee[1]}]` : "Nil"}'
       )
       .replace(/NAME/g, '"${payload.name}"')
+      .replace(/DEPTH/g, '${payload.depth || 1}')
       .replace(/FUNGIBLE/g, '${payload.fungible}')
       .replace(/TREE_HASH_MAP/g, treeHashMapTerm + ' |')
       .replace(/FROM_BOX_REGISTRY_URI/g, '${fromBoxRegistryUri}')}\`;

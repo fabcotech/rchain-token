@@ -512,8 +512,8 @@ new MakeNode, ByteArrayToNybbleList,
 } |
 
   // depth 2 = 12 * 12 = 144 maps
-  TreeHashMap!("init", 2, *pursesReadyCh) |
-  TreeHashMap!("init", 2, *pursesForSaleReadyCh) |
+  TreeHashMap!("init", ${payload.depth || 1}, *pursesReadyCh) |
+  TreeHashMap!("init", ${payload.depth || 1}, *pursesForSaleReadyCh) |
 
   for (@thm <- pursesReadyCh; @thm2 <- pursesForSaleReadyCh) {
     /*

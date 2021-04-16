@@ -26,7 +26,7 @@ As the owner, be very careful to only give `quantity: 1` when you create purses 
 
 ```
 # deploy contract and save super key to box
-node cli deploy --fungible false
+node cli deploy --fungible false --name "mynft"
 
 # create a non-fungible "cat123" token (quantity is always 1 for non-fungibles)
 node cli create-purse --quantity 1 --type "0" --new-id "cat123"
@@ -38,7 +38,7 @@ Fungibles tokens are identified mainly by the type property, purses can have a q
 
 ```
 # deploy contract and save super key to box
-node cli deploy --fungible true
+node cli deploy --fungible true --name "mytoken"
 
 # Create/mint a purse with 12 tokens "GOLD" using the admin/owner capability
 node cli create-purse --quantity 12 --type "GOLD"
