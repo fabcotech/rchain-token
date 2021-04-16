@@ -1268,7 +1268,7 @@ new MakeNode, ByteArrayToNybbleList,
           boxEntry!(("PUBLIC_READ", Nil, *boxDataCh)) |
           for (r <- boxDataCh) {
             match (*r.get("version")) {
-              "5.0.2" => {
+              "5.0.3" => {
                 @(*deployerId, "rho:id:${fromBoxRegistryUri}")!((
                   {
                     "type": "SAVE_SUPER_KEY",
@@ -1294,7 +1294,7 @@ new MakeNode, ByteArrayToNybbleList,
                         "locked": false,
                         "fungible": ${payload.fungible},
                         "name": "${payload.name}",
-                        "version": "5.0.2"
+                        "version": "5.0.3"
                       }) |
                       stdout!({
                         "status": "completed",
@@ -1303,7 +1303,7 @@ new MakeNode, ByteArrayToNybbleList,
                         "locked": false,
                         "fungible": ${payload.fungible},
                         "name": "${payload.name}",
-                        "version": "5.0.2"
+                        "version": "5.0.3"
                       }) |
                       stdout!("completed, contract deployed")
                     }
@@ -1313,11 +1313,11 @@ new MakeNode, ByteArrayToNybbleList,
               _ => {
                 mainCh!({
                   "status": "failed",
-                  "message": "box has not the same version number 5.0.2",
+                  "message": "box has not the same version number 5.0.3",
                 }) |
                 stdout!({
                   "status": "failed",
-                  "message": "box has not the same version number 5.0.2",
+                  "message": "box has not the same version number 5.0.3",
                 })
               }
             }

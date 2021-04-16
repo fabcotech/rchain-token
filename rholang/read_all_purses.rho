@@ -1,10 +1,9 @@
-new return, entryCh, readCh, stdout(`rho:io:stdout`), lookup(`rho:registry:lookup`) in {
-  lookup!(`rho:id:8thn9cwzhug5nqdyqmtsfpgghusgesyakms86irg5aawunnjwtbnux`, *entryCh) |
+new return, entryCh, readCh, lookup(`rho:registry:lookup`) in {
+  lookup!(`rho:id:REGISTRY_URI`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
       entry!(("PUBLIC_READ_ALL_PURSES", Nil, *x)) |
       for (y <- x) {
-        stdout!(*y) |
         return!(*y)
       }
     }

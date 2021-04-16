@@ -832,7 +832,7 @@ in {
           boxEntry!(("PUBLIC_READ", Nil, *boxDataCh)) |
           for (r <- boxDataCh) {
             match (*r.get("version")) {
-              "5.0.2" => {
+              "5.0.3" => {
                 @(*deployerId, "rho:id:FROM_BOX_REGISTRY_URI")!((
                   {
                     "type": "SAVE_SUPER_KEY",
@@ -858,7 +858,7 @@ in {
                         "locked": false,
                         "fungible": FUNGIBLE,
                         "name": NAME,
-                        "version": "5.0.2"
+                        "version": "5.0.3"
                       }) |
                       stdout!({
                         "status": "completed",
@@ -867,7 +867,7 @@ in {
                         "locked": false,
                         "fungible": FUNGIBLE,
                         "name": NAME,
-                        "version": "5.0.2"
+                        "version": "5.0.3"
                       }) |
                       stdout!("completed, contract deployed")
                     }
@@ -877,11 +877,11 @@ in {
               _ => {
                 mainCh!({
                   "status": "failed",
-                  "message": "box has not the same version number 5.0.2",
+                  "message": "box has not the same version number 5.0.3",
                 }) |
                 stdout!({
                   "status": "failed",
-                  "message": "box has not the same version number 5.0.2",
+                  "message": "box has not the same version number 5.0.3",
                 })
               }
             }

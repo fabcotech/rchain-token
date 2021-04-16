@@ -447,7 +447,7 @@ in {
     mainCh!({
       "registryUri": *entryUri,
       "publicKey": "${payload.publicKey}",
-      "version": "5.0.2",
+      "version": "5.0.3",
       "status": "completed"
     })
   }
