@@ -37,7 +37,7 @@ module.exports.view = async () => {
         term: term0,
       }
     );
-    purses = rc.utils.rhoValToJs(JSON.parse(result1));
+    purses = rchainToolkit.utils.rhoValToJs(JSON.parse(result1).expr[0]);
   }
 
   const term1 = readTerm(registryUri);
