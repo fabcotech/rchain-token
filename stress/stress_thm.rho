@@ -1,0 +1,63 @@
+new 
+basket,
+
+  entryCh,
+  entryUriCh,
+  iterateOnPrefixesCh,
+  pursesReadyCh,
+  TreeHashMap,
+
+  insertArbitrary(`rho:registry:insertArbitrary`),
+  stdout(`rho:io:stdout`),
+  revAddress(`rho:rev:address`),
+  registryLookup(`rho:registry:lookup`),
+  deployerId(`rho:rchain:deployerId`)
+in {
+
+  TREE_HASH_MAP
+
+  // depth 2 = 12 * 12 = 144 maps
+  TreeHashMap!("init", DEPTH, *pursesReadyCh) |
+
+  for (@thm <- pursesReadyCh) {
+
+    contract iterateOnPrefixesCh() = {
+      new itCh in {
+        for (@i <= itCh) {
+          stdout!(i) |
+          match i == ITERATE_OVER {
+            true => {
+              stdout!({ "status": "completed" })
+            }
+            false => {
+              new setReturnCh in {
+                TreeHashMap!("set", thm, i, VALUE, *setReturnCh) |
+                for (_ <- setReturnCh) {
+                  itCh!(i + 1)
+                }
+              }
+            }
+          }
+        } |
+        itCh!(0)
+      }
+    } |
+    iterateOnPrefixesCh!()  |
+
+    for (@("PUBLIC_READ_ALL_PURSES", Nil, return) <- entryCh) {
+      new getAllValuesCh in {
+        TreeHashMap!("getAllValues", thm, *getAllValuesCh) |
+        for (@allValues <- getAllValuesCh) {
+          @return!(allValues)
+        }
+      }
+    } |
+
+    insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
+
+    for (entryUri <- entryUriCh) {
+      stdout!({ "registryUri": *entryUri }) |
+      basket!({ "registryUri": *entryUri })
+    }
+  }
+}

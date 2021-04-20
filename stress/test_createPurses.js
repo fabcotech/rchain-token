@@ -48,7 +48,7 @@ module.exports.main = async (
     privateKey1,
     publicKey1,
     1,
-    100000000,
+    200000000,
     vab
   );
 

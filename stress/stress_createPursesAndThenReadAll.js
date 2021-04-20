@@ -12,7 +12,7 @@ const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE_INITIAL = 60;
+const PURSES_TO_CREATE_INITIAL = 500;
 const DEPTH = 2;
 
 const PRIVATE_KEY =
@@ -54,7 +54,6 @@ const main = async () => {
   await checkDefaultPurses(boxRegistryUri);
   console.log('✓ 02 check initial bags and data');
 
-  let lastDustCost;
   const createPursesBatch = async (j) => {
     const ids = [];
     for (let i = 0; i < PURSES_TO_CREATE_INITIAL; i += 1) {

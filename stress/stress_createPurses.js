@@ -12,8 +12,8 @@ const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE = 8;
-const PURSES_TO_CREATE_INITIAL = 8;
+const PURSES_TO_CREATE = 10;
+const PURSES_TO_CREATE_INITIAL = 10;
 const NEW_BOX_EACH_TIME = true;
 
 const PRIVATE_KEY =
@@ -41,7 +41,9 @@ const main = async () => {
     PUBLIC_KEY,
     boxRegistryUri,
     false,
-    'mytoken'
+    'mytoken',
+    null,
+    2
   );
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));

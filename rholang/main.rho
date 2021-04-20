@@ -435,41 +435,40 @@ in {
             @return!("error: contract is locked")
           }
           false => {
-            new itCh, createdPursesesCh, saveKeyAndBagCh in {
+            new itCh, sizeCh, createdPursesesCh, saveKeyAndBagCh in {
               createdPursesesCh!([]) |
-              itCh!(payload.get("purses").keys()) |
-              for(@set <= itCh) {
-                match set {
-                  Nil => {}
-                  Set(last) => {
-                    new retCh in {
-                      makePurseCh!((payload.get("purses").get(last), payload.get("data").get(last), *retCh)) |
-                      for (purse <- retCh) {
-                        match *purse {
-                          String => {
-                            @return!(*purse)
-                          }
-                          _ => {
-                            for (createdPurses <- createdPursesesCh) {
-                              @return!((true, { "purses": *createdPurses ++ [*purse] }))
+              sizeCh!(payload.get("purses").keys().size()) |
+              for (@size <- sizeCh) {
+                itCh!(payload.get("purses").keys()) |
+                for(@set <= itCh) {
+                  match set {
+                    Nil => {}
+                    Set(last) => {
+                      new retCh in {
+                        makePurseCh!((payload.get("purses").get(last), payload.get("data").get(last), *retCh)) |
+                        for (purse <- retCh) {
+                          match *purse {
+                            String => {
+                              @return!(*purse)
+                            }
+                            _ => {
+                              @return!((true, { "total": size, "purse": *purse }))
                             }
                           }
                         }
                       }
                     }
-                  }
-                  Set(first ... rest) => {
-                    new retCh in {
-                      makePurseCh!((payload.get("purses").get(first), payload.get("data").get(first), *retCh)) |
-                      for (purse <- retCh) {
-                        match *purse {
-                          String => {
-                            @return!(*purse)
-                          }
-                          _ => {
-                            for (createdPurses <- createdPursesesCh) {
-                              createdPursesesCh!(*createdPurses ++ [*purse]) |
-                              itCh!(rest)
+                    Set(first ... rest) => {
+                      new retCh in {
+                        makePurseCh!((payload.get("purses").get(first), payload.get("data").get(first), *retCh)) |
+                        for (purse <- retCh) {
+                          match *purse {
+                            String => {
+                              @return!(*purse)
+                            }
+                            _ => {
+                              itCh!(rest) |
+                              @return!((true, { "total": size, "purse": *purse }))
                             }
                           }
                         }

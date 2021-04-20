@@ -4,6 +4,9 @@ module.exports.createPursesTerm = (
 ) => {
   return `new basket,
   returnCh,
+  listenAgainOnReturnCh,
+  processPurseCh,
+  listenManyTimesCh,
   boxCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
@@ -32,65 +35,58 @@ in {
     }
   } |
 
-  for (resp <- returnCh) {
-    match *resp {
-      String => {
-        basket!({ "status": "failed", "message": *resp }) |
-        stdout!(("failed", *resp))
+  
+  for (@i <= listenAgainOnReturnCh) {
+    for (@resp <- returnCh) {
+      match resp {
+        String => {
+          basket!({ "status": "failed", "message": resp }) |
+          stdout!(("failed", resp))
+        }
+        (true, result) => {
+          if (i + 1 == result.get("total")) {
+            processPurseCh!((result.get("purse"), Nil, true))
+          } else {
+            new createNextCh in {
+              processPurseCh!((result.get("purse"), *createNextCh, false)) |
+              for (_ <- createNextCh) {
+                listenAgainOnReturnCh!(i + 1)
+              }
+            }
+          }
+        }
       }
-      (true, payload) => {
-        new entryCh, return2Ch, itCh in {
-          registryLookup!(\`rho:id:${payload.fromBoxRegistryUri}\`, *entryCh) |
-          for (entry <- entryCh) {
-            for (purses <= itCh) {
-              match *purses {
-                Nil => {
-                  basket!({ "status": "failed", "message": "no purse" }) |
-                  stdout!(("failed", "no purse"))
-                }
-                [last] => {
-                  new readReturnCh, receivePurseReturnCh in {
-                    @last!(("READ", Nil, *readReturnCh)) |
-                    entry!((
-                      "PUBLIC_RECEIVE_PURSE", {
-                        "registryUri": \`rho:id:${registryUri}\`,
-                        "purse": last
-                      }, *receivePurseReturnCh)
-                    ) |
-                    for (r <- receivePurseReturnCh) {
-                      match *r {
-                        String => {
-                          basket!({ "status": "failed", "message": *r }) |
-                          stdout!(("failed", *r))
-                        }
-                        _ => {
-                          stdout!("completed, purses created and saved to box") |
-                          basket!({ "status": "completed" })
-                        }
-                      }
-                    }
-                  }
-                }
-                [first ... rest] => {
-                  new readReturnCh, receivePurseReturnCh in {
-                    entry!(("PUBLIC_RECEIVE_PURSE", {
-                      "registryUri": \`rho:id:${registryUri}\`,
-                      "purse": first
-                    }, *receivePurseReturnCh)) |
-                    for (r <- receivePurseReturnCh) {
-                      match *r {
-                        String => {
-                          basket!({ "status": "failed", "message": *r }) |
-                          stdout!(("failed", *r))
-                        }
-                        _ => { itCh!(rest) }
-                      }
-                    }
-                  }
+    }
+  } |
+  listenAgainOnReturnCh!(0) |
+
+  for (@(purse, createNextCh, last) <= processPurseCh) {
+    new entryCh, return2Ch, itCh in {
+      registryLookup!(\`rho:id:${payload.fromBoxRegistryUri}\`, *entryCh) |
+      for (entry <- entryCh) {
+        new readReturnCh, receivePurseReturnCh in {
+          @purse!(("READ", Nil, *readReturnCh)) |
+          entry!((
+            "PUBLIC_RECEIVE_PURSE", {
+              "registryUri": \`rho:id:${registryUri}\`,
+              "purse": purse
+            }, *receivePurseReturnCh)
+          ) |
+          for (r <- receivePurseReturnCh) {
+            match *r {
+              String => {
+                basket!({ "status": "failed", "message": *r }) |
+                stdout!(("failed", *r))
+              }
+              _ => {
+                if (last == true) {
+                  stdout!("completed, purses created and saved to box") |
+                  basket!({ "status": "completed" })
+                } else {
+                  @createNextCh!(Nil)
                 }
               }
-            } |
-            itCh!(payload.get("purses"))
+            }
           }
         }
       }

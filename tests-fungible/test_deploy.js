@@ -9,12 +9,14 @@ module.exports.main = async (
   boxRegistryUri,
   fungible,
   name,
-  fee
+  fee,
+  depth
 ) => {
   const term = mainTerm(boxRegistryUri, {
     fungible: fungible,
     name: name,
     fee: fee ? fee : null,
+    depth: depth ? depth : 1,
   });
   console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();

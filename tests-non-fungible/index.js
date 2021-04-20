@@ -58,7 +58,9 @@ const main = async () => {
     PUBLIC_KEY,
     boxRegistryUri,
     false,
-    'mytoken'
+    'mytoken',
+    null,
+    2
   );
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));

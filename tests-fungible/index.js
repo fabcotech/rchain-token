@@ -62,7 +62,8 @@ const main = async () => {
     'mytoken',
     // 2% fee
     // 2.000 is 2% of 100.000
-    [PUBLIC_KEY_3, 2000]
+    [PUBLIC_KEY_3, 2000],
+    2
   );
 
   // If you purchase a token at 100 REV
@@ -98,15 +99,11 @@ const main = async () => {
       (new Date().getTime() - t) / 1000 +
       's'
   );
-  await checkPursesInBox(
-    boxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`
-  );
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
   await checkPursesInContract(
     contractRegistryUri,
     1,
-    `${PURSES_TO_CREATE}`,
+    `4`,
     3 * PURSES_TO_CREATE
   );
   console.log(
@@ -122,19 +119,15 @@ const main = async () => {
     PUBLIC_KEY,
     boxRegistryUri,
     5,
-    `${PURSES_TO_CREATE}` // ID of the purse to split from
+    `4` // ID of the purse to split from
   );
 
   console.log(`✓ 05 split purse`);
-  await checkPursesInBox(
-    boxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`
-  );
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
   await checkPursesInContract(
     contractRegistryUri,
     2,
-    `${PURSES_TO_CREATE}`,
+    `4`,
     PURSES_TO_CREATE * 3 - 5
   );
   await checkPursesInContract(
@@ -167,17 +160,13 @@ const main = async () => {
     `${PURSES_TO_CREATE + 3}`,
     5
   );
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
 
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log(`✓ 06 send one purse (5 tokens) from box 1 to box 2`);
   console.log(
     '  06 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-  await checkPursesInBox(
-    boxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`
   );
 
   // send from box 2 to box 1
@@ -189,17 +178,8 @@ const main = async () => {
     boxRegistryUri,
     '' + (PURSES_TO_CREATE + 3) // ID of the purse to send
   );
-  await checkPursesInContract(
-    contractRegistryUri,
-    1,
-    `${PURSES_TO_CREATE}`,
-    30
-  );
-  await checkPursesInBox(
-    boxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`
-  );
+  await checkPursesInContract(contractRegistryUri, 1, `4`, 30);
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
   await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 'none');
   balances2.push(await getBalance(PUBLIC_KEY_2));
   console.log(`✓ 07 send one purse (5 tokens) from box 2 to box 1`);
@@ -209,7 +189,7 @@ const main = async () => {
   );
 
   await withdraw(contractRegistryUri, PUBLIC_KEY, PRIVATE_KEY, {
-    purseId: `${PURSES_TO_CREATE}`,
+    purseId: `4`,
     fromBoxRegistryUri: boxRegistryUri,
     toBoxRegistryUri: secondBoxRegistryUri,
     quantityToWithdraw: 6,
@@ -220,15 +200,11 @@ const main = async () => {
     contractRegistryUri,
     `${PURSES_TO_CREATE + 5}`
   );
-  await checkPursesInBox(
-    boxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`
-  );
+  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
   await checkPursesInContract(
     contractRegistryUri,
     2,
-    `${PURSES_TO_CREATE}`,
+    `4`,
     PURSES_TO_CREATE * 3 - 6
   );
   await checkPursesInContract(
@@ -248,15 +224,11 @@ const main = async () => {
     PRIVATE_KEY,
     PUBLIC_KEY,
     boxRegistryUri,
-    `${PURSES_TO_CREATE}`, // bag 11 that probably has not been sent
+    `4`, // bag 4 that probably has not been sent
     'aaa'
   );
   balances1.push(await getBalance(PUBLIC_KEY));
-  await checkPurseDataInContract(
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`,
-    'aaa'
-  );
+  await checkPurseDataInContract(contractRegistryUri, `4`, 'aaa');
 
   console.log(`✓ 08 update data associated to purse`);
   console.log(
@@ -270,14 +242,10 @@ const main = async () => {
     PUBLIC_KEY,
     boxRegistryUri,
     1000,
-    `${PURSES_TO_CREATE}` // ID of the purse to set a price to
+    `4` // ID of the purse to set a price to
   );
   balances1.push(await getBalance(PUBLIC_KEY));
-  await checkPursePriceInContract(
-    contractRegistryUri,
-    `${PURSES_TO_CREATE}`,
-    1000
-  );
+  await checkPursePriceInContract(contractRegistryUri, `4`, 1000);
   console.log(`✓ 09 set a price to a purse`);
   console.log(
     '  09 dust cost: ' +
@@ -286,7 +254,7 @@ const main = async () => {
   const balance1BeforePurchase = balances1[balances1.length - 1];
   await purchase(contractRegistryUri, PRIVATE_KEY_2, PUBLIC_KEY_2, {
     toBoxRegistryUri: secondBoxRegistryUri,
-    purseId: `${PURSES_TO_CREATE}`,
+    purseId: `4`,
     quantity: 1,
     data: 'bbb',
     newId: null,
@@ -302,7 +270,7 @@ const main = async () => {
   await checkPursesInContract(
     contractRegistryUri,
     2,
-    `${PURSES_TO_CREATE}`,
+    `4`,
     PURSES_TO_CREATE * 3 - 7
   );
   await checkPursesInContract(
