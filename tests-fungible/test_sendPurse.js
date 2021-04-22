@@ -2,7 +2,7 @@ const rc = require('rchain-toolkit');
 
 const { sendPurseTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
-const waitForUnforgeable = require('./waitForUnforgeable').main;
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 
 module.exports.main = async (
   contractRegistryUri,

@@ -16,7 +16,7 @@ const PURSES_TO_CREATE_INITIAL = 100;
 const DEPTH = 2;
 
 const PRIVATE_KEY =
-  '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
+  'a2803d16030f83757a5043e5c0e28573685f6d8bf4e358bf1385d82bffa8e698';
 const PUBLIC_KEY = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
 
 const balances1 = [];
@@ -46,6 +46,7 @@ const main = async () => {
   );
 
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
+  console.log('  contractRegistryUri : ' + contractRegistryUri);
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy');
   console.log(
@@ -70,6 +71,7 @@ const main = async () => {
       ids
     );
     balances1.push(await getBalance(PUBLIC_KEY));
+    console.log('okokokokok');
     console.log(`✓ created ${PURSES_TO_CREATE_INITIAL} purses`);
 
     await checkPursesInBox(
@@ -79,6 +81,13 @@ const main = async () => {
     );
   };
   await createPursesBatch();
+
+  balances1.push(await getBalance(PUBLIC_KEY));
+  console.log('✓ 03 create purses');
+  console.log(
+    '  03 dust cost: ' +
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+  );
 
   const t = new Date().getTime();
   const term1 = readAllPursesTerm(contractRegistryUri);

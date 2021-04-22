@@ -231,12 +231,15 @@ new MakeNode, ByteArrayToNybbleList,
                           } else {
                             if (alsoStoreAsBytes == true) {
                               for (@bytes <- bytesOrMapCh) {
-                                if (bytes == Nil) {
-                                  bytesOrMapCh!( val)
+                                itCh!(i + 1) |
+                                // store-as-bytes-map
+                                bytesOrMapCh!(bytes.union(val))
+                                // store-as-bytes-array
+                                /* if (bytes == Nil) {
+                                  bytesOrMapCh!(bytes)
                                 } else {
                                   bytesOrMapCh!(bytes ++ val)
-                                } |
-                                itCh!(i + 1)
+                                } */
                               }
                             } else {
                               for (@map <- bytesOrMapCh) {
@@ -280,7 +283,10 @@ new MakeNode, ByteArrayToNybbleList,
                       }
                     } |
                     if (alsoStoreAsBytes == true) {
-                      bytesOrMapCh!(Nil)
+                      // store-as-bytes-map
+                       bytesOrMapCh!({})
+                      // store-as-bytes-array
+                      /* bytesOrMapCh!(Nil) */
                     } else {
                       bytesOrMapCh!({})
                     } |
@@ -492,9 +498,15 @@ new MakeNode, ByteArrayToNybbleList,
                   if (alsoStoreAsBytes == true) {
                     new ret1, ret2 in {
                       if (newVal == Nil) {
-                        TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, Nil, hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-map
+                        TreeHashMapSetter!((map, "bytes"), nybList, 0,  depth, Nil, hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-array
+                        /* TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, Nil, hash.slice(depth, 32), *ret2) */
                       } else {
-                        TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, newVal, hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-map
+                        TreeHashMapSetter!((map, "bytes"), nybList, 0,  depth, newVal.toByteArray(), hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-array
+                        /* TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, newVal, hash.slice(depth, 32), *ret2) */
                       } |
                       TreeHashMapSetter!(map, nybList, 0, depth, newVal, hash.slice(depth, 32), *ret1) |
                       for (_ <- ret1; _ <- ret2) {

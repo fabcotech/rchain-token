@@ -49,7 +49,7 @@ module.exports.main = async (
       const interval = setInterval(() => {
         try {
           rc.http
-            .dataAtName(process.env.VALIDATOR_HOST, {
+            .dataAtName(process.env.READ_ONLY_HOST, {
               name: {
                 UnforgPrivate: { data: JSON.parse(pd).names[0] },
               },

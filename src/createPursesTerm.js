@@ -13,6 +13,7 @@ module.exports.createPursesTerm = (
   registryLookup(\`rho:registry:lookup\`)
 in {
 
+stdout!("hey") |
   @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(({ "type": "READ_SUPER_KEYS" }, *boxCh)) |
 
   for (superKeys <- boxCh) {

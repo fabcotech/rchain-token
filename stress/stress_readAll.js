@@ -2,10 +2,10 @@ const rc = require('rchain-toolkit');
 
 require('dotenv').config();
 
-const { readAllPursesTerm } = require('../src');
+const { readAllPursesTerm, decodePurses } = require('../src');
 
 const CONTRACT_REGISTRY_URI =
-  'mpaijgz9fhghtdpouop14uq6apuou7ikts6ncx43pgam1byq1r5dwx';
+  'duikc8nkffd7cytgnugwjinqqdxw3xch1src43woqto6bbdxsw5p6q';
 
 const main = async () => {
   const t = new Date().getTime();
@@ -13,8 +13,9 @@ const main = async () => {
   const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term1,
   });
-  const purses = {};
-  const pursesOnChain = JSON.parse(result1).expr[0];
+  console.log(result1);
+
+  const pursesAsBytes = JSON.parse(result1).expr[0];
 
   let s = '';
 
@@ -24,29 +25,13 @@ const main = async () => {
     's\n';
 
   const t2 = new Date().getTime();
-  Object.keys(pursesOnChain.ExprMap.data).forEach((k) => {
-    const a = pursesOnChain.ExprMap.data[k];
-    if (a && a.ExprBytes && a.ExprBytes.data) {
-      const b = Buffer.from(a.ExprBytes.data, 'hex');
-      try {
-        const valJs = rc.utils.rhoExprToVar(rc.utils.decodePar(b).exprs[0]);
-        purses[valJs.id] = valJs;
-      } catch (err) {
-        console.log(err);
-      }
-    }
-  });
+  const purses = decodePurses(pursesAsBytes);
 
   s +=
     `  avg time of decode bytes in javascript : ` +
     (new Date().getTime() - t2) / 1000 +
     's\n';
 
-  console.log(
-    `  ${
-      Object.keys(pursesOnChain.ExprMap.data).length
-    } hashes in tree hash map`
-  );
   console.log(`  ${Object.keys(purses).length} purses`);
 
   console.log(s);

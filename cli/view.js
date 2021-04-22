@@ -9,6 +9,7 @@ const {
   readPursesIdsTerm,
 } = require('../src');
 const { getProcessArgv, getRegistryUri, logData } = require('./utils');
+const { decodePurses } = require('../src/decodePurses');
 
 module.exports.view = async () => {
   const purseId = getProcessArgv('--purse');
@@ -24,9 +25,8 @@ module.exports.view = async () => {
         term: term0,
       }
     );
-    rchainToolkit.utils.rhoValToJs(JSON.parse(result1).expr[0]).forEach((p) => {
-      purses[p.id] = p;
-    });
+    const pursesAsBytes = JSON.parse(result1).expr[0];
+    purses = decodePurses(pursesAsBytes);
   } else {
     term0 = readPursesTerm(registryUri, {
       pursesIds: [purseId],

@@ -2,6 +2,7 @@ const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
 const { boxTerm } = require('../src/');
+const waitForUnforgeable = require('./waitForUnforgeable').main;
 
 const { log, validAfterBlockNumber, prepareDeploy } = require('./utils');
 
@@ -58,43 +59,7 @@ module.exports.deployBox = async () => {
 
   let dataAtNameResponse;
   try {
-    dataAtNameResponse = await new Promise((resolve, reject) => {
-      const interval = setInterval(() => {
-        try {
-          rchainToolkit.http
-            .dataAtName(process.env.VALIDATOR_HOST, {
-              name: {
-                UnforgPrivate: { data: JSON.parse(pd).names[0] },
-              },
-              depth: 3,
-            })
-            .then((dataAtNameResponse) => {
-              if (
-                dataAtNameResponse &&
-                JSON.parse(dataAtNameResponse) &&
-                JSON.parse(dataAtNameResponse).exprs &&
-                JSON.parse(dataAtNameResponse).exprs.length
-              ) {
-                resolve(dataAtNameResponse);
-                clearInterval(interval);
-              } else {
-                log('.');
-              }
-            })
-            .catch((err) => {
-              log(
-                'Cannot retreive transaction data, will try again in 15 seconds'
-              );
-              console.log(err);
-              process.exit();
-            });
-        } catch (err) {
-          log('Cannot retreive transaction data, will try again in 15 seconds');
-          console.log(err);
-          process.exit();
-        }
-      }, 15000);
-    });
+    dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     log('Failed to parse dataAtName response', 'error');
     console.log(err);

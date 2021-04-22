@@ -1,8 +1,28 @@
 const rc = require('rchain-toolkit');
 
+// store-as-bytes-map
+module.exports.decodePurses = (expr) => {
+  const purses = {};
+
+  Object.keys(expr.ExprMap.data).forEach((k) => {
+    const a = expr.ExprMap.data[k];
+    if (a && a.ExprBytes && a.ExprBytes.data) {
+      const b = Buffer.from(a.ExprBytes.data, 'hex');
+      try {
+        const valJs = rc.utils.rhoExprToVar(rc.utils.decodePar(b).exprs[0]);
+        purses[valJs.id] = valJs;
+      } catch (err) {
+        throw err;
+      }
+    }
+  });
+  return purses;
+};
+
+// store-as-bytes-array
+/*
 const DELIMITER = 'c2a324c2a324c2a324c2a324'; // '£$£$£$£$' represented has hex
 const INSIDE_DELIMITER = 'c2a324c2a324'; // '£$£$' represented has hex
-
 module.exports.decodePurses = (expr) => {
   const purses = {};
   if (expr && expr.ExprBytes && expr.ExprBytes.data) {
@@ -22,4 +42,4 @@ module.exports.decodePurses = (expr) => {
       });
   }
   return purses;
-};
+}; */

@@ -1,7 +1,7 @@
 const rc = require('rchain-toolkit');
 
 const { createPursesTerm } = require('../src/createPursesTerm');
-const waitForUnforgeable = require('../tests-fungible/waitForUnforgeable').main;
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (

@@ -20,6 +20,12 @@ Local deploy, around 200 names depth = 2
 PUBLIC_READ_ALL_PURSES 200 names (deploy 1) = 84s
 PUBLIC_READ_ALL_PURSES 200 names (deploy 2) = 86s
 
+{ id: 1, quantity: 130, type: "gold", box: "aa", publicKey:"aaaaaaaaaaaaadd" }
+
+{ id: 1, quantity: 130, type: "gold", box: "aa", publicKey:"aaaaaaaaaaaaadd" }.toByteArray()
+
+[255, 12, 12, 1, 120]
+
 Local deploy, around 400 names depth = 2
 PUBLIC_READ_ALL_PURSES 100 names (deploy 1) = 142s
 
@@ -114,3 +120,43 @@ Local deploy, 200 values (3) as byte array depth = 2 phlo/dust = 5530078
 PUBLIC_READ_ALL_PURSES 200 values = 11.3s
 
 Great ! So even value (3) can be recovered as quick as value 1 and 2, it just has to be stored as byte array
+
+**2021-04-21**
+
+Tree hash map can also store process as bytes, the hard work of deserialisation etc. is done in javascript off-chain
+
+Very good results !!!
+
+"getAllValues", sends back the bytes directly, in the following format:
+
+```
+{
+    // hash of the key : byte array
+    "abbcbcdbbabbd": Buffer<ab4feaf4>,
+    "cdbcacebbabbd": Buffer<c3335dae>,
+}
+```
+
+Maybe there's a way to even get rid of the Map structure, this would imply that rholang can manipulate byte arrays.
+
+Local deploy, 200 values depth = 2
+PUBLIC_READ_ALL_PURSES 200 values = 13s
+
+Local deploy, 450 values depth = 2
+PUBLIC_READ_ALL_PURSES 200 values = 16.52s
+
+Local deploy, 1400 values depth = 2
+PUBLIC_READ_ALL_PURSES 1400 values = 43.9s
+
+Local deploy, 15 values depth = 2
+PUBLIC_READ_ALL_PURSES 15 values = 8.7s
+
+Local deploy, 100 values depth = 2
+PUBLIC_READ_ALL_PURSES 100 values = 11.8s
+time to create purse (time between purse.SWAP logs) = 1,2s
+
+**2021-04-22**
+
+Big byte array insteaf of Map of byte arrays, brings phlo issues, dropped (see mode store-as-bytes-array)
+
+TESTNET

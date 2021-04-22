@@ -83,7 +83,8 @@ in {
   /* forbidden characters are used as delimiters in
   tree hash map, this method checks they are not aprt
   of a byte array */
-  for (@(ba, ret) <= byteArraySafeToStoreCh) {
+  // store-as-bytes-array
+  /* for (@(ba, ret) <= byteArraySafeToStoreCh) {
     new itCh1, itCh2, removeSectionCh, indexesCh in {
       itCh1!(0) |
       indexesCh!([]) |
@@ -99,7 +100,7 @@ in {
         }
       }
     }
-  } |
+  } | */
 
   for (@thm <- pursesReadyCh; @thm2 <- pursesForSaleReadyCh) {
     /*
@@ -112,7 +113,7 @@ in {
       the purse with SWAP, UPDATE_DATA, SET_PRICE, WITHDRAW, DEPOSIT instance methods
     */
     for (@(properties, data, return) <= makePurseCh) {
-      new idAndQuantityCh, safeStringCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch, byteArraySafeToStoreReturnCh in {
+      new idAndQuantityCh, safeStringCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch in {
         for (current <<- mainCh) {
           if (*current.get("fungible") == true) {
             for (counter <- counterCh) {
@@ -123,16 +124,18 @@ in {
             TreeHashMap!("get", thm, properties.get("id"), *thmGetReturnCh) |
             for (@existingPurseProperties <- thmGetReturnCh) {
               if (existingPurseProperties == Nil) {
-                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") }) |
-                byteArraySafeToStoreCh!(((properties.get("type"), properties.get("id")).toByteArray(), *byteArraySafeToStoreReturnCh))
+                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
+                // store-as-bytes-array
+                /* byteArraySafeToStoreCh!(((properties.get("type"), properties.get("id")).toByteArray(), *byteArraySafeToStoreReturnCh)) */
               } else {
                 if (properties.get("id") == "0") {
                   TreeHashMap!("get", thm, properties.get("newId"), *thmGetReturn2Ch) |
                   for (properties2 <- thmGetReturn2Ch) {
                     match (properties.get("newId"), *properties2) {
                       (String, Nil) => {
-                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 }) |
-                        byteArraySafeToStoreCh!(((properties.get("type"), properties.get("newId")).toByteArray(), *byteArraySafeToStoreReturnCh))
+                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
+                        // store-as-bytes-array
+                        /* byteArraySafeToStoreCh!(((properties.get("type"), properties.get("newId")).toByteArray(), *byteArraySafeToStoreReturnCh)) */
                       }
                       _ => {
                         @return!("error: no .newId in payload or .newId already exists")
@@ -146,14 +149,14 @@ in {
             }
           }
         } |
-        for (@idAndQuantity <- idAndQuantityCh; @safe <- byteArraySafeToStoreReturnCh) {
+        for (@idAndQuantity <- idAndQuantityCh) {
           match properties
             .set("id", idAndQuantity.get("id"))
             .set("quantity", idAndQuantity.get("quantity"))
             .delete("newId")
           {
             purseProperties => {
-              match (purseProperties, purseProperties.get("id").length() > 0, purseProperties.get("id").length() < 25, safe) {
+              match (purseProperties, purseProperties.get("id").length() > 0, purseProperties.get("id").length() < 25) {
                 ({
                   "quantity": Int,
                   // .box may is used to deploy other contracts
@@ -164,7 +167,7 @@ in {
                   "type": String,
                   "id": String,
                   "price": Nil \/ Int
-                }, true, true, true) => {
+                }, true, true) => {
                   new purse, setReturnCh in {
                     TreeHashMap!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
                     for (_ <- setReturnCh) {

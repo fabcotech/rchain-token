@@ -308,12 +308,15 @@ new MakeNode, ByteArrayToNybbleList,
                           } else {
                             if (alsoStoreAsBytes == true) {
                               for (@bytes <- bytesOrMapCh) {
-                                if (bytes == Nil) {
-                                  bytesOrMapCh!( val)
+                                itCh!(i + 1) |
+                                // store-as-bytes-map
+                                bytesOrMapCh!(bytes.union(val))
+                                // store-as-bytes-array
+                                /* if (bytes == Nil) {
+                                  bytesOrMapCh!(bytes)
                                 } else {
                                   bytesOrMapCh!(bytes ++ val)
-                                } |
-                                itCh!(i + 1)
+                                } */
                               }
                             } else {
                               for (@map <- bytesOrMapCh) {
@@ -357,7 +360,10 @@ new MakeNode, ByteArrayToNybbleList,
                       }
                     } |
                     if (alsoStoreAsBytes == true) {
-                      bytesOrMapCh!(Nil)
+                      // store-as-bytes-map
+                       bytesOrMapCh!({})
+                      // store-as-bytes-array
+                      /* bytesOrMapCh!(Nil) */
                     } else {
                       bytesOrMapCh!({})
                     } |
@@ -569,9 +575,15 @@ new MakeNode, ByteArrayToNybbleList,
                   if (alsoStoreAsBytes == true) {
                     new ret1, ret2 in {
                       if (newVal == Nil) {
-                        TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, Nil, hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-map
+                        TreeHashMapSetter!((map, "bytes"), nybList, 0,  depth, Nil, hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-array
+                        /* TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, Nil, hash.slice(depth, 32), *ret2) */
                       } else {
-                        TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, newVal, hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-map
+                        TreeHashMapSetter!((map, "bytes"), nybList, 0,  depth, newVal.toByteArray(), hash.slice(depth, 32), *ret2)
+                        // store-as-bytes-array
+                        /* TreeHashMapSetterBytes!((map, "bytes"), nybList, 0,  depth, newVal, hash.slice(depth, 32), *ret2) */
                       } |
                       TreeHashMapSetter!(map, nybList, 0, depth, newVal, hash.slice(depth, 32), *ret1) |
                       for (_ <- ret1; _ <- ret2) {
@@ -693,7 +705,8 @@ new MakeNode, ByteArrayToNybbleList,
   /* forbidden characters are used as delimiters in
   tree hash map, this method checks they are not aprt
   of a byte array */
-  for (@(ba, ret) <= byteArraySafeToStoreCh) {
+  // store-as-bytes-array
+  /* for (@(ba, ret) <= byteArraySafeToStoreCh) {
     new itCh1, itCh2, removeSectionCh, indexesCh in {
       itCh1!(0) |
       indexesCh!([]) |
@@ -709,7 +722,7 @@ new MakeNode, ByteArrayToNybbleList,
         }
       }
     }
-  } |
+  } | */
 
   for (@thm <- pursesReadyCh; @thm2 <- pursesForSaleReadyCh) {
     /*
@@ -722,7 +735,7 @@ new MakeNode, ByteArrayToNybbleList,
       the purse with SWAP, UPDATE_DATA, SET_PRICE, WITHDRAW, DEPOSIT instance methods
     */
     for (@(properties, data, return) <= makePurseCh) {
-      new idAndQuantityCh, safeStringCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch, byteArraySafeToStoreReturnCh in {
+      new idAndQuantityCh, safeStringCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch in {
         for (current <<- mainCh) {
           if (*current.get("fungible") == true) {
             for (counter <- counterCh) {
@@ -733,16 +746,18 @@ new MakeNode, ByteArrayToNybbleList,
             TreeHashMap!("get", thm, properties.get("id"), *thmGetReturnCh) |
             for (@existingPurseProperties <- thmGetReturnCh) {
               if (existingPurseProperties == Nil) {
-                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") }) |
-                byteArraySafeToStoreCh!(((properties.get("type"), properties.get("id")).toByteArray(), *byteArraySafeToStoreReturnCh))
+                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
+                // store-as-bytes-array
+                /* byteArraySafeToStoreCh!(((properties.get("type"), properties.get("id")).toByteArray(), *byteArraySafeToStoreReturnCh)) */
               } else {
                 if (properties.get("id") == "0") {
                   TreeHashMap!("get", thm, properties.get("newId"), *thmGetReturn2Ch) |
                   for (properties2 <- thmGetReturn2Ch) {
                     match (properties.get("newId"), *properties2) {
                       (String, Nil) => {
-                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 }) |
-                        byteArraySafeToStoreCh!(((properties.get("type"), properties.get("newId")).toByteArray(), *byteArraySafeToStoreReturnCh))
+                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
+                        // store-as-bytes-array
+                        /* byteArraySafeToStoreCh!(((properties.get("type"), properties.get("newId")).toByteArray(), *byteArraySafeToStoreReturnCh)) */
                       }
                       _ => {
                         @return!("error: no .newId in payload or .newId already exists")
@@ -756,14 +771,14 @@ new MakeNode, ByteArrayToNybbleList,
             }
           }
         } |
-        for (@idAndQuantity <- idAndQuantityCh; @safe <- byteArraySafeToStoreReturnCh) {
+        for (@idAndQuantity <- idAndQuantityCh) {
           match properties
             .set("id", idAndQuantity.get("id"))
             .set("quantity", idAndQuantity.get("quantity"))
             .delete("newId")
           {
             purseProperties => {
-              match (purseProperties, purseProperties.get("id").length() > 0, purseProperties.get("id").length() < 25, safe) {
+              match (purseProperties, purseProperties.get("id").length() > 0, purseProperties.get("id").length() < 25) {
                 ({
                   "quantity": Int,
                   // .box may is used to deploy other contracts
@@ -774,7 +789,7 @@ new MakeNode, ByteArrayToNybbleList,
                   "type": String,
                   "id": String,
                   "price": Nil \\/ Int
-                }, true, true, true) => {
+                }, true, true) => {
                   new purse, setReturnCh in {
                     TreeHashMap!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
                     for (_ <- setReturnCh) {

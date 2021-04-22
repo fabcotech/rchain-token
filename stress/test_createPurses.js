@@ -1,7 +1,7 @@
 const rc = require('rchain-toolkit');
 
 const { createPursesTerm } = require('../src/createPursesTerm');
-const waitForUnforgeable = require('../tests-fungible/waitForUnforgeable').main;
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (
@@ -48,7 +48,7 @@ module.exports.main = async (
     privateKey1,
     publicKey1,
     1,
-    1000000000,
+    100000000,
     vab
   );
 
@@ -76,6 +76,7 @@ module.exports.main = async (
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
+  console.log(data);
 
   return;
 };

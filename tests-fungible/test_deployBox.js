@@ -1,6 +1,7 @@
 const { boxTerm } = require('../src');
 const rc = require('rchain-toolkit');
 
+const waitForUnforgeable = require('../cli/waitForUnforgeable.js').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (privateKey, publicKey) => {
@@ -43,39 +44,7 @@ module.exports.main = async (privateKey, publicKey) => {
 
   let dataAtNameResponse;
   try {
-    dataAtNameResponse = await new Promise((resolve, reject) => {
-      const interval = setInterval(() => {
-        try {
-          rc.http
-            .dataAtName(process.env.VALIDATOR_HOST, {
-              name: {
-                UnforgPrivate: { data: JSON.parse(pd).names[0] },
-              },
-              depth: 3,
-            })
-            .then((dataAtNameResponse) => {
-              if (
-                dataAtNameResponse &&
-                JSON.parse(dataAtNameResponse) &&
-                JSON.parse(dataAtNameResponse).exprs &&
-                JSON.parse(dataAtNameResponse).exprs.length
-              ) {
-                resolve(dataAtNameResponse);
-                clearInterval(interval);
-              } else {
-                console.log('  .');
-              }
-            })
-            .catch((err) => {
-              console.log(err);
-              throw new Error('00_deployBox 03');
-            });
-        } catch (err) {
-          console.log(err);
-          throw new Error('00_deployBox 04');
-        }
-      }, 4000);
-    });
+    dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     console.log(err);
     throw new Error('00_deployBox 05');
