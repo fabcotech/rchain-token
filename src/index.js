@@ -1,3 +1,4 @@
+// rholang terms
 const { boxTerm } = require('./boxTerm');
 const { mainTerm } = require('./mainTerm');
 const { createPursesTerm } = require('./createPursesTerm');
@@ -14,8 +15,12 @@ const { setPriceTerm } = require('./setPriceTerm');
 const { purchaseTerm } = require('./purchaseTerm');
 const { withdrawTerm } = require('./withdrawTerm');
 
+// utils
+const { decodePurses } = require('./decodePurses');
+
 module.exports = {
   version: '5.0.3',
+  // rholang terms
   boxTerm,
   mainTerm,
   createPursesTerm,
@@ -31,4 +36,7 @@ module.exports = {
   setPriceTerm,
   purchaseTerm,
   withdrawTerm,
+
+  // utils
+  decodePurses,
 };

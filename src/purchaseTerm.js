@@ -95,9 +95,6 @@ in {
 
             registryLookup!(\`rho:rchain:revVault\`, *RevVaultCh) |
             for (@(_, RevVault) <- RevVaultCh; deployerRevAddress <- revAddressCh) {
-
-              stdout!(("3.transfer_funds.rho")) |
-
               /*
                 Put price * quantity REV in the purse
               */

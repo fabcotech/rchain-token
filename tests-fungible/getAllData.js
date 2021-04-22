@@ -1,4 +1,8 @@
-const { readAllPursesTerm, readPursesDataTerm } = require('../src/');
+const {
+  readAllPursesTerm,
+  readPursesDataTerm,
+  decodePurses,
+} = require('../src/');
 const rc = require('rchain-toolkit');
 
 module.exports.main = async (contractRegistryUri) => {
@@ -6,12 +10,8 @@ module.exports.main = async (contractRegistryUri) => {
   const result0 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term0,
   });
-
-  let purses = {};
-  let onChainPurses = rc.utils.rhoValToJs(JSON.parse(result0).expr[0]);
-  Object.keys(onChainPurses).forEach((k) => {
-    purses[onChainPurses[k].id] = onChainPurses[k];
-  });
+  const pursesOnChain = JSON.parse(result0).expr[0];
+  const purses = decodePurses(pursesOnChain);
 
   const term2 = readPursesDataTerm(contractRegistryUri, {
     pursesIds: Object.keys(purses),

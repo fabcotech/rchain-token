@@ -15,7 +15,7 @@ const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
 const createPurses = require('./test_createPurseZero.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE = 10;
+const PURSES_TO_PURCHASE_EACH_TIME = 40;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
@@ -42,16 +42,17 @@ const main = async () => {
     '  00 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
-  /* 
+
   const data = await deploy(
     PRIVATE_KEY,
     PUBLIC_KEY,
     boxRegistryUri,
     false,
-    'mytoken'
+    'mytoken',
+    null,
+    2
   );
-  const contractRegistryUri =
-    'eq6mf5s3954887ep74qqe1d51zh7q6yhuuxegmct44rbot7mz5tgaf'; //data.registryUri.replace('rho:id:', '');
+
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy');
   console.log(
@@ -61,6 +62,7 @@ const main = async () => {
   await checkDefaultPurses(boxRegistryUri);
   console.log('✓ 02 check initial bags and data');
 
+  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   await createPurses(
     contractRegistryUri,
     PRIVATE_KEY,
@@ -80,10 +82,8 @@ const main = async () => {
     `0` // ID of the purse to set a price to
   );
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('  price set'); */
+  console.log('  price set');
 
-  const contractRegistryUri =
-    'eq6mf5s3954887ep74qqe1d51zh7q6yhuuxegmct44rbot7mz5tgaf'; //data.registryUri.replace('rho:id:', '');
   let lastDustCost;
   const purchasePurseBatch = async (j) => {
     const t = new Date().getTime();
@@ -95,7 +95,7 @@ const main = async () => {
 
     const ids = [];
     const terms = [];
-    for (let i = 0; i < PURSES_TO_CREATE; i += 1) {
+    for (let i = 0; i < PURSES_TO_PURCHASE_EACH_TIME; i += 1) {
       ids.push(getRandomName());
       terms.push(
         purchaseTerm(contractRegistryUri, {
@@ -104,7 +104,7 @@ const main = async () => {
           quantity: 1,
           data: 'bbb',
           newId: ids[i],
-          price: 10,
+          price: 1,
           publicKey: PUBLIC_KEY_2,
         })
       );
@@ -133,7 +133,7 @@ const main = async () => {
     await checkPursesInBox(
       newBoxRegistryUri,
       contractRegistryUri,
-      PURSES_TO_CREATE
+      PURSES_TO_PURCHASE_EACH_TIME
     );
     return s;
   };
@@ -145,7 +145,7 @@ const main = async () => {
     if (j === 0) {
       fs.writeFileSync(
         filename,
-        `PURCHASE_PURSE_FROM_PURSE_ZERO\nPURSES_TO_CREATE: ${PURSES_TO_CREATE}\nHOST=${process.env.VALIDATOR_HOST}\n`,
+        `PURCHASE_PURSE_FROM_PURSE_ZERO\nPURSES_TO_PURCHASE_EACH_TIME: ${PURSES_TO_PURCHASE_EACH_TIME}\nHOST=${process.env.VALIDATOR_HOST}\n`,
         'utf8'
       );
     }

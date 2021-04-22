@@ -166,5 +166,12 @@ READ_ONLY_HOST=http://127.0.0.1:40403
 VALIDATOR_HOST=http://127.0.0.1:40403
 ```
 
-`npm run test:fungibles`
-`npm run test:non-fungibles`
+`npm run test:ft`
+`npm run test:nft`
+
+##### Stressing
+
+Many stress tests exist, see `stress/stress_*` files, you might want to change the variables on the top of each file.
+
+example:
+`node stress/stress_createPurses.js`

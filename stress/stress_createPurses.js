@@ -136,7 +136,7 @@ const main = async () => {
       PURSES_TO_CREATE +
       ' purses\n';
     const res = await createPursesBatch(j);
-    console.log('ok');
+
     let logs = '';
     try {
       logs = fs.readFileSync(filename, 'utf8');

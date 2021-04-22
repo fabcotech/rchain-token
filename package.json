@@ -7,8 +7,8 @@
     "generate": "node generateJavascripts",
     "build:browser": "npx rollup -c",
     "test": "npm run test test:fungibles && npm run test:non-fungibles",
-    "test:fungibles": "node tests-fungible/index",
-    "test:non-fungibles": "node tests-non-fungible/index"
+    "test:ft": "node tests-fungible/index",
+    "test:nft": "node tests-non-fungible/index"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/fabcotech/rchain-token#readme",
   "dependencies": {
-    "rchain-toolkit": "0.2.9",
+    "rchain-toolkit": "0.3.2",
     "uuid": "3.4.0",
     "dotenv": "6.2.0",
     "blakejs": "^1.1.0"

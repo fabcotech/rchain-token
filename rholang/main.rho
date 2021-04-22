@@ -4,6 +4,7 @@ new
   entryCh,
   entryUriCh,
   iterateDataCh,
+  byteArraySafeToStoreCh,
   iteratePropertiesCh,
   makePurseCh,
   superKeyCh,
@@ -76,8 +77,29 @@ in {
   TREE_HASH_MAP
 
   // depth 2 = 12 * 12 = 144 maps
-  TreeHashMap!("init", DEPTH, *pursesReadyCh) |
-  TreeHashMap!("init", DEPTH, *pursesForSaleReadyCh) |
+  TreeHashMap!("init", DEPTH, true, *pursesReadyCh) |
+  TreeHashMap!("init", DEPTH, false, *pursesForSaleReadyCh) |
+
+  /* forbidden characters are used as delimiters in
+  tree hash map, this method checks they are not aprt
+  of a byte array */
+  for (@(ba, ret) <= byteArraySafeToStoreCh) {
+    new itCh1, itCh2, removeSectionCh, indexesCh in {
+      itCh1!(0) |
+      indexesCh!([]) |
+      for (@i <= itCh1) {
+        if (ba.slice(i, i + 6) == "£$£$£$£$".toByteArray().slice(4, 10)) {
+          @ret!(false)
+        } else {
+          if (i == ba.length() - 6) {
+            @ret!(true)
+          } else {
+            itCh1!(i + 1)
+          }
+        }
+      }
+    }
+  } |
 
   for (@thm <- pursesReadyCh; @thm2 <- pursesForSaleReadyCh) {
     /*
@@ -90,7 +112,7 @@ in {
       the purse with SWAP, UPDATE_DATA, SET_PRICE, WITHDRAW, DEPOSIT instance methods
     */
     for (@(properties, data, return) <= makePurseCh) {
-      new idAndQuantityCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch in {
+      new idAndQuantityCh, safeStringCh, thmGetReturnCh, thmGetReturn2Ch, thmGetReturn3Ch, byteArraySafeToStoreReturnCh in {
         for (current <<- mainCh) {
           if (*current.get("fungible") == true) {
             for (counter <- counterCh) {
@@ -101,14 +123,16 @@ in {
             TreeHashMap!("get", thm, properties.get("id"), *thmGetReturnCh) |
             for (@existingPurseProperties <- thmGetReturnCh) {
               if (existingPurseProperties == Nil) {
-                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
+                idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") }) |
+                byteArraySafeToStoreCh!(((properties.get("type"), properties.get("id")).toByteArray(), *byteArraySafeToStoreReturnCh))
               } else {
                 if (properties.get("id") == "0") {
                   TreeHashMap!("get", thm, properties.get("newId"), *thmGetReturn2Ch) |
                   for (properties2 <- thmGetReturn2Ch) {
                     match (properties.get("newId"), *properties2) {
                       (String, Nil) => {
-                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
+                        idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 }) |
+                        byteArraySafeToStoreCh!(((properties.get("type"), properties.get("newId")).toByteArray(), *byteArraySafeToStoreReturnCh))
                       }
                       _ => {
                         @return!("error: no .newId in payload or .newId already exists")
@@ -122,14 +146,14 @@ in {
             }
           }
         } |
-        for (idAndQuantity <- idAndQuantityCh) {
+        for (@idAndQuantity <- idAndQuantityCh; @safe <- byteArraySafeToStoreReturnCh) {
           match properties
-            .set("id", *idAndQuantity.get("id"))
-            .set("quantity", *idAndQuantity.get("quantity"))
+            .set("id", idAndQuantity.get("id"))
+            .set("quantity", idAndQuantity.get("quantity"))
             .delete("newId")
           {
             purseProperties => {
-              match (purseProperties, purseProperties.get("id").length() > 0, purseProperties.get("id").length() < 25) {
+              match (purseProperties, purseProperties.get("id").length() > 0, purseProperties.get("id").length() < 25, safe) {
                 ({
                   "quantity": Int,
                   // .box may is used to deploy other contracts
@@ -140,7 +164,7 @@ in {
                   "type": String,
                   "id": String,
                   "price": Nil \/ Int
-                }, true, true) => {
+                }, true, true, true) => {
                   new purse, setReturnCh in {
                     TreeHashMap!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
                     for (_ <- setReturnCh) {
@@ -398,7 +422,7 @@ in {
                   }
                 }
                 _ => {
-                  @return!("error: invalid purse, id length must be between length 1 and 24")
+                  @return!("error: invalid purse, one of the following errors: id length must be between length 1 and 24, id/type must not contain characters £$£$")
                 }
               }
             }

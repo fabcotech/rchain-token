@@ -2,7 +2,7 @@ const rc = require('rchain-toolkit');
 
 require('dotenv').config();
 
-const { readAllPursesTerm } = require('../src');
+const { readAllPursesTerm, decodePurses } = require('../src');
 const getBalance = require('../tests-fungible/getBalance').main;
 const getRandomName = require('./getRandomName').main;
 const deployBox = require('../tests-fungible/test_deployBox').main;
@@ -12,7 +12,7 @@ const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE_INITIAL = 500;
+const PURSES_TO_CREATE_INITIAL = 100;
 const DEPTH = 2;
 
 const PRIVATE_KEY =
@@ -44,6 +44,7 @@ const main = async () => {
     null,
     DEPTH
   );
+
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy');
@@ -84,7 +85,7 @@ const main = async () => {
   const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term1,
   });
-  console.log(result1);
+  const pursesAsBytes = JSON.parse(result1).expr[0];
   let s = '';
 
   s +=
@@ -92,6 +93,15 @@ const main = async () => {
     (new Date().getTime() - t) / 1000 +
     's\n';
 
+  const t2 = new Date().getTime();
+  const purses = decodePurses(pursesAsBytes);
+
+  s +=
+    `  avg time of decode bytes in javascript : ` +
+    (new Date().getTime() - t2) / 1000 +
+    's\n';
+
+  console.log(`  ${Object.keys(purses).length} purses`);
   console.log(s);
   process.exit();
 };
