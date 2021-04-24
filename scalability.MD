@@ -157,6 +157,11 @@ time to create purse (time between purse.SWAP logs) = 1,2s
 
 **2021-04-22**
 
-Big byte array insteaf of Map of byte arrays, brings phlo issues, dropped (see mode store-as-bytes-array)
+Local deploy, 2900 values depth = 2
+PUBLIC_READ_ALL_PURSES 2900 values = 66.7s
 
-TESTNET
+Local deploy, 2900 values depth = 2
+PUBLIC_READ_ALL_PURSES 2900 values = 63.7s
+
+Local deploy, 150 values depth = 2
+PUBLIC_READ_ALL_PURSES 150 values = 11.6s, 12.7s, 11.8s, 11.6s, 11.4s, 11.6s

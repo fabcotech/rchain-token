@@ -12,7 +12,7 @@ const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE_INITIAL = 100;
+const PURSES_TO_CREATE_INITIAL = 150;
 const DEPTH = 2;
 
 const PRIVATE_KEY =
