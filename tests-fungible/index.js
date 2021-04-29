@@ -230,9 +230,9 @@ const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
   await checkPurseDataInContract(contractRegistryUri, `4`, 'aaa');
 
-  console.log(`✓ 08 update data associated to purse`);
+  console.log(`✓ 09 update data associated to purse`);
   console.log(
-    '  08 dust cost: ' +
+    '  09 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
@@ -246,22 +246,76 @@ const main = async () => {
   );
   balances1.push(await getBalance(PUBLIC_KEY));
   await checkPursePriceInContract(contractRegistryUri, `4`, 1000);
-  console.log(`✓ 09 set a price to a purse`);
+  console.log(`✓ 10 set a price to a purse`);
   console.log(
-    '  09 dust cost: ' +
+    '  10 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
   const balance1BeforePurchase = balances1[balances1.length - 1];
-  await purchase(contractRegistryUri, PRIVATE_KEY_2, PUBLIC_KEY_2, {
-    toBoxRegistryUri: secondBoxRegistryUri,
-    purseId: `4`,
-    quantity: 1,
-    data: 'bbb',
-    newId: null,
-    price: 1000,
-    publicKey: PUBLIC_KEY_2,
-  });
+  const purchaseFailed1 = await purchase(
+    contractRegistryUri,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    {
+      toBoxRegistryUri: secondBoxRegistryUri,
+      purseId: `4`,
+      quantity: 'Nil', // invalid payload
+      data: 'bbb',
+      newId: null,
+      price: 1000,
+      publicKey: PUBLIC_KEY_2,
+    }
+  );
+  balances1.push(await getBalance(PUBLIC_KEY_2));
+  if (
+    purchaseFailed1.status !== 'failed' ||
+    purchaseFailed1.message !==
+      'error: invalid payload, cancelled purchase and payment'
+  ) {
+    throw new Error('purchase should have fail with proper error message (1)');
+  }
+  console.log(`✓ 11 failed purchase because of invalid payload`);
 
+  const purchaseFailed2 = await purchase(
+    contractRegistryUri,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    {
+      toBoxRegistryUri: secondBoxRegistryUri,
+      purseId: `4`,
+      quantity: 50, // invalid payload
+      data: 'bbb',
+      newId: null,
+      price: 1000,
+      publicKey: PUBLIC_KEY_2,
+    }
+  );
+  balances1.push(await getBalance(PUBLIC_KEY_2));
+  console.log(`✓ 12 failed purchase because of invalid quantity`);
+  if (
+    purchaseFailed2.status !== 'failed' ||
+    purchaseFailed2.message !==
+      'error: quantity not available or purse not for sale, issuer was refunded'
+  ) {
+    throw new Error('purchase should have fail with proper error message (2)');
+  }
+  const purchaseSuccess = await purchase(
+    contractRegistryUri,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    {
+      toBoxRegistryUri: secondBoxRegistryUri,
+      purseId: `4`,
+      quantity: 1,
+      data: 'bbb',
+      newId: null,
+      price: 1000,
+      publicKey: PUBLIC_KEY_2,
+    }
+  );
+  if (purchaseSuccess.status !== 'completed') {
+    throw new Error('purchase should have been successful');
+  }
   await checkPursesInBox(
     secondBoxRegistryUri,
     contractRegistryUri,
@@ -288,13 +342,13 @@ const main = async () => {
   if (balances3[0] + 20 !== balance3AfterPurchase) {
     throw new Error('owner of public key 3 did not receive fee from purchase');
   }
-  console.log(`✓ 10 purchase`);
-  console.log(`✓ 10 balance of purse's owner checked and has +10 dust`);
-  console.log(`✓ 10 2% fee was earned by owner of public key 3`);
+  console.log(`✓ 13 purchase`);
+  console.log(`✓ 13 balance of purse's owner checked and has +10 dust`);
+  console.log(`✓ 13 2% fee was earned by owner of public key 3`);
 
   balances1.push(await getBalance(PUBLIC_KEY_2));
   console.log(
-    '  10 dust cost: ' +
+    '  13 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 };

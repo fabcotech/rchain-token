@@ -15,7 +15,8 @@ new
   boxValuesCh,
   contractExistsCh,
   contractValuesCh,
-  proceedCh,
+  proceed1Ch,
+  proceed2Ch,
   registryLookup(`rho:registry:lookup`),
   deployerId(`rho:rchain:deployerId`),
   stdout(`rho:io:stdout`),
@@ -49,11 +50,11 @@ in {
     for (@contractValues <- contractValuesCh; @boxValues <- boxValuesCh ) {
       match contractValues.get("version") == boxValues.get("version") {
         true => {
-          proceedCh!(Nil)
+          proceed1Ch!(Nil)
         }
         true => {
-          basket!({ "status": "failed", "message": "box and contract don't have the same version, cancelled payment" }) |
-          stdout!(("failed", "box and contract don't have the same version, cancelled payment"))
+          basket!({ "status": "failed", "message": "box and contract don't have the same version, cancelled purchase and payment" }) |
+          stdout!(("failed", "box and contract don't have the same version, cancelled purchase and payment"))
         }
       }
     }
@@ -64,18 +65,18 @@ in {
   /*
     Create a vault/purse that is just used once (purse)
   */
-  for(@(_, *RevVaultPurse) <- revVaultPurseCh; _ <- proceedCh) {
-    new unf, purseRevAddrCh, purseAuthKeyCh, vaultCh, revAddressCh in {
+  for(@(_, *RevVaultPurse) <- revVaultPurseCh; _ <- proceed1Ch) {
+    new unf, purseRevAddrCh, purseAuthKeyCh, purseVaultCh, revAddressCh, RevVaultCh in {
       revAddress!("fromUnforgeable", *unf, *purseRevAddrCh) |
       RevVaultPurse!("unforgeableAuthKey", *unf, *purseAuthKeyCh) |
       for (@purseAuthKey <- purseAuthKeyCh; @purseRevAddr <- purseRevAddrCh) {
 
         stdout!({"new purse rev addr": purseRevAddr, "purse authKey": purseAuthKey}) |
 
-        RevVaultPurse!("findOrCreate", purseRevAddr, *vaultCh) |
+        RevVaultPurse!("findOrCreate", purseRevAddr, *purseVaultCh) |
 
         for (
-          @(true, *vault) <- vaultCh;
+          @(true, purseVault) <- purseVaultCh;
           @publicKey <- publicKeyCh;
           @purseId <- purseIdCh;
           @registryUri <- registryUriCh;
@@ -85,22 +86,41 @@ in {
           @data <- dataCh
         ) {
 
-          revAddress!("fromPublicKey", publicKey.hexToBytes(), *revAddressCh) |
+          match {
+            "publicKey": publicKey,
+            "price": price,
+            "quantity": quantity,
+            "purseId": purseId,
+            "newId": newId,
+          } {
+            {
+              "publicKey": String,
+              "price": Int,
+              "quantity": Int,
+              "purseId": String,
+              "newId": String,
+            } => {
+              proceed2Ch!(Nil)
+            }
+            _ => {
+              basket!({ "status": "failed", "message": "error: invalid payload, cancelled purchase and payment" }) |
+              stdout!(("failed", "error: invalid payload, cancelled purchase and payment"))
+            }
+          } |
 
-          new RevVaultCh in {
+          for (_ <- proceed2Ch) {
+
+            revAddress!("fromPublicKey", publicKey.hexToBytes(), *revAddressCh) |
 
             registryLookup!(`rho:rchain:revVault`, *RevVaultCh) |
             for (@(_, RevVault) <- RevVaultCh; deployerRevAddress <- revAddressCh) {
-              /*
-                Put price * quantity REV in the purse
-              */
+              // send price * quantity REV in purse
               match (
                 *deployerRevAddress,
                 purseRevAddr,
                 price * quantity
               ) {
                 (from, to, amount) => {
-
                   new vaultCh, revVaultkeyCh in {
                     @RevVault!("findOrCreate", from, *vaultCh) |
                     @RevVault!("deployerAuthKey", *deployerId, *revVaultkeyCh) |
@@ -178,13 +198,14 @@ in {
                                     }
                                     _ => {
                                       new refundPurseBalanceCh, refundResultCh in {
-                                        @vault!("balance", *refundPurseBalanceCh) |
+                                        @purseVault!("balance", *refundPurseBalanceCh) |
                                         for (@balance <- refundPurseBalanceCh) {
+                                          // the refund was successful
                                           if (balance == 0) {
                                             basket!({ "status": "failed", "message": *resp }) |
                                             stdout!(("failed", *resp))
                                           } else {
-                                            @vault!("transfer", from, balance, *key, *refundResultCh) |
+                                            @purseVault!("transfer", from, balance, purseAuthKey, *refundResultCh) |
                                             for (result <- refundResultCh)  {
                                               match *result {
                                                 (true, Nil) => {

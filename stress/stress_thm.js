@@ -4,7 +4,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
-const waitForUnforgeable = require('../tests-fungible/waitForUnforgeable').main;
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const getBalance = require('../tests-fungible/getBalance').main;
 const { readAllPursesTerm } = require('../src');
 

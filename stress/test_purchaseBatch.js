@@ -1,6 +1,6 @@
 const rc = require('rchain-toolkit');
 
-const waitForUnforgeable = require('./waitForUnforgeable').main;
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (privateKey, publicKey, term) => {
