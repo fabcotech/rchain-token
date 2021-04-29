@@ -25,7 +25,11 @@ const main = async () => {
     's\n';
 
   const t2 = new Date().getTime();
-  const purses = decodePurses(pursesAsBytes);
+  const purses = decodePurses(
+    pursesAsBytes,
+    rc.utils.rhoExprToVar,
+    rc.utils.decodePar
+  );
 
   s +=
     `  avg time of decode bytes in javascript : ` +

@@ -26,7 +26,11 @@ module.exports.view = async () => {
       }
     );
     const pursesAsBytes = JSON.parse(result1).expr[0];
-    purses = decodePurses(pursesAsBytes);
+    purses = decodePurses(
+      pursesAsBytes,
+      rchainToolkit.utils.rhoExprToVar,
+      rchainToolkit.utils.decodePar
+    );
   } else {
     term0 = readPursesTerm(registryUri, {
       pursesIds: [purseId],

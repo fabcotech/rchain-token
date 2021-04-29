@@ -11,7 +11,11 @@ module.exports.main = async (contractRegistryUri) => {
     term: term0,
   });
   const pursesOnChain = JSON.parse(result0).expr[0];
-  const purses = decodePurses(pursesOnChain);
+  const purses = decodePurses(
+    pursesOnChain,
+    rc.utils.rhoExprToVar,
+    rc.utils.decodePar
+  );
 
   const term2 = readPursesDataTerm(contractRegistryUri, {
     pursesIds: Object.keys(purses),
