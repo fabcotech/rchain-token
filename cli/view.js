@@ -79,7 +79,7 @@ module.exports.view = async () => {
     }
     const registryUri = data.registryUri.replace('rho:id:', '');
     console.log(
-      `\n Purses [0-${ids.length < 99 ? ids.length : '99'}] / ${
+      `\n Purses [0-${ids.length < 99 ? (ids.length - 1) : '99'}] / ${
         ids.length
       }\n purse ID          type       box           owner         quantity         price (dust) \n`
     );

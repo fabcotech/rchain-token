@@ -27,14 +27,20 @@ module.exports.viewBox = async () => {
       console.log(`  Registry URI (contract) : ${sk.replace('rho:id:', '')}`);
     });
   }
-  if (Object.keys(data.purses).length === 0) {
+  const keys = Object.keys(data.purses);
+  if (keys.length === 0) {
     console.log(`\nNo purses`);
   }
-  if (Object.keys(data.purses).length > 0) {
-    console.log(`\nPurses :`);
-    Object.keys(data.purses).forEach((k) => {
-      console.log(`  Registry URI (contract) : ${k.replace('rho:id:', '')}`);
-      console.log(`    purses IDs: ${data.purses[k].join(', ')}`);
+  if (keys.length > 0) {
+    console.log(`\nPurses (${keys.length} contracts) :`);
+    keys.forEach((k) => {
+      if (data.purses[k].length > 99) {
+        console.log('\x1b[34m', `  Registry URI (contract)`, '\x1b[0m', ` : ${k.replace('rho:id:', '')}`)
+        console.log('\x1b[34m', `  Purses IDs 0-99/${data.purses[k].length}`,'\x1b[0m', `: ${data.purses[k].slice(0,100).join(', ')}`);
+      } else {
+        console.log('\x1b[34m', `  Registry URI (contract)`, '\x1b[0m', ` : ${k.replace('rho:id:', '')}`)
+        console.log('\x1b[34m', `    Purses IDs 0-${data.purses[k].length - 1}`, '\x1b[0m', `: ${data.purses[k].join(', ')}`);
+      }
     });
   }
   console.log('\n');
