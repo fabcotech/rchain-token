@@ -35,7 +35,6 @@ in {
     }
   } |
 
-  
   for (@i <= listenAgainOnReturnCh) {
     for (@resp <- returnCh) {
       match resp {

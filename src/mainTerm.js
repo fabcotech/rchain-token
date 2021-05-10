@@ -790,16 +790,17 @@ new MakeNode, ByteArrayToNybbleList,
                   "id": String,
                   "price": Nil \\/ Int
                 }, true, true) => {
-                  new purse, setReturnCh in {
+                  new purse, setReturnCh, bundldPurseCh in {
                     TreeHashMap!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
-                    for (_ <- setReturnCh) {
+                    bundldPurseCh!(bundle+{*purse}) |
+                    for (_ <- setReturnCh; bundldPurse <- bundldPurseCh) {
 
                       @(*pursesData, purseProperties.get("id"))!(data) |
-                      @(*vault, *purse)!(purseProperties.get("id")) |
+                      @(*vault, *bundldPurse)!(purseProperties.get("id")) |
 
                       // todo if returns bundle+{*purse}, we can't iterate
                       // at line 627, why ???
-                      @return!(*purse) |
+                      @return!(*bundldPurse) |
 
                       /*
                         READ
@@ -807,7 +808,7 @@ new MakeNode, ByteArrayToNybbleList,
                         (Nil) => propertie
                       */
                       for (@("READ", Nil, returnRead) <= purse) {
-                        for (id <<- @(*vault, *purse)) {
+                        for (id <<- @(*vault, *bundldPurse)) {
                           TreeHashMap!("get", thm, *id, returnRead)
                         }
                       } |
@@ -821,7 +822,7 @@ new MakeNode, ByteArrayToNybbleList,
                       for (@("SWAP", payload, returnSwap) <= purse) {
                         match (payload.get("box"), payload.get("publicKey")) {
                           (URI, String) => {
-                            for (id <- @(*vault, *purse)) {
+                            for (id <- @(*vault, *bundldPurse)) {
                               stdout!(("purse.SWAP", *id)) |
                               new setReturnCh, setForSaleReturnCh, getReturnCh, makePurseReturnCh in {
                                 TreeHashMap!("get", thm, *id, *getReturnCh) |
@@ -870,7 +871,7 @@ new MakeNode, ByteArrayToNybbleList,
                       */
                       for (@("UPDATE_DATA", payload, returnUpdateData) <= purse) {
                         new getReturnCh in {
-                          for (id <<- @(*vault, *purse)) {
+                          for (id <<- @(*vault, *bundldPurse)) {
                             stdout!(("purse.UPDATE_DATA", *id)) |
                             TreeHashMap!("get", thm, *id, *getReturnCh) |
                             for (properties <- getReturnCh) {
@@ -896,7 +897,7 @@ new MakeNode, ByteArrayToNybbleList,
                         match payload {
                           Int \\/ Nil => {
                             new setReturnCh, getReturnCh, setForSaleReturnCh in {
-                              for (id <<- @(*vault, *purse)) {
+                              for (id <<- @(*vault, *bundldPurse)) {
                                 stdout!(("purse.SET_PRICE", *id)) |
                                 TreeHashMap!("get", thm, *id, *getReturnCh) |
                                 for (properties <- getReturnCh) {
@@ -908,7 +909,7 @@ new MakeNode, ByteArrayToNybbleList,
                                       stdout!(("purse.SET_PRICE successful", *id)) |
                                       match payload {
                                         Int => {
-                                          TreeHashMap!("set", thm2, *id, *purse, *setForSaleReturnCh) |
+                                          TreeHashMap!("set", thm2, *id, *bundldPurse, *setForSaleReturnCh) |
                                           for (_ <- setForSaleReturnCh) {
                                             @returnSetPrice!((true, Nil))
                                           }
@@ -940,7 +941,7 @@ new MakeNode, ByteArrayToNybbleList,
                         match payload {
                           Int => {
                             new getReturnCh, makePurseReturnCh, setReturnCh in {
-                              for (id <<- @(*vault, *purse)) {
+                              for (id <<- @(*vault, *bundldPurse)) {
                                 stdout!(("purse.WITHDRAW", *id)) |
                                 TreeHashMap!("get", thm, *id, *getReturnCh) |
                                 for (@properties <- getReturnCh) {
@@ -1003,7 +1004,7 @@ new MakeNode, ByteArrayToNybbleList,
                             }
                           } |
                           for (_ <- proceedCh) {
-                            for (id <<- @(*vault, *purse); depositedPurseId <<- @(*vault, payload)) {
+                            for (id <<- @(*vault, *bundldPurse); depositedPurseId <<- @(*vault, payload)) {
                               stdout!(("purse.DEPOSIT", *id)) |
                               TreeHashMap!("get", thm, *id, *getReturnCh) |
                               TreeHashMap!("get", thm, *depositedPurseId, *getReturn2Ch) |
@@ -1272,7 +1273,6 @@ new MakeNode, ByteArrayToNybbleList,
         itCh!(payload)
       }
     } |
-
 
     for (@(amount, return) <= calculateFeeCh) {
       for (@current <<- mainCh) {
