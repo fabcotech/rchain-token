@@ -790,7 +790,7 @@ new MakeNode, ByteArrayToNybbleList,
                   "id": String,
                   "price": Nil \\/ Int
                 }, true, true) => {
-                  new purse, setReturnCh, bundldPurseCh in {
+                  new purse, setReturnCh, bundldPurseCh, rCh in {
                     TreeHashMap!("set", thm, purseProperties.get("id"), purseProperties, *setReturnCh) |
                     bundldPurseCh!(bundle+{*purse}) |
                     for (_ <- setReturnCh; bundldPurse <- bundldPurseCh) {
@@ -798,9 +798,12 @@ new MakeNode, ByteArrayToNybbleList,
                       @(*pursesData, purseProperties.get("id"))!(data) |
                       @(*vault, *bundldPurse)!(purseProperties.get("id")) |
 
-                      // todo if returns bundle+{*purse}, we can't iterate
-                      // at line 627, why ???
                       @return!(*bundldPurse) |
+
+                      // If price is not Nil, record copy of purse in pursesForSale
+                      if (purseProperties.get("price") != Nil) {
+                        TreeHashMap!("set", thm2, purseProperties.get("id"), *bundldPurse, *rCh)
+                      } |
 
                       /*
                         READ
@@ -830,8 +833,6 @@ new MakeNode, ByteArrayToNybbleList,
                                   if (*properties == Nil) {
                                     @returnSwap!("error: purse is worthless")
                                   } else {
-                                    // todo remove key in treeHashMap instead of set Nil
-                                    // not implemented in rnode yet
                                     TreeHashMap!("set", thm, *id, Nil, *setReturnCh) |
                                     TreeHashMap!("set", thm2, *id, Nil, *setForSaleReturnCh) |
                                     for (_ <- setReturnCh; _ <- setForSaleReturnCh; data <- @(*pursesData, *id)) {
@@ -1392,16 +1393,24 @@ new MakeNode, ByteArrayToNybbleList,
                                       */
                                       match properties.get("quantity") - payload.get("quantity") {
                                         0 => {
-                                          // todo remove key in treeHashMap instead of set Nil
-                                          // not implemented in rnode yet
                                           TreeHashMap!("get", thm2, properties.get("id"), *getForSaleReturnCh) |
                                           for (purse <- getForSaleReturnCh) {
-                                            stdout!(("buyer receives entire purse from seller", *purse)) |
+                                            stdout!("buyer receives entire purse from seller") |
                                             if (*purse == Nil) {
                                               performRefundCh!("error: CRITICAL purse was not found in pursesForSale")
                                             } else {
-                                              @return!((true, *purse))
-
+                                              // replace data with payload
+                                              if (payload.get("data") != Nil) {
+                                                for (_ <- @(*pursesData, properties.get("id"))) {
+                                                  @(*pursesData, properties.get("id"))!(payload.get("data"))
+                                                }
+                                              } |
+                                              // set price to Nil
+                                              TreeHashMap!("set", thm, properties.get("id"),
+                                              properties.set("price", Nil), *setReturnCh) |
+                                              for (_ <- setReturnCh) {
+                                                @return!((true, *purse))
+                                              }
                                             }
                                           }
                                         }
