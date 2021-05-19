@@ -1,5 +1,4 @@
 module.exports.updatePurseDataTerm = (
-    registryUri,
   payload
 ) => {
   return `new basket,

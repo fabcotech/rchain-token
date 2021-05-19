@@ -5,8 +5,8 @@ const {
 } = require('../src/');
 const rc = require('rchain-toolkit');
 
-module.exports.main = async (contractRegistryUri) => {
-  const term0 = readAllPursesTerm(contractRegistryUri);
+module.exports.main = async (masterRegistryUri, contractId) => {
+  const term0 = readAllPursesTerm({masterRegistryUri, contractId });
   const result0 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term0,
   });
@@ -17,7 +17,7 @@ module.exports.main = async (contractRegistryUri) => {
     rc.utils.decodePar
   );
 
-  const term2 = readPursesDataTerm(contractRegistryUri, {
+  const term2 = readPursesDataTerm(masterRegistryUri, {
     pursesIds: Object.keys(purses),
   });
   const results = await Promise.all([

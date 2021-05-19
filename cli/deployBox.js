@@ -25,7 +25,7 @@ module.exports.deployBox = async () => {
     timestamp
   );
 
-  const term = deployBoxTerm({ masterRegistryUri: masterRegistryUri, boxId: boxId });
+  const term = deployBoxTerm({ masterRegistryUri: masterRegistryUri, boxId: boxId, publicKey: publicKey });
   log('✓ prepare deploy');
 
   const deployOptions = await rchainToolkit.utils.getDeployOptions(

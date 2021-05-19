@@ -10,6 +10,7 @@ const checkPursesInBox = require('./checkPursesInBox.js').main;
 
 const deployBox = require('./test_deployBox').main;
 const deploy = require('./test_deploy').main;
+const deployMaster = require('./test_deployMaster').main;
 const withdraw = require('./test_withdraw').main;
 const checkDefaultPurses = require('./test_checkDefaultPurses').main;
 const createPurses = require('./test_createPurses.js').main;
@@ -42,22 +43,42 @@ const main = async () => {
   balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
 
-  const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
-  const boxRegistryUri = dataBox.registryUri.replace('rho:id:', '');
-  const secondDataBox = await deployBox(PRIVATE_KEY_2, PUBLIC_KEY_2);
-  const secondBoxRegistryUri = secondDataBox.registryUri.replace('rho:id:', '');
+  const data = await deployMaster(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+  );
+  const masterRegistryUri = data.registryUri.replace('rho:id:', '');
+  console.log('  masterRegistryUri', masterRegistryUri);
 
+  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 00 deploy boxes');
+  console.log('✓ 01 deploy master');
   console.log(
-    '  00 dust cost: ' +
+    '  01 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  const data = await deploy(
+  const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, "box1");
+  balances1.push(await getBalance(PUBLIC_KEY));
+
+  const secondDataBox = await deployBox(PRIVATE_KEY_2, PUBLIC_KEY_2, masterRegistryUri, "box2");
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+
+  console.log('✓ 02 deploy boxes');
+  console.log(
+    '  02 dust cost (1 box): ' +
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+  );
+
+  await checkDefaultPurses(masterRegistryUri, "box1");
+  await checkDefaultPurses(masterRegistryUri, "box2");
+  console.log('✓ 02 check initial purses in boxes');
+
+  const deployData = await deploy(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
+    masterRegistryUri,
+    "box1",
     true,
     'mytoken',
     // 2% fee
@@ -65,45 +86,43 @@ const main = async () => {
     [PUBLIC_KEY_3, 2000],
     2
   );
-
   // If you purchase a token at 100 REV
   // seller gets 98 REV
   // owner of the contract gets 2 REV
 
-  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 01 deploy');
-  console.log(
-    '  01 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-  await checkDefaultPurses(boxRegistryUri);
-  console.log('✓ 02 check initial bags and data');
-
-  const t = new Date().getTime();
-  await createPurses(
-    contractRegistryUri,
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    boxRegistryUri,
-    PURSES_TO_CREATE
-  );
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log(`✓ 03 create ${PURSES_TO_CREATE} bags`);
+  console.log('✓ 03 deployed fungible/FT contract');
   console.log(
     '  03 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
+
+  const t = new Date().getTime();
+  await createPurses(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    "mytoken",
+    "box1",
+    PURSES_TO_CREATE
+  );
+  balances1.push(await getBalance(PUBLIC_KEY));
+  console.log(`✓ 04 create ${PURSES_TO_CREATE} purses`);
   console.log(
-    `  03 avg time of deploy+propose : ` +
+    '  04 dust cost: ' +
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+  );
+  console.log(
+    `  04 avg time of deploy+propose : ` +
       (new Date().getTime() - t) / 1000 +
       's'
   );
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
+
+  await checkPursesInBox(masterRegistryUri,"box1", "mytoken", `1`);
   await checkPursesInContract(
-    contractRegistryUri,
+    masterRegistryUri,
     1,
-    `4`,
+    `1`,
     3 * PURSES_TO_CREATE
   );
   console.log(

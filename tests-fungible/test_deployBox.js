@@ -1,13 +1,13 @@
-const { boxTerm } = require('../src');
+const { deployBoxTerm } = require('../src');
 const rc = require('rchain-toolkit');
 
 const waitForUnforgeable = require('../cli/waitForUnforgeable.js').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (privateKey, publicKey) => {
-  const term = boxTerm({ publicKey: publicKey });
+module.exports.main = async (privateKey, publicKey, masterRegistryUri, boxId) => {
+  const term = deployBoxTerm({ publicKey: publicKey, boxId: boxId, masterRegistryUri: masterRegistryUri });
   console.log(
-    '  00 deploy box is ' + Buffer.from(term).length / 1000000 + 'mb'
+    '  02 deploy box is ' + Buffer.from(term).length / 1000000 + 'mb'
   );
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
@@ -53,8 +53,9 @@ module.exports.main = async (privateKey, publicKey) => {
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (typeof data.registryUri !== 'string') {
-    throw new Error('00_deployBox invalid data.registryUri');
+  if (data.status !== 'completed') {
+    console.log(data);
+    throw new Error('00_deployBox 06');
   }
 
   return data;

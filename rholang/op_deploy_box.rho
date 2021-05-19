@@ -12,7 +12,7 @@ in {
   registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *masterEntryCh) |
 
   for (masterEntry <- masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_BOX", "BOX_ID", *registerBoxReturnCh)) |
+    masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "BOX_ID", "publicKey": "PUBLIC_KEY" }, *registerBoxReturnCh)) |
     for (@r <- registerBoxReturnCh) {
       match r {
         String => {

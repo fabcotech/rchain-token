@@ -125,21 +125,6 @@ module.exports.readTerm = (
 `
 );
 
-const readPursesIdsFile = fs
-  .readFileSync('./rholang/read_purses_ids.rho')
-  .toString('utf8');
-
-fs.writeFileSync(
-  './src/readPursesIdsTerm.js',
-  `
-module.exports.readPursesIdsTerm = (
-  registryUri
-) => {
-  return \`${replaceEverything(readPursesIdsFile)}\`;
-};
-`
-);
-
 const readAllPursesFile = fs
   .readFileSync('./rholang/read_all_purses.rho')
   .toString('utf8');
@@ -148,7 +133,6 @@ fs.writeFileSync(
   './src/readAllPursesTerm.js',
   `
 module.exports.readAllPursesTerm = (
-  registryUri,
   payload
 ) => {
   return \`${replaceEverything(readAllPursesFile)}\`;
@@ -163,7 +147,6 @@ fs.writeFileSync(
   './src/readPursesTerm.js',
   `
 module.exports.readPursesTerm = (
-  registryUri,
   payload
 ) => {
   return \`${replaceEverything(readPursesFile).replace(
@@ -201,7 +184,7 @@ fs.writeFileSync(
   './src/readBoxTerm.js',
   `
 module.exports.readBoxTerm = (
-  boxRegistryUri
+  payload
 ) => {
   return \`${replaceEverything(readBoxFile)}\`;
 };
@@ -270,7 +253,6 @@ const updatePurseDataFile = fs
 fs.writeFileSync(
   './src/updatePurseDataTerm.js',
   `module.exports.updatePurseDataTerm = (
-    registryUri,
   payload
 ) => {
   return \`${replaceEverything(updatePurseDataFile)}\`;
@@ -291,11 +273,6 @@ fs.writeFileSync(
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')
       .replace(/\$\{/g, '\\${')
-      .replace(
-        /FEE/g,
-        '${payload.fee ? `["${payload.fee[0]}", ${payload.fee[1]}]` : "Nil"}'
-      )
-      .replace(/NAME/g, '"${payload.name}"')
       .replace(/VERSION/g, `"${VERSION}"`)
       .replace(/DEPTH_CONTRACT/g, '${payload.contractDepth || 2}')
       .replace(/DEPTH/g, '${payload.depth || 3}')
@@ -315,12 +292,12 @@ fs.writeFileSync(
       .replace(/\$\{/g, '\\${')
       .replace(
         /FEE/g,
-        '${payload.fee ? `["${payload.fee[0]}", ${payload.fee[1]}]` : "Nil"}'
+        '${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
       )
       .replace(/CONTRACT_ID/g, '${payload.contractId}')
+      .replace(/BOX_ID/g, '${payload.boxId}')
       .replace(/MASTER_REGISTRY_URI/g, '${payload.masterRegistryUri}')
-      .replace(/FUNGIBLE/g, '${payload.fungible}')
-      .replace(/TREE_HASH_MAP/g, treeHashMapTerm + ' |')}\`;
+      .replace(/FUNGIBLE/g, '${payload.fungible}')}\`;
 };
 `
 );

@@ -1,4 +1,4 @@
-const { mainTerm } = require('../src/mainTerm');
+const { deployTerm } = require('../src/');
 const rc = require('rchain-toolkit');
 
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
@@ -7,19 +7,20 @@ const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 module.exports.main = async (
   privateKey1,
   publicKey1,
-  boxRegistryUri,
+  masterRegistryUri,
+  boxId,
   fungible,
-  name,
-  fee,
-  depth
+  contractId,
+  fee
 ) => {
-  const term = mainTerm(boxRegistryUri, {
+  const term = deployTerm({
+    masterRegistryUri: masterRegistryUri,
     fungible: fungible,
-    name: name,
+    boxId: boxId,
+    contractId: contractId,
     fee: fee ? fee : null,
-    depth: depth ? depth : 1,
   });
-  console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
+  console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const pd = await prepareDeploy(
@@ -64,8 +65,9 @@ module.exports.main = async (
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (data.locked !== false) {
-    throw new Error('01_deploy invalid locked');
+  if (data.status !== "completed") {
+    console.log(data)
+    throw new Error('01_deploy 06');
   }
 
   return data;

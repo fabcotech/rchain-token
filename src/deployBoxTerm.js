@@ -15,7 +15,7 @@ in {
   registryLookup!(\`rho:id:${payload.masterRegistryUri}\`, *masterEntryCh) |
 
   for (masterEntry <- masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_BOX", "${payload.boxId}", *registerBoxReturnCh)) |
+    masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "${payload.boxId}", "publicKey": "${payload.publicKey}" }, *registerBoxReturnCh)) |
     for (@r <- registerBoxReturnCh) {
       match r {
         String => {

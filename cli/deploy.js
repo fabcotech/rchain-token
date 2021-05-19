@@ -22,6 +22,7 @@ module.exports.deploy = async () => {
   const masterRegistryUri = getMasterRegistryUri();
   const fungible = getFungible();
   const contractId = getContractId();
+  const boxId = process.env.BOX_ID;
 
   console.log(
     `Will deploy a\x1b[36m`,
@@ -42,6 +43,7 @@ module.exports.deploy = async () => {
 
   const term = deployTerm({
     masterRegistryUri: masterRegistryUri,
+    boxId: boxId,
     fungible: fungible,
     contractId: contractId,
     fee: null,
