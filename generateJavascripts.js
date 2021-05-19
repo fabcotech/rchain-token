@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { VERSION } = require('./constants');
 
 const replaceEverything = (a) => {
   return (
@@ -8,8 +9,11 @@ const replaceEverything = (a) => {
       .replace(/\\\//g, '\\\\/')
       .replace(/FROM_BOX_REGISTRY_URI/g, '${payload.fromBoxRegistryUri}')
       .replace(/TO_BOX_REGISTRY_URI/g, '${payload.toBoxRegistryUri}')
+      .replace(/MASTER_REGISTRY_URI/g, '${payload.masterRegistryUri}')
       .replace(/BOX_REGISTRY_URI/g, '${boxRegistryUri}')
       .replace(/REGISTRY_URI/g, '${registryUri}')
+      .replace(/CONTRACT_ID/g, '${payload.contractId}')
+      .replace(/BOX_ID/g, '${payload.boxId}')
       .replace(/PURSE_ID/g, '${payload.purseId}')
       .replace(/NEW_ID/g, '${payload.newId ? payload.newId : "Nil"}')
       .replace(/SPLIT_PURSE_QUANTITY/g, '${payload.quantityInNewPurse}')
@@ -36,9 +40,7 @@ const replaceEverything = (a) => {
       )
       .replace(
         'CREATE_PURSESS',
-        `\${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')
-        .split('"$BQ').join('\`')
-        .split('$BQ"').join('\`')}`
+        `\${JSON.stringify(payload.purses).replace(new RegExp(': null|:null', 'g'), ': Nil')}`
       )
       .replace('BAG_NONCE', '${payload.bagNonce}')
       .replace('BAG_NONCE_2', '${payload.bagNonce2}')
@@ -63,7 +65,6 @@ const createPursesFile = fs
 fs.writeFileSync(
   './src/createPursesTerm.js',
   `module.exports.createPursesTerm = (
-  registryUri,
   payload
 ) => {
   return \`${replaceEverything(createPursesFile)}\`;
@@ -81,6 +82,19 @@ fs.writeFileSync(
   payload
 ) => {
   return \`${replaceEverything(purchaseFile)}\`;
+};
+`
+);
+
+const deployBoxFile = fs
+  .readFileSync('./rholang/op_deploy_box.rho')
+  .toString('utf8');
+fs.writeFileSync(
+  './src/deployBoxTerm.js',
+  `module.exports.deployBoxTerm = (
+  payload
+) => {
+  return \`${replaceEverything(deployBoxFile)}\`;
 };
 `
 );
@@ -264,16 +278,16 @@ fs.writeFileSync(
 `
 );
 
-const mainTerm = fs.readFileSync('./rholang/main.rho').toString('utf8');
+const masterTerm = fs.readFileSync('./rholang/master.rho').toString('utf8');
 const treeHashMapTerm = fs
   .readFileSync('./rholang/tree_hash_map.rho')
   .toString('utf8')
   .replace(/`/g, '\\`');
 
 fs.writeFileSync(
-  './src/mainTerm.js',
-  `module.exports.mainTerm = (fromBoxRegistryUri, payload) => {
-    return \`${mainTerm
+  './src/masterTerm.js',
+  `module.exports.masterTerm = (payload) => {
+    return \`${masterTerm
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')
       .replace(/\$\{/g, '\\${')
@@ -282,10 +296,31 @@ fs.writeFileSync(
         '${payload.fee ? `["${payload.fee[0]}", ${payload.fee[1]}]` : "Nil"}'
       )
       .replace(/NAME/g, '"${payload.name}"')
-      .replace(/DEPTH/g, '${payload.depth || 1}')
+      .replace(/VERSION/g, `"${VERSION}"`)
+      .replace(/DEPTH_CONTRACT/g, '${payload.contractDepth || 2}')
+      .replace(/DEPTH/g, '${payload.depth || 3}')
+      .replace(/TREE_HASH_MAP/g, treeHashMapTerm + ' |')}\`;
+};
+`
+);
+
+const deployTerm = fs.readFileSync('./rholang/op_deploy.rho').toString('utf8');
+
+fs.writeFileSync(
+  './src/deployTerm.js',
+  `module.exports.deployTerm = (payload) => {
+    return \`${deployTerm
+      .replace(/`/g, '\\`')
+      .replace(/\\\//g, '\\\\/')
+      .replace(/\$\{/g, '\\${')
+      .replace(
+        /FEE/g,
+        '${payload.fee ? `["${payload.fee[0]}", ${payload.fee[1]}]` : "Nil"}'
+      )
+      .replace(/CONTRACT_ID/g, '${payload.contractId}')
+      .replace(/MASTER_REGISTRY_URI/g, '${payload.masterRegistryUri}')
       .replace(/FUNGIBLE/g, '${payload.fungible}')
-      .replace(/TREE_HASH_MAP/g, treeHashMapTerm + ' |')
-      .replace(/FROM_BOX_REGISTRY_URI/g, '${fromBoxRegistryUri}')}\`;
+      .replace(/TREE_HASH_MAP/g, treeHashMapTerm + ' |')}\`;
 };
 `
 );

@@ -1,33 +1,25 @@
 const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
-const { VERSION } = require('../constants');
-const { deployTerm } = require('../src/');
+const { masterTerm } = require('../src/');
 const waitForUnforgeable = require('./waitForUnforgeable').main;
 const {
   log,
   validAfterBlockNumber,
   prepareDeploy,
-  getMasterRegistryUri,
-  getFungible,
-  getContractId,
-  logData,
+  getDepth,
+  getContractDepth,
 } = require('./utils');
 
-module.exports.deploy = async () => {
-  if (typeof process.env.CONTRACT_ID === 'string') {
-    console.log('Please remove CONTRACT_ID=* line in .env file');
+module.exports.deployMaster = async () => {
+  if (typeof process.env.MASTER_REGISTRY_URI === 'string') {
+    console.log('Please remove MASTER_REGISTRY_URI=* line in .env file');
     process.exit();
   }
-  const masterRegistryUri = getMasterRegistryUri();
-  const fungible = getFungible();
-  const contractId = getContractId();
 
-  console.log(
-    `Will deploy a\x1b[36m`,
-    fungible ? 'fungible' : 'non-fungible',
-    '\x1b[0mtokens contract'
-  );
+  const depth = getDepth() || 3;
+  const contractDepth = getContractDepth() || 2;
+
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
@@ -40,11 +32,9 @@ module.exports.deploy = async () => {
     timestamp
   );
 
-  const term = deployTerm({
-    masterRegistryUri: masterRegistryUri,
-    fungible: fungible,
-    contractId: contractId,
-    fee: null,
+  const term = masterTerm({
+    depth: depth,
+    contractDepth: contractDepth,
   });
 
   //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)
@@ -92,22 +82,14 @@ module.exports.deploy = async () => {
   const data = rchainToolkit.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
-  if (data.status !== "completed") {
-    console.log(data);
-    process.exit();
-  }
   let envText = fs.readFileSync('./.env', 'utf8');
-  envText += `\nCONTRACT_ID=${contractId}`;
+  envText += `\nMASTER_REGISTRY_URI=${data.registryUri.replace('rho:id:', '')}`;
   fs.writeFileSync('./.env', envText, 'utf8');
-  log('✓ deployed and retrieved data from the blockchain');
+  log('✓ deployed master and retrieved data from the blockchain');
   log(
-    `✓ updated .env file with CONTRACT_ID=${contractId}`
+    `✓ updated .env file with MASTER_REGISTRY_URI=${data.registryUri.replace(
+      'rho:id:',
+      ''
+    )}`
   );
-  logData({
-    masterRegistryUri,
-    contractId,
-    fungible,
-    locked: false,
-    version: VERSION
-  });
 };

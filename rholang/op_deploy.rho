@@ -1,0 +1,31 @@
+new basket,
+  masterEntryCh,
+  registerContractReturnCh,
+  sendReturnCh,
+  deletePurseReturnCh,
+  boxCh,
+  stdout(`rho:io:stdout`),
+  deployerId(`rho:rchain:deployerId`),
+  registryLookup(`rho:registry:lookup`)
+in {
+
+  registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *masterEntryCh) |
+
+  for (masterEntry <- masterEntryCh) {
+    masterEntry!(("PUBLIC_REGISTER_CONTRACT", { "contractId": "CONTRACT_ID", "fungible": FUNGIBLE, "fee": FEE }, *registerContractReturnCh)) |
+    for (@r <- registerContractReturnCh) {
+      match r {
+        String => {
+          basket!({ "status": "failed", "message": r }) |
+          stdout!(("failed", r))
+        }
+        (true, superKey) => {
+          stdout!(("superKey", superKey)) |
+          @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")!(superKey) |
+          basket!({ "status": "completed" }) |
+          stdout!("completed, contract registered")
+        }
+      }
+    }
+  }
+}

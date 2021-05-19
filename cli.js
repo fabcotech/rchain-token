@@ -1,4 +1,5 @@
 const { deploy } = require('./cli/deploy');
+const { deployMaster } = require('./cli/deployMaster');
 const { deployBox } = require('./cli/deployBox');
 const { purchaseTokens } = require('./cli/purchaseTokens');
 const { view } = require('./cli/view');
@@ -55,6 +56,12 @@ const main = async () => {
   const deployArg = process.argv.findIndex((arg) => arg === 'deploy') !== -1;
   if (deployArg) {
     deploy();
+    return;
+  }
+
+  const deployMasterArg = process.argv.findIndex((arg) => arg === 'deploy-master') !== -1;
+  if (deployMasterArg) {
+    deployMaster();
     return;
   }
 

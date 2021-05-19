@@ -4,9 +4,10 @@ const fs = require('fs');
 const { createPursesTerm } = require('../src');
 
 const {
-  getBoxRegistryUri,
+  getBoxId,
   getQuantity,
-  getRegistryUri,
+  getContractId,
+  getMasterRegistryUri,
   getType,
   getNewId,
   getPrice,
@@ -20,8 +21,9 @@ module.exports.createPurse = async () => {
     'Make sure the private key provided is the one of the contract owner (initial deploy)'
   );
   log('Make sure the contract is not locked');
-  const registryUri = getRegistryUri();
-  const boxRegistryUri = getBoxRegistryUri();
+  const masterRegistryUri = getMasterRegistryUri();
+  const contractId = getContractId();
+  const boxId = process.env.BOX_ID;
 
   const type = getType();
   const newId = getNewId();
@@ -52,20 +54,20 @@ module.exports.createPurse = async () => {
     }
   }
   let payload = {
+    masterRegistryUri: masterRegistryUri,
+    contractId: contractId,
     purses: {
       [`newbag1`]: {
         id: newId || '', // will be ignored if fungible = true
         type: type,
         price: price,
-        publicKey: publicKey,
-        box: `$BQrho:id:${boxRegistryUri}$BQ`,
+        boxId: boxId,
         quantity: quantity,
       },
     },
     data: {
       [`newbag1`]: null,
     },
-    fromBoxRegistryUri: boxRegistryUri,
   };
 
   const defaultPursesData = {};
@@ -77,8 +79,7 @@ module.exports.createPurse = async () => {
       defaultPursesData[purseId] = bags[purseId].data;
       delete bags[purseId].data;
       defaultPurses[purseId] = bags[purseId];
-      defaultPurses[purseId].publicKey = publicKey;
-      defaultPurses[purseId].box = `$BQrho:id:${boxRegistryUri}$BQ`;
+      defaultPurses[purseId].box = boxId;
       defaultPurses[purseId].price = null;
     });
     log(Object.keys(defaultPurses).length + ' purse found in json file');
@@ -86,13 +87,14 @@ module.exports.createPurse = async () => {
       Object.keys(defaultPursesData).length + ' purse data found in json file'
     );
     payload = {
+      masterRegistryUri: masterRegistryUri,
+      contractId: contractId,
       purses: defaultPurses,
       data: defaultPursesData,
-      fromBoxRegistryUri: boxRegistryUri,
     };
   }
 
-  const term = createPursesTerm(registryUri, payload);
+  const term = createPursesTerm(payload);
 
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

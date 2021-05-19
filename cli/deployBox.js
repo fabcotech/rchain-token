@@ -1,20 +1,19 @@
 const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
-const { boxTerm } = require('../src/');
+const { deployBoxTerm } = require('../src/');
 const waitForUnforgeable = require('./waitForUnforgeable').main;
 
-const { log, validAfterBlockNumber, prepareDeploy } = require('./utils');
+const { log, validAfterBlockNumber, prepareDeploy, getMasterRegistryUri, getBoxId } = require('./utils');
 
 module.exports.deployBox = async () => {
-  if (typeof process.env.BOX_NAME === 'string') {
-    console.log('Please remove BOX_NAME=* line in .env file');
+  if (typeof process.env.BOX_ID === 'string') {
+    console.log('Please remove BOX_ID=* line in .env file');
     process.exit();
   }
-  if (typeof process.env.BOX_REGISTRY_URI === 'string') {
-    console.log('Please remove BOX_REGISTRY_URI=* line in .env file');
-    process.exit();
-  }
+
+  const masterRegistryUri = getMasterRegistryUri();
+  const boxId = getBoxId();
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
@@ -26,7 +25,7 @@ module.exports.deployBox = async () => {
     timestamp
   );
 
-  const term = boxTerm({ publicKey: publicKey });
+  const term = deployBoxTerm({ masterRegistryUri: masterRegistryUri, boxId: boxId });
   log('✓ prepare deploy');
 
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
@@ -68,11 +67,14 @@ module.exports.deployBox = async () => {
   const data = rchainToolkit.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
+  if (data.status !== "completed") {
+    console.log(data);
+    process.exit();
+  }
   let envText = fs.readFileSync('./.env', 'utf8');
-  const boxRegstryUri = data.registryUri.replace('rho:id:', '');
-  envText += `\BOX_REGISTRY_URI=${boxRegstryUri}`;
+  envText += `\nBOX_ID=${boxId}`;
   fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
-  log(`✓ updated .env file with BOX_REGISTRY_URI=${boxRegstryUri}`);
-  console.log(`Registry URI (box)    : ${boxRegstryUri}`);
+  log(`✓ updated .env file with BOX_ID=${boxId}`);
+  console.log(`box id    : ${boxId}`);
 };

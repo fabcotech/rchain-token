@@ -1,6 +1,9 @@
 // rholang terms
 const { boxTerm } = require('./boxTerm');
+const { deployBoxTerm } = require('./deployBoxTerm');
 const { mainTerm } = require('./mainTerm');
+const { masterTerm } = require('./masterTerm');
+const { deployTerm } = require('./deployTerm');
 const { createPursesTerm } = require('./createPursesTerm');
 const { sendPurseTerm } = require('./sendPurseTerm');
 const { readPursesTerm } = require('./readPursesTerm');
@@ -18,11 +21,15 @@ const { withdrawTerm } = require('./withdrawTerm');
 // utils
 const { decodePurses } = require('./decodePurses');
 
+const { VERSION } = require('../constants');
 module.exports = {
-  version: '5.0.3',
+  version: VERSION,
   // rholang terms
   boxTerm,
   mainTerm,
+  deployBoxTerm,
+  masterTerm,
+  deployTerm,
   createPursesTerm,
   sendPurseTerm,
   readPursesTerm,

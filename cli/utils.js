@@ -13,19 +13,19 @@ const getProcessArgv = (param) => {
 module.exports.getProcessArgv = getProcessArgv;
 
 module.exports.logData = (data) => {
-  console.log(`Registry URI   : ${data.registryUri.replace('rho:id:', '')}`);
-  console.log(`Name           : ${data.name}`);
+  console.log(`Master registry URI   : ${data.masterRegistryUri.replace('rho:id:', '')}`);
+  console.log(`Contract id           : ${data.contractId}`);
   if (data.fungible) {
-    console.log(`Fungibility    :\x1b[36m`, 'fungible tokens', '\x1b[0m');
+    console.log(`Fungibility           :\x1b[36m`, 'fungible tokens', '\x1b[0m');
   } else {
-    console.log(`Fungibility    :\x1b[36m`, 'non-fungible tokens', '\x1b[0m');
+    console.log(`Fungibility           :\x1b[36m`, 'non-fungible tokens', '\x1b[0m');
   }
   if (data.locked) {
-    console.log(`Locked         : locked`, '\x1b[0m');
+    console.log(`Locked                : locked`, '\x1b[0m');
   } else {
-    console.log('Locked         :\x1b[31m NOT LOCKED \x1b[0m');
+    console.log('Locked                :\x1b[31m NOT LOCKED \x1b[0m');
   }
-  console.log(`Version        : ${data.version}`);
+  console.log(`Version               : ${data.version}`);
 };
 
 module.exports.prepareDeploy = async (
@@ -169,12 +169,12 @@ module.exports.getToBoxId = () => {
   return boxId;
 };
 
-module.exports.getBoxRegistryUri = () => {
-  let boxRegistryUri = process.env.BOX_REGISTRY_URI;
-  if (typeof boxRegistryUri !== 'string' || boxRegistryUri.length === 0) {
-    throw new Error('Missing arguments --box or BOX_NAME=* in .env file');
+module.exports.getBoxId = () => {
+  let boxId = process.env.BOX_ID;
+  if (typeof boxId !== 'string' || boxId.length === 0) {
+    throw new Error('Missing arguments --box or BOX_ID=* in .env file');
   }
-  return boxRegistryUri;
+  return boxId;
 };
 
 module.exports.getFungible = () => {
@@ -190,14 +190,22 @@ module.exports.getDepth = () => {
   return parseInt(depth);
 };
 
-module.exports.getName = () => {
-  const name = getProcessArgv('--name');
-  if (typeof name !== 'string') {
-    throw new Error(
-      'Missing arguments --name , please give a name to your contract, ex: "gold tokens", "mytoken", "kitties", "E corp shares"'
-    );
+module.exports.getContractDepth = () => {
+  let depth = getProcessArgv('--contract-depth');
+  return parseInt(depth);
+};
+
+module.exports.getContractId = () => {
+  let contractId = getProcessArgv('--contract-id');
+  if (typeof contractId !== 'string') {
+    contractId = process.env.CONTRACT_ID;
+    if (typeof contractId !== 'string') {
+      throw new Error(
+        'Missing arguments --contract-id or CONTRACT_ID=* in .env file, please provide an available contract id, ex: "gold tokens", "mytoken", "kitties", "E corp shares"'
+      );
+    }
   }
-  return name;
+  return contractId;
 };
 
 module.exports.getNewBagId = () => {
@@ -206,6 +214,14 @@ module.exports.getNewBagId = () => {
     throw new Error('Missing arguments --new-bag');
   }
   return bagId;
+};
+
+module.exports.getBoxId = () => {
+  const boxId = getProcessArgv('--box');
+  if (!boxId) {
+    throw new Error('Missing arguments --box');
+  }
+  return boxId;
 };
 
 module.exports.getFile = () => {
@@ -217,17 +233,17 @@ module.exports.getFile = () => {
   return data;
 };
 
-module.exports.getRegistryUri = () => {
-  let registryUri = getProcessArgv('--registry-uri');
+module.exports.getMasterRegistryUri = () => {
+  let registryUri = getProcessArgv('--master-registry-uri');
   if (!registryUri) {
     registryUri = getProcessArgv('-r');
   }
   if (typeof registryUri !== 'string') {
-    registryUri = process.env.REGISTRY_URI;
+    registryUri = process.env.MASTER_REGISTRY_URI;
   }
   if (typeof registryUri !== 'string' || registryUri.length === 0) {
     throw new Error(
-      'Missing arguments --registry-uri, or -r, or REGISTRY_URI=* in .env file'
+      'Missing arguments --master-registry-uri, or -r, or MASTER_REGISTRY_URI=* in .env file'
     );
   }
   return registryUri;
