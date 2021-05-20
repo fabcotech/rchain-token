@@ -60,6 +60,7 @@ const main = async () => {
   );
 
   let lastDustCost;
+  let firstDustCost;
   const createPursesBatch = async (j) => {
     const t = new Date().getTime();
     const ids = [];
@@ -90,17 +91,23 @@ const main = async () => {
     );
 
     balances1.push(await getBalance(PUBLIC_KEY));
-
+    
     if (NEW_BOX_EACH_TIME) {
       await checkPursesInBox(masterRegistryUri, boxId, "mytoken", ids);
     }
     const dustCost =
-      balances1[balances1.length - 2] - balances1[balances1.length - 1];
+    balances1[balances1.length - 2] - balances1[balances1.length - 1];
+    if (j === 0) {
+      firstDustCost = dustCost
+    }
     const dustCostDiff = lastDustCost ? dustCost - lastDustCost : 0;
     lastDustCost = dustCost;
+
+    const a = ((dustCost / firstDustCost) * 100) - 100;
+    const dustCostDiffFirst = Math.round(a * 100) / 100;
     let s = '';
     s += `✓ ${j} create ${j === 0 ? PURSES_TO_CREATE_INITIAL : PURSES_TO_CREATE} purses\n`;
-    s += `  ${j} dust cost: ` + dustCost + '(diff: ' + dustCostDiff + ')\n';
+    s += `  ${j} dust cost: ${dustCost} dust diff with prec: ${dustCostDiff}, dust diff with first: ${dustCostDiffFirst > 0 ? "+" + dustCostDiffFirst : dustCostDiffFirst}%\n`;
     s +=
       `  ${j} avg time of deploy+propose : ` +
       (new Date().getTime() - t) / 1000 +
