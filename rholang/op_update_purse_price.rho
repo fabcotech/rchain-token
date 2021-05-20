@@ -1,5 +1,5 @@
 new basket,
-  withdrawReturnCh,
+  returnCh,
   boxCh,
   stdout(`rho:io:stdout`),
   deployerId(`rho:rchain:deployerId`),
@@ -7,8 +7,8 @@ new basket,
 in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")) {
-    boxCh!(("WITHDRAW", { "contractId": "CONTRACT_ID", "quantity": WITHDRAW_QUANTITY, "toBoxId": "TO_BOX_ID", "purseId": "PURSE_ID", "merge": MERGE }, *withdrawReturnCh)) |
-    for (@r <- withdrawReturnCh) {
+    boxCh!(("UPDATE_PURSE_PRICE", { "contractId": "CONTRACT_ID", "price": PRICEE, "purseId": "PURSE_ID" }, *returnCh)) |
+    for (@r <- returnCh) {
       match r {
         String => {
           basket!({ "status": "failed", "message": r }) |
@@ -16,7 +16,7 @@ in {
         }
         _ => {
           basket!({ "status": "completed" }) |
-          stdout!("completed, withdraw successful")
+          stdout!("completed, price updated")
         }
       }
     }

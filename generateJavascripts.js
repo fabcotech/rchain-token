@@ -7,15 +7,16 @@ const replaceEverything = (a) => {
       .replace(/`/g, '\\`')
       .replace(/\$\{/g, '\\${')
       .replace(/\\\//g, '\\\\/')
-      .replace(/FROM_BOX_REGISTRY_URI/g, '${payload.fromBoxRegistryUri}')
-      .replace(/TO_BOX_REGISTRY_URI/g, '${payload.toBoxRegistryUri}')
+      .replace(/TO_BOX_ID/g, '${payload.toBoxId}')
+      .replace(/WITHDRAW_QUANTITY/g, '${payload.withdrawQuantity}')
+      .replace(/MERGE/g, '${payload.merge}')
       .replace(/MASTER_REGISTRY_URI/g, '${payload.masterRegistryUri}')
       .replace(/BOX_REGISTRY_URI/g, '${boxRegistryUri}')
       .replace(/REGISTRY_URI/g, '${registryUri}')
       .replace(/CONTRACT_ID/g, '${payload.contractId}')
       .replace(/BOX_ID/g, '${payload.boxId}')
       .replace(/PURSE_ID/g, '${payload.purseId}')
-      .replace(/NEW_ID/g, '${payload.newId ? payload.newId : "Nil"}')
+      .replace(/NEW_ID/g, '${payload.newId ? payload.newId : ""}')
       .replace(/SPLIT_PURSE_QUANTITY/g, '${payload.quantityInNewPurse}')
       .replace(/WITHDRAW_PURSE_QUANTITY/g, '${payload.quantityToWithdraw}')
       .replace(
@@ -28,7 +29,7 @@ const replaceEverything = (a) => {
         '${typeof payload.n == "string" ? \'"\' + payload.n + \'"\' : "Nil"}'
       )
       .replace('NEW_NONCE', '${payload.newNonce}')
-      .replace('UPDATE_PURSE_DATA', `\${payload.data}`)
+      .replace('UPDATE_PURSE_DATAA', `\${payload.data}`)
       .replace('PURCHASE_PURSE_DATA', `\${payload.data}`)
       .replace(
         'ACTION_AFTER_PURCHASE',
@@ -64,7 +65,8 @@ const createPursesFile = fs
   .toString('utf8');
 fs.writeFileSync(
   './src/createPursesTerm.js',
-  `module.exports.createPursesTerm = (
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.createPursesTerm = (
   payload
 ) => {
   return \`${replaceEverything(createPursesFile)}\`;
@@ -77,8 +79,8 @@ const purchaseFile = fs
   .toString('utf8');
 fs.writeFileSync(
   './src/purchaseTerm.js',
-  `module.exports.purchaseTerm = (
-  registryUri,
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.purchaseTerm = (
   payload
 ) => {
   return \`${replaceEverything(purchaseFile)}\`;
@@ -91,7 +93,8 @@ const deployBoxFile = fs
   .toString('utf8');
 fs.writeFileSync(
   './src/deployBoxTerm.js',
-  `module.exports.deployBoxTerm = (
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.deployBoxTerm = (
   payload
 ) => {
   return \`${replaceEverything(deployBoxFile)}\`;
@@ -99,28 +102,28 @@ fs.writeFileSync(
 `
 );
 
-const setPriceFile = fs
-  .readFileSync('./rholang/op_set_price.rho')
+const updatePursePriceFile = fs
+  .readFileSync('./rholang/op_update_purse_price.rho')
   .toString('utf8');
 fs.writeFileSync(
-  './src/setPriceTerm.js',
-  `module.exports.setPriceTerm = (
-  registryUri,
+  './src/updatePursePriceTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.updatePursePriceTerm = (
   payload
 ) => {
-  return \`${replaceEverything(setPriceFile)}\`;
+  return \`${replaceEverything(updatePursePriceFile)}\`;
 };
 `
 );
 
-const readFile = fs.readFileSync('./rholang/read.rho').toString('utf8');
+const readConfigFile = fs.readFileSync('./rholang/read_config.rho').toString('utf8');
 fs.writeFileSync(
-  './src/readTerm.js',
+  './src/readConfigTerm.js',
   `
-module.exports.readTerm = (
-  registryUri
+module.exports.readConfigTerm = (
+  payload
 ) => {
-  return \`${replaceEverything(readFile)}\`;
+  return \`${replaceEverything(readConfigFile)}\`;
 };
 `
 );
@@ -166,7 +169,6 @@ fs.writeFileSync(
   './src/readPursesDataTerm.js',
   `
 module.exports.readPursesDataTerm = (
-  registryUri,
   payload
 ) => {
   return \`${replaceEverything(readPursesDataFile).replace(
@@ -191,54 +193,14 @@ module.exports.readBoxTerm = (
 `
 );
 
-const boxFile = fs.readFileSync('./rholang/box.rho').toString('utf8');
-
-fs.writeFileSync(
-  './src/boxTerm.js',
-  `
-module.exports.boxTerm = (payload) => {
-  return \`${replaceEverything(boxFile)}\`;
-};
-`
-);
-
-const sendPurseFile = fs
-  .readFileSync('./rholang/op_send_purse.rho')
-  .toString('utf8');
-
-fs.writeFileSync(
-  './src/sendPurseTerm.js',
-  `module.exports.sendPurseTerm = (
-    registryUri,
-  payload
-) => {
-  return \`${replaceEverything(sendPurseFile)}\`;
-};
-`
-);
-
-const splitPurseFile = fs
-  .readFileSync('./rholang/op_split_purse.rho')
-  .toString('utf8');
-fs.writeFileSync(
-  './src/splitPurseTerm.js',
-  `module.exports.splitPurseTerm = (
-    registryUri,
-  payload
-) => {
-  return \`${replaceEverything(splitPurseFile)}\`;
-};
-`
-);
-
 const withdrawFile = fs
   .readFileSync('./rholang/op_withdraw.rho')
   .toString('utf8');
 
 fs.writeFileSync(
   './src/withdrawTerm.js',
-  `module.exports.withdrawTerm = (
-    registryUri,
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.withdrawTerm = (
   payload
 ) => {
   return \`${replaceEverything(withdrawFile)}\`;
@@ -252,7 +214,8 @@ const updatePurseDataFile = fs
 
 fs.writeFileSync(
   './src/updatePurseDataTerm.js',
-  `module.exports.updatePurseDataTerm = (
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.updatePurseDataTerm = (
   payload
 ) => {
   return \`${replaceEverything(updatePurseDataFile)}\`;
@@ -268,7 +231,8 @@ const treeHashMapTerm = fs
 
 fs.writeFileSync(
   './src/masterTerm.js',
-  `module.exports.masterTerm = (payload) => {
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.masterTerm = (payload) => {
     return \`${masterTerm
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')
@@ -285,7 +249,8 @@ const deployTerm = fs.readFileSync('./rholang/op_deploy.rho').toString('utf8');
 
 fs.writeFileSync(
   './src/deployTerm.js',
-  `module.exports.deployTerm = (payload) => {
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.deployTerm = (payload) => {
     return \`${deployTerm
       .replace(/`/g, '\\`')
       .replace(/\\\//g, '\\\\/')

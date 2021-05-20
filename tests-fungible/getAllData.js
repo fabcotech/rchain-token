@@ -10,24 +10,26 @@ module.exports.main = async (masterRegistryUri, contractId) => {
   const result0 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term0,
   });
-  const pursesOnChain = JSON.parse(result0).expr[0];
+  const pursesAsBytes = JSON.parse(result0).expr[0];
+
   const purses = decodePurses(
-    pursesOnChain,
+    pursesAsBytes,
     rc.utils.rhoExprToVar,
     rc.utils.decodePar
   );
 
-  const term2 = readPursesDataTerm(masterRegistryUri, {
+  const term2 = readPursesDataTerm({
+    masterRegistryUri: masterRegistryUri,
     pursesIds: Object.keys(purses),
+    contractId: contractId,
   });
-  const results = await Promise.all([
-    rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: term2,
-    }),
-  ]);
+
+  const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
+    term: term2,
+  })
 
   return {
     purses: purses,
-    pursesData: rc.utils.rhoValToJs(JSON.parse(results[0]).expr[0]),
+    pursesData: rc.utils.rhoValToJs(JSON.parse(result1).expr[0]),
   };
 };

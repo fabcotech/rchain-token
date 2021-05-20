@@ -5,12 +5,13 @@ const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 
 module.exports.main = async (
-  contractRegistryUri,
   privateKey,
   publicKey,
-  fromBoxRegistryUri,
+  masterRegistryUri,
+  boxId,
+  contractId,
   purseId,
-  data
+  d
 ) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
@@ -20,12 +21,14 @@ module.exports.main = async (
   );
 
   const payload = {
-    fromBoxRegistryUri: fromBoxRegistryUri,
+    masterRegistryUri: masterRegistryUri,
     purseId: purseId,
-    data: data,
+    boxId: boxId,
+    contractId: contractId,
+    data: d,
   };
 
-  const term = updatePurseDataTerm(contractRegistryUri, payload);
+  const term = updatePurseDataTerm(payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -45,11 +48,11 @@ module.exports.main = async (
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('07_updatePurseData 01');
+      throw new Error('test_updatePurseData 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('07_updatePurseData 02');
+    throw new Error('test_updatePurseData 02');
   }
 
   let dataAtNameResponse;
@@ -57,6 +60,14 @@ module.exports.main = async (
     dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     console.log(err);
-    throw new Error('07_updatePurseData 05');
+    throw new Error('test_updatePurseData 05');
+  }
+
+  const data = rc.utils.rhoValToJs(
+    JSON.parse(dataAtNameResponse).exprs[0].expr
+  );
+  if (data.status !== "completed") {
+    console.log(data);
+    throw new Error('test_updatePurseData')
   }
 };

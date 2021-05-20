@@ -1,9 +1,9 @@
 /* GENERATED CODE, only edit rholang/*.rho files*/
-module.exports.withdrawTerm = (
+module.exports.updatePursePriceTerm = (
   payload
 ) => {
   return `new basket,
-  withdrawReturnCh,
+  returnCh,
   boxCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
@@ -11,8 +11,8 @@ module.exports.withdrawTerm = (
 in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")) {
-    boxCh!(("WITHDRAW", { "contractId": "${payload.contractId}", "quantity": ${payload.withdrawQuantity}, "toBoxId": "${payload.toBoxId}", "purseId": "${payload.purseId}", "merge": ${payload.merge} }, *withdrawReturnCh)) |
-    for (@r <- withdrawReturnCh) {
+    boxCh!(("UPDATE_PURSE_PRICE", { "contractId": "${payload.contractId}", "price": ${payload.price || "Nil"}, "purseId": "${payload.purseId}" }, *returnCh)) |
+    for (@r <- returnCh) {
       match r {
         String => {
           basket!({ "status": "failed", "message": r }) |
@@ -20,7 +20,7 @@ in {
         }
         _ => {
           basket!({ "status": "completed" }) |
-          stdout!("completed, withdraw successful")
+          stdout!("completed, price updated")
         }
       }
     }

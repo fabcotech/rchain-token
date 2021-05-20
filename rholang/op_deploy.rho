@@ -11,8 +11,8 @@ in {
 
   registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *masterEntryCh) |
 
-  for (masterEntry <- masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_CONTRACT", { "contractId": "CONTRACT_ID", "boxId": "BOX_ID", "fungible": FUNGIBLE, "fee": FEE }, *registerContractReturnCh)) |
+  for (boxCh <<- @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")) {
+    boxCh!(("PUBLIC_REGISTER_CONTRACT", { "contractId": "CONTRACT_ID", "fungible": FUNGIBLE, "fee": FEE }, *registerContractReturnCh)) |
     for (@r <- registerContractReturnCh) {
       match r {
         String => {
@@ -20,7 +20,6 @@ in {
           stdout!(("failed", r))
         }
         (true, superKey) => {
-          stdout!(("superKey", superKey)) |
           @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")!(superKey) |
           basket!({ "status": "completed" }) |
           stdout!("completed, contract registered")

@@ -1,7 +1,7 @@
 const getAllData = require('../tests-fungible/getAllData').main;
 
-module.exports.main = async (registryUri, ids) => {
-  const allData = await getAllData(registryUri);
+module.exports.main = async (masterRegistryUri, contractId, ids) => {
+  const allData = await getAllData(masterRegistryUri, contractId);
 
   if (
     Object.keys(allData.purses).filter((bid) => !!ids.find((id) => id === bid))

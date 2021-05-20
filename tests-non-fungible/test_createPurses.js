@@ -1,14 +1,15 @@
 const rc = require('rchain-toolkit');
 
 const { createPursesTerm } = require('../src/createPursesTerm');
-const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 
 module.exports.main = async (
-  contractRegistryUri,
   privateKey1,
   publicKey1,
-  boxRegistryUri,
+  masterRegistryUri,
+  contractId,
+  boxId,
   ids
 ) => {
   const timestamp = new Date().getTime();
@@ -18,32 +19,33 @@ module.exports.main = async (
     timestamp
   );
 
+
   const payload = {
     purses: {
       ['0']: {
         id: '0',
-        box: `$BQrho:id:${boxRegistryUri}$BQ`,
-        publicKey: publicKey1,
+        boxId: boxId,
         type: '0',
         quantity: 1000000,
         price: null,
       },
     },
     data: {},
-    fromBoxRegistryUri: boxRegistryUri,
+    masterRegistryUri: masterRegistryUri,
+    contractId: contractId,
+    boxId: boxId,
   };
   for (let i = 0; i < ids.length; i += 1) {
     payload.purses[ids[i]] = {
       id: ids[i], // will be checked and use as id if available (non-fungible)
-      publicKey: publicKey1,
-      box: `$BQrho:id:${boxRegistryUri}$BQ`,
+      boxId: boxId,
       type: '0',
       quantity: 1,
       price: null,
     };
   }
 
-  const term = createPursesTerm(contractRegistryUri, payload);
+  const term = createPursesTerm(payload);
   console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -53,7 +55,7 @@ module.exports.main = async (
     privateKey1,
     publicKey1,
     1,
-    100000000,
+    1000000000,
     vab
   );
 

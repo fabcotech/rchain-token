@@ -1,3 +1,4 @@
+/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.deployTerm = (payload) => {
     return `new basket,
   masterEntryCh,
@@ -12,8 +13,8 @@ in {
 
   registryLookup!(\`rho:id:${payload.masterRegistryUri}\`, *masterEntryCh) |
 
-  for (masterEntry <- masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_CONTRACT", { "contractId": "${payload.contractId}", "boxId": "${payload.boxId}", "fungible": ${payload.fungible}, "fee": ${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"} }, *registerContractReturnCh)) |
+  for (boxCh <<- @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")) {
+    boxCh!(("PUBLIC_REGISTER_CONTRACT", { "contractId": "${payload.contractId}", "fungible": ${payload.fungible}, "fee": ${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"} }, *registerContractReturnCh)) |
     for (@r <- registerContractReturnCh) {
       match r {
         String => {
@@ -21,7 +22,6 @@ in {
           stdout!(("failed", r))
         }
         (true, superKey) => {
-          stdout!(("superKey", superKey)) |
           @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", "${payload.contractId}")!(superKey) |
           basket!({ "status": "completed" }) |
           stdout!("completed, contract registered")

@@ -1,10 +1,10 @@
 const getAllBoxData = require('../tests-fungible/getAllBoxData').main;
 
-module.exports.main = async (boxRegistryUri, contractRegistryUri, ids) => {
-  const allData = await getAllBoxData(boxRegistryUri);
+module.exports.main = async (masterRegistryUri, boxId, contractId, ids) => {
+  const allData = await getAllBoxData(masterRegistryUri, boxId);
 
   if (
-    allData.purses[`rho:id:${contractRegistryUri}`].filter(
+    allData.purses[contractId].filter(
       (bid) => !!ids.find((id) => id === bid)
     ).length !== ids.length
   ) {

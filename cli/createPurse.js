@@ -17,13 +17,13 @@ const {
 } = require('./utils');
 
 module.exports.createPurse = async () => {
-  log(
-    'Make sure the private key provided is the one of the contract owner (initial deploy)'
-  );
-  log('Make sure the contract is not locked');
   const masterRegistryUri = getMasterRegistryUri();
   const contractId = getContractId();
-  const boxId = process.env.BOX_ID;
+  log(
+    'Make sure the private key provided is the one of the contract'
+  );
+  log('Make sure the contract is not locked');
+  const boxId = getBoxId();
 
   const type = getType();
   const newId = getNewId();
@@ -46,11 +46,6 @@ module.exports.createPurse = async () => {
     }
     if (!quantity) {
       throw new Error('Please provide a quantity with --quantity option');
-    }
-    if (!newId) {
-      console.log(
-        'No --new-id option found. If your contract deals with non-fungible, please provide a --new-id'
-      );
     }
   }
   let payload = {

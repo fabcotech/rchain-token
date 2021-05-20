@@ -5,7 +5,6 @@ const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (
-  contractRegistryUri,
   privateKey,
   publicKey,
   payload
@@ -17,7 +16,7 @@ module.exports.main = async (
     timestamp
   );
 
-  const term = purchaseTerm(contractRegistryUri, payload);
+  const term = purchaseTerm(payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(

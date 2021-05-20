@@ -10,7 +10,6 @@ new basket,
 in {
 
   for (superKey <<- @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")) {
-    stdout!(("superKey", *superKey)) |
     superKey!((
       "CREATE_PURSES",
       {

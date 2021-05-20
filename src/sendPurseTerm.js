@@ -1,3 +1,4 @@
+/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.sendPurseTerm = (
     registryUri,
   payload
@@ -15,7 +16,7 @@ module.exports.sendPurseTerm = (
   registryLookup(\`rho:registry:lookup\`)
 in {
 
-  @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!(({ "type": "READ_PURSES" }, *boxCh)) |
+  @(*deployerId, "rho:id:FROM_${boxRegistryUri}")!(({ "type": "READ_PURSES" }, *boxCh)) |
 
   for (purses <- boxCh) {
     match *purses.get(\`rho:id:${registryUri}\`).get("${payload.purseId}") {
@@ -24,7 +25,7 @@ in {
         stdout!(("failed", "purse not found"))
       }
       purse => {
-        registryLookup!(\`rho:id:${payload.toBoxRegistryUri}\`, *boxEntryCh) |
+        registryLookup!(\`rho:id:TO_${boxRegistryUri}\`, *boxEntryCh) |
         for (boxEntry <- boxEntryCh) {
           boxEntry!(("PUBLIC_RECEIVE_PURSE", 
             {
@@ -36,7 +37,7 @@ in {
           for (r <- receivePursesReturnCh) {
             match *r {
               (true, Nil) => {
-                match "rho:id:${payload.toBoxRegistryUri}" == "rho:id:${payload.fromBoxRegistryUri}" {
+                match "rho:id:TO_${boxRegistryUri}" == "rho:id:FROM_${boxRegistryUri}" {
                   true => {
                     stdout!("completed, purse sent") |
                     basket!({ "status": "completed" })
@@ -46,7 +47,7 @@ in {
                       Remove the purse from emitter's box now that it is worthless :
                       deleted in contract
                     */
-                    @(*deployerId, "rho:id:${payload.fromBoxRegistryUri}")!((
+                    @(*deployerId, "rho:id:FROM_${boxRegistryUri}")!((
                       { "type": "DELETE_PURSE", "payload": { "registryUri": \`rho:id:${registryUri}\`, "id": "${payload.purseId}" } },
                       *deletePurseReturnCh
                     )) |
@@ -67,7 +68,7 @@ in {
                 }
               }
               _ => {
-                registryLookup!(\`rho:id:${payload.fromBoxRegistryUri}\`, *boxEntry2Ch) |
+                registryLookup!(\`rho:id:FROM_${boxRegistryUri}\`, *boxEntry2Ch) |
                 for (boxEntry2 <- boxEntry2Ch) {
                   boxEntry!(("PUBLIC_RECEIVE_PURSE", 
                     {

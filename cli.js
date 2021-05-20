@@ -4,7 +4,7 @@ const { deployBox } = require('./cli/deployBox');
 const { purchaseTokens } = require('./cli/purchaseTokens');
 const { view } = require('./cli/view');
 const { viewBox } = require('./cli/viewBox');
-const { sendPurse } = require('./cli/sendPurse');
+const { withdraw } = require('./cli/withdraw');
 const { createPurse } = require('./cli/createPurse');
 const { lock } = require('./cli/lock');
 const { updateBagData } = require('./cli/updateBagData');
@@ -96,10 +96,10 @@ const main = async () => {
     return;
   }
 
-  const sendPurseArg =
-    process.argv.findIndex((arg) => arg === 'send-purse') !== -1;
-  if (sendPurseArg) {
-    sendPurse();
+  const withdrawArg =
+    process.argv.findIndex((arg) => arg === 'withdraw') !== -1;
+  if (withdrawArg) {
+    withdraw();
     return;
   }
 

@@ -1,31 +1,39 @@
 const rchainToolkit = require('rchain-toolkit');
 
-const { sendPurseTerm } = require('../src');
+const { withdrawTerm } = require('../src');
 
 const {
-  getBoxRegistryUri,
-  getRegistryUri,
+  getQuantity,
   getPurseId,
   getToBoxId,
   log,
   validAfterBlockNumber,
+  getMasterRegistryUri,
+  getContractId,
 } = require('./utils');
 
-module.exports.sendPurse = async () => {
-  const registryUri = getRegistryUri();
-  const to = getToBoxId();
-  const boxRegistryUri = getBoxRegistryUri();
-  const timestamp = new Date().getTime();
+module.exports.withdraw = async () => {
+  const boxId = getBoxId();
+  const masterRegistryUri = getMasterRegistryUri();
+  const contractId = getContractId();
+  const toBoxId = getToBoxId();
   const purseId = getPurseId();
+
+  const timestamp = new Date().getTime();
   if (!purseId) {
     throw new Error('please provide --purse option');
   }
+
   const payload = {
-    fromBoxRegistryUri: boxRegistryUri,
-    toBoxRegistryUri: to,
+    masterRegistryUri: masterRegistryUri,
+    withdrawQuantity: getQuantity(),
     purseId: purseId,
-  };
-  const term = sendPurseTerm(registryUri, payload);
+    toBoxId: toBoxId,
+    boxId: boxId,
+    contractId: contractId,
+    merge: true
+  }
+  const term = withdrawTerm(payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rchainToolkit.utils.getDeployOptions(

@@ -1,16 +1,17 @@
 const rc = require('rchain-toolkit');
 
-const { splitPurseTerm } = require('../src');
+const { updatePursePriceTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 
 module.exports.main = async (
-  contractRegistryUri,
   privateKey,
   publicKey,
-  fromBoxRegistryUri,
-  quantityInNewPurse,
-  purseId
+  masterRegistryUri,
+  boxId,
+  contractId,
+  purseId,
+  price
 ) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
@@ -20,12 +21,14 @@ module.exports.main = async (
   );
 
   const payload = {
-    fromBoxRegistryUri: fromBoxRegistryUri,
-    quantityInNewPurse: quantityInNewPurse,
+    masterRegistryUri: masterRegistryUri,
     purseId: purseId,
+    boxId: boxId,
+    contractId: contractId,
+    price: price,
   };
 
-  const term = splitPurseTerm(contractRegistryUri, payload);
+  const term = updatePursePriceTerm(payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -45,11 +48,11 @@ module.exports.main = async (
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('07_updateBagData 01');
+      throw new Error('test_updatePursePrice 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('07_updateBagData 02');
+    throw new Error('test_updatePursePrice 02');
   }
 
   let dataAtNameResponse;
@@ -57,11 +60,15 @@ module.exports.main = async (
     dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     console.log(err);
-    throw new Error('07_updateBagData 05');
+    throw new Error('test_updatePurseData 05');
   }
+
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  return;
+  if (data.status !== "completed") {
+    console.log(data);
+    throw new Error('test_updatePurseData')
+  }
 };

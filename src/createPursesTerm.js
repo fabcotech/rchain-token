@@ -1,3 +1,4 @@
+/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.createPursesTerm = (
   payload
 ) => {
@@ -13,7 +14,6 @@ module.exports.createPursesTerm = (
 in {
 
   for (superKey <<- @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", "${payload.contractId}")) {
-    stdout!(("superKey", *superKey)) |
     superKey!((
       "CREATE_PURSES",
       {

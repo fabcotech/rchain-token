@@ -35,11 +35,16 @@ const characters = [
   '7',
   '8',
   '9',
+  'é',  
+  'è',
+  'ê',
+  'ë',
+  'ù'
 ];
 module.exports.main = () => {
   let name = '';
   for (let i = 0; i < 6; i += 1) {
-    name += characters[Math.floor(Math.random() * 36)];
+    name += characters[Math.floor(Math.random() * 41)];
   }
   return name;
 };

@@ -6,7 +6,7 @@ module.exports.readAllPursesTerm = (
   lookup!(\`rho:id:${payload.masterRegistryUri}\`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
-      entry!(("PUBLIC_READ_ALL_PURSES", { "contractId": "${payload.contractId}"}, *x)) |
+      entry!(("PUBLIC_READ_ALL_PURSES", "${payload.contractId}", *x)) |
       for (y <- x) {
         return!(*y)
       }

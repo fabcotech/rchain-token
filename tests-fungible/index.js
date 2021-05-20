@@ -14,11 +14,8 @@ const deployMaster = require('./test_deployMaster').main;
 const withdraw = require('./test_withdraw').main;
 const checkDefaultPurses = require('./test_checkDefaultPurses').main;
 const createPurses = require('./test_createPurses.js').main;
-const sendPurse = require('./test_sendPurse.js').main;
-const splitPurse = require('./test_splitPurse.js').main;
-const setPrice = require('./test_setPrice.js').main;
 const updatePurseData = require('./test_updatePurseData.js').main;
-const checkBagData = require('./test_checkBagData.js').main;
+const updatePursePrice = require('./test_updatePursePrice.js').main;
 const purchase = require('./test_purchase').main;
 
 const PURSES_TO_CREATE = 10;
@@ -48,7 +45,6 @@ const main = async () => {
     PUBLIC_KEY,
   );
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
-  console.log('  masterRegistryUri', masterRegistryUri);
 
   const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
@@ -118,11 +114,12 @@ const main = async () => {
       's'
   );
 
-  await checkPursesInBox(masterRegistryUri,"box1", "mytoken", `1`);
+  await checkPursesInBox(masterRegistryUri,"box1", "mytoken", `0`);
   await checkPursesInContract(
     masterRegistryUri,
+    "mytoken",
     1,
-    `1`,
+    `0`,
     3 * PURSES_TO_CREATE
   );
   console.log(
@@ -131,28 +128,30 @@ const main = async () => {
     } and right id`
   );
 
-  // split 5 in box 1
-  await splitPurse(
-    contractRegistryUri,
+  await withdraw(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
+    masterRegistryUri,
+    "box1",
+    "box2",
     5,
-    `4` // ID of the purse to split from
+    `0` // id of the purse to withdraw from
   );
 
-  console.log(`✓ 05 split purse`);
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
+  console.log(`✓ 05 withdraw`);
+  await checkPursesInBox(masterRegistryUri, "box2", "mytoken", `${PURSES_TO_CREATE}`);
   await checkPursesInContract(
-    contractRegistryUri,
+    masterRegistryUri,
+    "mytoken",
     2,
-    `4`,
+    `0`,
     PURSES_TO_CREATE * 3 - 5
   );
   await checkPursesInContract(
     contractRegistryUri,
+    "mytoken",
     2,
-    `${PURSES_TO_CREATE + 2}`,
+    `${PURSES_TO_CREATE}`,
     5
   );
   console.log(
@@ -163,129 +162,89 @@ const main = async () => {
     '  05 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
-  // send from box 1 to box 2
-  await sendPurse(
-    contractRegistryUri,
+
+  await withdraw(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
-    secondBoxRegistryUri,
-    '' + (PURSES_TO_CREATE + 2) // ID of the purse to send
+    masterRegistryUri,
+    "box1",
+    "box2",
+    (PURSES_TO_CREATE * 3) - 5, // everything remaining
+    `0` // id of the purse to withdraw from
   );
 
+  await checkPursesInBox(masterRegistryUri, "box1", "mytoken", `none`);
+  await checkPursesInBox(masterRegistryUri, "box2", "mytoken", `${PURSES_TO_CREATE}`);
   await checkPursesInContract(
     contractRegistryUri,
-    2,
-    `${PURSES_TO_CREATE + 3}`,
-    5
+    "mytoken",
+    1,
+    `${PURSES_TO_CREATE}`,
+    (PURSES_TO_CREATE * 3)
   );
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
 
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log(`✓ 06 send one purse (5 tokens) from box 1 to box 2`);
+  console.log(`✓ 06 withdraw/send one entire purse (25 tokens) from box 1 to box 2, initial purse deleted`);
   console.log(
     '  06 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  // send from box 2 to box 1
-  await sendPurse(
-    contractRegistryUri,
+  await updatePurseData(
     PRIVATE_KEY_2,
     PUBLIC_KEY_2,
-    secondBoxRegistryUri,
-    boxRegistryUri,
-    '' + (PURSES_TO_CREATE + 3) // ID of the purse to send
+    masterRegistryUri,
+    "box2",
+    "mytoken",
+    `${PURSES_TO_CREATE}`,
+    'aaa'
   );
-  await checkPursesInContract(contractRegistryUri, 1, `4`, 30);
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
-  await checkPursesInBox(secondBoxRegistryUri, contractRegistryUri, 'none');
   balances2.push(await getBalance(PUBLIC_KEY_2));
-  console.log(`✓ 07 send one purse (5 tokens) from box 2 to box 1`);
+  await checkPurseDataInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE}`, 'aaa');
+
+  console.log(`✓ 07 update data associated to purse`);
   console.log(
     '  07 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 
-  await withdraw(contractRegistryUri, PUBLIC_KEY, PRIVATE_KEY, {
-    purseId: `4`,
-    fromBoxRegistryUri: boxRegistryUri,
-    toBoxRegistryUri: secondBoxRegistryUri,
-    quantityToWithdraw: 6,
-  });
-  balances1.push(await getBalance(PUBLIC_KEY));
-  await checkPursesInBox(
-    secondBoxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE + 5}`
-  );
-  await checkPursesInBox(boxRegistryUri, contractRegistryUri, `4`);
-  await checkPursesInContract(
-    contractRegistryUri,
-    2,
-    `4`,
-    PURSES_TO_CREATE * 3 - 6
-  );
-  await checkPursesInContract(
-    contractRegistryUri,
-    2,
-    `${PURSES_TO_CREATE + 5}`,
-    6
-  );
-  console.log(`✓ 08 withdraw 6 from box 1 to box 2`);
-  console.log(
-    '  08 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-
-  await updatePurseData(
-    contractRegistryUri,
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    boxRegistryUri,
-    `4`, // bag 4 that probably has not been sent
-    'aaa'
-  );
-  balances1.push(await getBalance(PUBLIC_KEY));
-  await checkPurseDataInContract(contractRegistryUri, `4`, 'aaa');
-
-  console.log(`✓ 09 update data associated to purse`);
-  console.log(
-    '  09 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-
-  await setPrice(
-    contractRegistryUri,
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    boxRegistryUri,
-    1000,
-    `4` // ID of the purse to set a price to
-  );
-  balances1.push(await getBalance(PUBLIC_KEY));
-  await checkPursePriceInContract(contractRegistryUri, `4`, 1000);
-  console.log(`✓ 10 set a price to a purse`);
-  console.log(
-    '  10 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-  const balance1BeforePurchase = balances1[balances1.length - 1];
-  const purchaseFailed1 = await purchase(
-    contractRegistryUri,
+  await updatePursePrice(
     PRIVATE_KEY_2,
     PUBLIC_KEY_2,
+    masterRegistryUri,
+    "box2",
+    "mytoken",
+    `${PURSES_TO_CREATE}`,
+    1000
+  );
+
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+  await checkPursePriceInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE}`, 1000);
+  console.log(`✓ 08 set a price to a purse`);
+  console.log(
+    '  08 dust cost: ' +
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+  );
+
+  const balance2BeforePurchase = balances2[balances2.length - 1];
+  const purchaseFailed1 = await purchase(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
     {
-      toBoxRegistryUri: secondBoxRegistryUri,
-      purseId: `4`,
+      masterRegistryUri: masterRegistryUri,
+      purseId: `${PURSES_TO_CREATE}`,
+      contractId: `mytoken`,
+      boxId: `box1`,
       quantity: 'Nil', // invalid payload
       data: 'bbb',
-      newId: null,
+      newId: "",
+      merge: true,
       price: 1000,
-      publicKey: PUBLIC_KEY_2,
+      publicKey: PUBLIC_KEY,
     }
   );
-  balances1.push(await getBalance(PUBLIC_KEY_2));
+  balances1.push(await getBalance(PUBLIC_KEY));
+
   if (
     purchaseFailed1.status !== 'failed' ||
     purchaseFailed1.message !==
@@ -293,67 +252,78 @@ const main = async () => {
   ) {
     throw new Error('purchase should have fail with proper error message (1)');
   }
-  console.log(`✓ 11 failed purchase because of invalid payload`);
+  console.log(`✓ 09 failed purchase because of invalid payload`);
 
   const purchaseFailed2 = await purchase(
-    contractRegistryUri,
-    PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
+    PRIVATE_KEY,
+    PUBLIC_KEY,
     {
-      toBoxRegistryUri: secondBoxRegistryUri,
-      purseId: `4`,
-      quantity: 50, // invalid payload
+      masterRegistryUri: masterRegistryUri,
+      purseId: `${PURSES_TO_CREATE}`,
+      contractId: `mytoken`,
+      boxId: `box1`,
+      quantity: (PURSES_TO_CREATE * 3) + 1, // not available
       data: 'bbb',
-      newId: null,
+      newId: "",
+      merge: true,
       price: 1000,
-      publicKey: PUBLIC_KEY_2,
+      publicKey: PUBLIC_KEY,
     }
   );
-  balances1.push(await getBalance(PUBLIC_KEY_2));
-  console.log(`✓ 12 failed purchase because of invalid quantity`);
+  balances1.push(await getBalance(PUBLIC_KEY));
   if (
     purchaseFailed2.status !== 'failed' ||
     purchaseFailed2.message !==
-      'error: quantity not available or purse not for sale, issuer was refunded'
-  ) {
-    throw new Error('purchase should have fail with proper error message (2)');
-  }
+    'error: quantity not available or purse not for sale, issuer was refunded'
+    ) {
+      throw new Error('purchase should have fail with proper error message (2)');
+    }
+  console.log(`✓ 10 failed purchase because of invalid quantity`);
+
   const purchaseSuccess = await purchase(
-    contractRegistryUri,
-    PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
+    PRIVATE_KEY,
+    PUBLIC_KEY,
     {
-      toBoxRegistryUri: secondBoxRegistryUri,
-      purseId: `4`,
+      masterRegistryUri: masterRegistryUri,
+      purseId: `${PURSES_TO_CREATE}`,
+      contractId: `mytoken`,
+      boxId: `box1`,
       quantity: 1,
       data: 'bbb',
       newId: null,
+      merge: true,
       price: 1000,
-      publicKey: PUBLIC_KEY_2,
+      publicKey: PUBLIC_KEY,
     }
   );
+  balances1.push(await getBalance(PUBLIC_KEY));
   if (purchaseSuccess.status !== 'completed') {
     throw new Error('purchase should have been successful');
   }
+
+  await checkPurseDataInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE + 2}`, 'bbb');
   await checkPursesInBox(
-    secondBoxRegistryUri,
-    contractRegistryUri,
-    `${PURSES_TO_CREATE + 5}`
+    masterRegistryUri,
+    "box1",
+    "mytoken",
+    `${PURSES_TO_CREATE + 2}`
   );
   await checkPursesInContract(
-    contractRegistryUri,
+    masterRegistryUri,
+    "mytoken",
     2,
-    `4`,
-    PURSES_TO_CREATE * 3 - 7
+    `${PURSES_TO_CREATE + 2}`,
+    1
   );
   await checkPursesInContract(
-    contractRegistryUri,
+    masterRegistryUri,
+    "mytoken",
     2,
-    `${PURSES_TO_CREATE + 5}`,
-    6 + 1
+    `${PURSES_TO_CREATE}`,
+    (PURSES_TO_CREATE * 3) - 1
   );
-  const balance1AfterPurchase = await getBalance(PUBLIC_KEY);
-  if (balance1BeforePurchase + 980 !== balance1AfterPurchase) {
+  const balance2AfterPurchase = await getBalance(PUBLIC_KEY_2);
+  if (balance2BeforePurchase + 980 !== balance2AfterPurchase) {
     throw new Error('owner of box 1 did not receive payment from purchase');
   }
 
@@ -361,13 +331,13 @@ const main = async () => {
   if (balances3[0] + 20 !== balance3AfterPurchase) {
     throw new Error('owner of public key 3 did not receive fee from purchase');
   }
-  console.log(`✓ 13 purchase`);
-  console.log(`✓ 13 balance of purse's owner checked and has +10 dust`);
-  console.log(`✓ 13 2% fee was earned by owner of public key 3`);
+  console.log(`✓ 11 purchase`);
+  console.log(`✓ 11 balance of purse's owner checked and has +980 dust`);
+  console.log(`✓ 11 2% fee was earned by owner of public key 3`);
 
   balances1.push(await getBalance(PUBLIC_KEY_2));
   console.log(
-    '  13 dust cost: ' +
+    '  11 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 };

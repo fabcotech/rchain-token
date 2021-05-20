@@ -1,6 +1,5 @@
 
 module.exports.readPursesDataTerm = (
-  registryUri,
   payload
 ) => {
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
