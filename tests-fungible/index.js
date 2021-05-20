@@ -80,7 +80,6 @@ const main = async () => {
     // 2% fee
     // 2.000 is 2% of 100.000
     [PUBLIC_KEY_3, 2000],
-    2
   );
   // If you purchase a token at 100 REV
   // seller gets 98 REV

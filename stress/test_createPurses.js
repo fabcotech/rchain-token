@@ -1,15 +1,16 @@
 const rc = require('rchain-toolkit');
 
 const { createPursesTerm } = require('../src/createPursesTerm');
-const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
+const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 
 module.exports.main = async (
-  contractRegistryUri,
   privateKey1,
   publicKey1,
-  boxRegistryUri,
-  receiverBoxRegistryUri,
+  masterRegistryUri,
+  contractId,
+  boxId,
+  toBoxId,
   ids
 ) => {
   const timestamp = new Date().getTime();
@@ -19,27 +20,26 @@ module.exports.main = async (
     timestamp
   );
 
+
   const payload = {
     purses: {},
     data: {},
-    fromBoxRegistryUri: boxRegistryUri,
+    masterRegistryUri: masterRegistryUri,
+    contractId: contractId,
+    boxId: boxId,
   };
   for (let i = 0; i < ids.length; i += 1) {
     payload.purses[ids[i]] = {
       id: ids[i], // will be checked and use as id if available (non-fungible)
-      publicKey: publicKey1,
-      box: `$BQrho:id:${boxRegistryUri}$BQ`,
+      boxId: toBoxId,
       type: '0',
       quantity: 1,
       price: null,
     };
   }
 
-  let term = createPursesTerm(contractRegistryUri, payload);
-  var t = 0;
-  term = term.replace(new RegExp(boxRegistryUri, 'g'), receiverBoxRegistryUri);
-  term = term.replace(new RegExp(receiverBoxRegistryUri), boxRegistryUri);
-
+  const term = createPursesTerm(payload);
+  console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
     'secp256k1',
@@ -48,7 +48,7 @@ module.exports.main = async (
     privateKey1,
     publicKey1,
     1,
-    100000000,
+    1000000000,
     vab
   );
 
@@ -59,11 +59,11 @@ module.exports.main = async (
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('test_createPurses 01');
+      throw new Error('03_createTokens 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('test_createPurses 02');
+    throw new Error('03_createTokens 02');
   }
 
   let dataAtNameResponse;
@@ -71,12 +71,11 @@ module.exports.main = async (
     dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     console.log(err);
-    throw new Error('test_createPurses 05');
+    throw new Error('03_createTokens 05');
   }
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
-  console.log(data);
 
   return;
 };

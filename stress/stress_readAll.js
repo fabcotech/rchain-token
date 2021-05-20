@@ -5,15 +5,15 @@ require('dotenv').config();
 const { readAllPursesTerm, decodePurses } = require('../src');
 
 const CONTRACT_REGISTRY_URI =
-  'dudncqxgfptyifhu8iaqr8cdn5afsytpckie6qgyyu44p9ifi64wu8';
+  '598hsijm66p7mzfk5cja3dscsm5pm9cazum8fr1ptfinw4ht9c7i7t';
+const CONTRACT_ID = "mytoken";
 
 const main = async () => {
   const t = new Date().getTime();
-  const term1 = readAllPursesTerm(CONTRACT_REGISTRY_URI);
+  const term1 = readAllPursesTerm({ masterRegistryUri: CONTRACT_REGISTRY_URI, contractId: CONTRACT_ID });
   const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term1,
   });
-  console.log(result1);
 
   const pursesAsBytes = JSON.parse(result1).expr[0];
 

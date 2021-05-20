@@ -10,6 +10,7 @@ module.exports.main = async (
   masterRegistryUri,
   contractId,
   boxId,
+  toBoxId,
   ids
 ) => {
   const timestamp = new Date().getTime();
@@ -24,7 +25,7 @@ module.exports.main = async (
     purses: {
       ['0']: {
         id: '0',
-        boxId: boxId,
+        boxId: toBoxId,
         type: '0',
         quantity: 1000000,
         price: null,
@@ -38,7 +39,7 @@ module.exports.main = async (
   for (let i = 0; i < ids.length; i += 1) {
     payload.purses[ids[i]] = {
       id: ids[i], // will be checked and use as id if available (non-fungible)
-      boxId: boxId,
+      boxId: toBoxId,
       type: '0',
       quantity: 1,
       price: null,

@@ -106,6 +106,7 @@ const main = async () => {
     masterRegistryUri,
     "mytoken",
     "box1",
+    "box1",
     ids
   );
   balances1.push(await getBalance(PUBLIC_KEY));

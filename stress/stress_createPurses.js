@@ -4,16 +4,16 @@ const fs = require('fs');
 require('dotenv').config();
 
 const getBalance = require('../tests-fungible/getBalance').main;
-const getRandomName = require('./getRandomName').main;
+const getRandomName = require('../tests-non-fungible/getRandomName').main;
 const deployBox = require('../tests-fungible/test_deployBox').main;
+const deployMaster = require('../tests-fungible/test_deployMaster').main;
 const deploy = require('../tests-fungible/test_deploy').main;
-const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
-  .main;
-const createPurses = require('./test_createPurses.js').main;
-const checkPursesInBox = require('./checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE = 100;
-const PURSES_TO_CREATE_INITIAL = 100;
+const createPurses = require('./test_createPurses.js').main;
+const checkPursesInBox = require('../tests-non-fungible/checkPursesInBox.js').main;
+
+const PURSES_TO_CREATE = 10;
+const PURSES_TO_CREATE_INITIAL = 10;
 const NEW_BOX_EACH_TIME = true;
 const SKIP_CHECK = false;
 
@@ -26,36 +26,38 @@ const balances1 = [];
 const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
 
-  const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
-  const boxRegistryUri = dataBox.registryUri.replace('rho:id:', '');
+  const data = await deployMaster(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+  );
+  const masterRegistryUri = data.registryUri.replace('rho:id:', '');
+
+  const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, "box");
+  let boxId = "box";
   balances1.push(await getBalance(PUBLIC_KEY));
 
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 00 deploy boxes');
+  console.log('✓ 00 deploy box');
   console.log(
     '  00 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  const data = await deploy(
+  const deployData = await deploy(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
+    masterRegistryUri,
+    boxId,
     false,
     'mytoken',
-    null,
-    2
+    null
   );
-  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
-  console.log('  contractRegistryUri : ' + contractRegistryUri);
+
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 01 deploy');
+  console.log('✓ 01 deploy contract');
   console.log(
     '  01 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
-  await checkDefaultPurses(boxRegistryUri);
-  console.log('✓ 02 check initial bags and data');
 
   let lastDustCost;
   const createPursesBatch = async (j) => {
@@ -71,52 +73,38 @@ const main = async () => {
 
     let newBoxRegistryUri;
     if (NEW_BOX_EACH_TIME && j !== 0) {
-      const newDataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
-      newBoxRegistryUri = newDataBox.registryUri.replace('rho:id:', '');
+      const newBoxId = "box" + j;
+      await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, newBoxId);
+      boxId = newBoxId
       balances1.push(await getBalance(PUBLIC_KEY));
     }
 
     await createPurses(
-      contractRegistryUri,
       PRIVATE_KEY,
       PUBLIC_KEY,
-      boxRegistryUri,
-      NEW_BOX_EACH_TIME && j !== 0 ? newBoxRegistryUri : boxRegistryUri,
+      masterRegistryUri,
+      "mytoken",
+      "box",
+      boxId,
       ids
     );
+
     balances1.push(await getBalance(PUBLIC_KEY));
+
+    if (NEW_BOX_EACH_TIME) {
+      await checkPursesInBox(masterRegistryUri, boxId, "mytoken", ids);
+    }
     const dustCost =
       balances1[balances1.length - 2] - balances1[balances1.length - 1];
     const dustCostDiff = lastDustCost ? dustCost - lastDustCost : 0;
     lastDustCost = dustCost;
     let s = '';
-    s += `✓ ${j} create ${PURSES_TO_CREATE} purses\n`;
+    s += `✓ ${j} create ${j === 0 ? PURSES_TO_CREATE_INITIAL : PURSES_TO_CREATE} purses\n`;
     s += `  ${j} dust cost: ` + dustCost + '(diff: ' + dustCostDiff + ')\n';
     s +=
       `  ${j} avg time of deploy+propose : ` +
       (new Date().getTime() - t) / 1000 +
       's\n';
-    if (SKIP_CHECK) {
-      if (NEW_BOX_EACH_TIME && j !== 0) {
-        await checkPursesInBox(
-          newBoxRegistryUri,
-          contractRegistryUri,
-          PURSES_TO_CREATE
-        );
-      } else if (j === 0) {
-        await checkPursesInBox(
-          boxRegistryUri,
-          contractRegistryUri,
-          PURSES_TO_CREATE_INITIAL
-        );
-      } else {
-        await checkPursesInBox(
-          boxRegistryUri,
-          contractRegistryUri,
-          PURSES_TO_CREATE_INITIAL + PURSES_TO_CREATE * (j + 1)
-        );
-      }
-    }
 
     return s;
   };
@@ -132,7 +120,12 @@ const main = async () => {
         'utf8'
       );
     }
-    const s = '  ' + new Date().toString() + '\n';
+    const res = await createPursesBatch(j);
+    let s = '';
+    if (j === 0) {
+      s += `MASTER_REGISTRY_URI=${masterRegistryUri}\n`
+    }
+    s += '  ' + new Date().toString() + '\n';
     '  batch no ' +
       j +
       ' will create (current: ' +
@@ -140,7 +133,6 @@ const main = async () => {
       ') + ' +
       PURSES_TO_CREATE +
       ' purses\n';
-    const res = await createPursesBatch(j);
 
     let logs = '';
     try {
