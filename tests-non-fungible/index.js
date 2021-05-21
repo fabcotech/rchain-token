@@ -240,6 +240,7 @@ const main = async () => {
     purchaseFailed1.message !==
       'error: invalid payload, cancelled purchase and payment'
   ) {
+    console.log(purchaseFailed1);
     throw new Error('purchase should have fail with proper error message (1)');
   }
   console.log(`✓ 10 failed purchase because of invalid payload`);
@@ -252,7 +253,7 @@ const main = async () => {
       purseId: ids[0],
       contractId: `mytoken`,
       boxId: `box1`,
-      quantity: (PURSES_TO_CREATE * 3) + 1, // not available
+      quantity: 2, // not available
       data: 'bbb',
       newId: "",
       merge: true,
@@ -264,8 +265,9 @@ const main = async () => {
   if (
     purchaseFailed2.status !== 'failed' ||
     purchaseFailed2.message !==
-    'error: quantity not available or purse not for sale, issuer was refunded'
+    `error: purchase failed but was able to refund ${1000 * 2} error: quantity not available or purse not for sale`
     ) {
+      console.log(purchaseFailed2);
       throw new Error('purchase should have fail with proper error message (2)');
     }
   console.log(`✓ 11 failed purchase because of invalid quantity`);
@@ -327,6 +329,46 @@ const main = async () => {
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 
+  const purchaseFromZeroFailed1 = await purchase(
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    {
+      masterRegistryUri: masterRegistryUri,
+      purseId: "0",
+      contractId: `mytoken`,
+      boxId: `box2`,
+      quantity: 1,
+      data: 'bbb',
+      newId: "mytokemytokennmytokenmytokemytokennmytokenmytokemytokennmytoken", // above 25 length limit, makePurse should fail
+      merge: true,
+      price: 1000,
+      publicKey: PUBLIC_KEY_2,
+    }
+  );
+  if (
+    purchaseFromZeroFailed1.status !== 'failed' ||
+    purchaseFromZeroFailed1.message !==
+      `error: purchase failed but was able to refund ${1000} error: rollback successful, makePurse error, transaction was rolled backed, emitter purse was reimbursed error: invalid purse, one of the following errors: id length must be between length 1 and 24`
+  ) {
+    console.log(purchaseFromZeroFailed1);
+    throw new Error('purchase should have fail with proper error message (1)');
+  }
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+
+  await checkPursesInBox(
+    masterRegistryUri,
+    "box2",
+    "mytoken",
+    []
+  );
+  await checkPursesInBox(
+    masterRegistryUri,
+    "box1",
+    "mytoken",
+    ["0"].concat(ids)
+  );
+
+  console.log(`✓ 13 failed purchase, makePurse error`);
 
   const balance1BeforePurchaseFromZero = balances1[balances1.length - 1];
   const purchaseFromZeroSuccess = await purchase(
@@ -375,13 +417,13 @@ const main = async () => {
     throw new Error('owner of public key 3 did not receive fee from purchase');
   }
 
-  console.log(`✓ 13 purchase from special purse "0" and create NFT`);
-  console.log(`✓ 13 balance of purse's owner checked and has +980 dust`);
-  console.log(`✓ 13 2% fee was earned by owner of public key 3`);
+  console.log(`✓ 14 purchase from special purse "0" and create NFT`);
+  console.log(`✓ 14 balance of purse's owner checked and has +980 dust`);
+  console.log(`✓ 14 2% fee was earned by owner of public key 3`);
 
   balances2.push(await getBalance(PUBLIC_KEY_2));
   console.log(
-    '  12 dust cost: ' +
+    '  14 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 };

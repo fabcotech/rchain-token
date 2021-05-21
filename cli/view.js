@@ -6,9 +6,8 @@ const {
   readConfigTerm,
   readPursesTerm,
   readAllPursesTerm,
-  readPursesIdsTerm,
 } = require('../src');
-const { getProcessArgv, getRegistryUri, logData, getContractId, getMasterRegistryUri } = require('./utils');
+const { getProcessArgv, logData, getContractId, getMasterRegistryUri } = require('./utils');
 const { decodePurses } = require('../src/decodePurses');
 
 module.exports.view = async () => {
@@ -18,6 +17,7 @@ module.exports.view = async () => {
 
   let term0 = undefined;
   let purses = {};
+  const t = new Date().getTime();
   if (purseId === undefined) {
     term0 = readAllPursesTerm({ masterRegistryUri: masterRegistryUri, contractId: contractId });
     const result1 = await rchainToolkit.http.exploreDeploy(
@@ -52,7 +52,6 @@ module.exports.view = async () => {
     ? rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY)
     : 'é';
 
-  const t = new Date().getTime();
   const result2 = await rchainToolkit.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term1,
   });
@@ -101,6 +100,7 @@ module.exports.view = async () => {
       console.log('\x1b[0m', s);
     }
   });
+  console.log("request took " + (Math.round(100 * (new Date().getTime() - t)) / 100000) + "s");
   fs.writeFileSync(
     path.join(`./purses-${masterRegistryUri}-${contractId}.json`),
     JSON.stringify(purses, null, 2)

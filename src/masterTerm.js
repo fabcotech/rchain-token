@@ -41,31 +41,30 @@ module.exports.masterTerm = (payload) => {
   vault,
 
   /*
-    purses / thm
-    A purse's properties is a Map {"quantity", "type", "price", "box", "publicKey"}
-    stored in the tree hash map @(*vault, "purses", "contract03") . Anyone can read it through
-    "READ_PURSES" public channel.
+    boxesThm and contractsThm only store the list
+    of existing contracts / boxes, ex:
+    boxesThm:
+    { "box1": "exists", "mycoolbox": "exists" }
 
-    // create purse "12" (it must not exist)
-    for (thm <- @(*vault, "purses", "contract03")) {
-      TreeHashMap!("set", thm, "12", { "publicKey": "aaa", "box": \`rho:id:aaa\`, etc... }, *createReturnCh) |
-      for (_ <- createReturnCh) {
-        ...
-      }
+    Then each box is a Map stored at a unique channel
+    (see above) and has the following structure:
+    {
+      [contractId: string]: Set(purseId: string)
     }
 
-    // get properties of purse "12"
-    for (thm <- @(*vault, "purses", "contract03")) {
-      TreeHashMap!("get", thm, "12", *geteturnCh) |
-      for (@purse <- geteturnCh) {
-        ...
-      }
+    Each contract has its own tree hash map, and
+    have the following structure:
+    pursesThm:
+    {
+      "1": { quantity: 2, type: "0", box: "box1", price: Nil},
+      "2": { quantity: 12, type: "0", box: "box1", price: 2},
     }
   */
   boxesReadyCh,
   contractsReadyCh,
 
   TreeHashMap,
+
   savePurseInBoxCh,
   removePurseInBoxCh,
   getBoxCh,
@@ -814,15 +813,15 @@ new MakeNode, ByteArrayToNybbleList,
         for (@box <- ch1; @pursesThm <- ch2) {
           match (box != Nil, pursesThm != Nil) {
             (true, true) => {
-              for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
-                if (box.get(contractId) == Nil) {
-                  for (_ <- @(*vault, "boxes", boxId)) {
-                    stdout!(contractId ++ "/" ++ boxId ++ " purse " ++ purseId ++ " saved to box") |
-                    @(*vault, "boxes", boxId)!(box.set(contractId, Set(purseId))) |
-                    @return!((true, Nil))
-                  }
-                } else {
-                  if (box.get(contractId).contains(purseId) == false) {
+              if (box.get(contractId) == Nil) {
+                for (_ <- @(*vault, "boxes", boxId)) {
+                  stdout!(contractId ++ "/" ++ boxId ++ " purse " ++ purseId ++ " saved to box") |
+                  @(*vault, "boxes", boxId)!(box.set(contractId, Set(purseId))) |
+                  @return!((true, Nil))
+                }
+              } else {
+                if (box.get(contractId).contains(purseId) == false) {
+                  for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
                     match (contractConfig.get("fungible") == true, merge) {
                       (true, true) => {
                         for (@pursesThm <<- @(*vault, "purses", contractId)) {
@@ -843,9 +842,9 @@ new MakeNode, ByteArrayToNybbleList,
                         }
                       }
                     }
-                  } else {
-                    @return!("error: CRITICAL, purse already exists in box")
                   }
+                } else {
+                  @return!("error: CRITICAL, purse already exists in box")
                 }
               }
             }
@@ -859,6 +858,7 @@ new MakeNode, ByteArrayToNybbleList,
             for (ids <= itCh) {
               match *ids {
                 Set() => {
+                  stdout!(contractId ++ "/" ++ boxId ++ " purse " ++ purse.get("id") ++ " saved to box") |
                   for (_ <- @(*vault, "boxes", boxId)) {
                      @(*vault, "boxes", boxId)!(box.set(contractId, Set(purseId))) |
                      @return!((true, Nil))
@@ -964,15 +964,15 @@ new MakeNode, ByteArrayToNybbleList,
 
     /*
       makePurseCh
-      only place where new purses are created
-      "WITHDRAW", "PUBLIC_PURCHASE", "SWAP", "CREATE_PURSES" only call this channel
+      only place where new purses are created:
+      PURCHASE, WITHDRAW, and CREATE_PURSES may call this channel
 
       depending on if .fungible is true or false, it decides
-      which id to give to the new purse, then it creates
-      the purse with SWAP, UPDATE_DATA, SET_PRICE, WITHDRAW, DEPOSIT instance methods
+      which id to give to the new purse, then it creates the
+      purse and saves to box
     */
     for (@(contractId, properties, data, merge, return) <= makePurseCh) {
-      new ch1, ch2, idAndQuantityCh in {
+      new ch1, ch2, ch3, ch4, idAndQuantityCh in {
         for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
           if (contractConfig.get("fungible") == true) {
             for (_ <- @(*vault, "contractConfig", contractId)) {
@@ -982,11 +982,15 @@ new MakeNode, ByteArrayToNybbleList,
           } else {
             for (@pursesThm <<- @(*vault, "purses", contractId)) {
               TreeHashMap!("get", pursesThm, properties.get("id"), *ch1) |
-              for (@existingPurseProperties <- ch1) {
+              for (@existingPurse <- ch1) {
 
                 // check that nft does not exist
-                if (existingPurseProperties == Nil) {
-                  idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
+                if (existingPurse == Nil) {
+                  if (properties.get("id") == "0") {
+                    idAndQuantityCh!({ "id": properties.get("id"), "quantity": properties.get("quantity") })
+                  } else {
+                    idAndQuantityCh!({ "id": properties.get("id"), "quantity": 1 })
+                  }
                 } else {
 
                   // nft with id: "0" is a special nft from which
@@ -994,8 +998,8 @@ new MakeNode, ByteArrayToNybbleList,
                   // used by dappy name system for example
                   if (properties.get("id") == "0") {
                     TreeHashMap!("get", pursesThm, properties.get("newId"), *ch2) |
-                    for (properties2 <- ch2) {
-                      match (properties.get("newId"), *properties2) {
+                    for (@purseWithNewId <- ch2) {
+                      match (properties.get("newId"), purseWithNewId) {
                         (String, Nil) => {
                           idAndQuantityCh!({ "id": properties.get("newId"), "quantity": 1 })
                         }
@@ -1009,7 +1013,6 @@ new MakeNode, ByteArrayToNybbleList,
                   }
                 }
               }
-
             }
           }
         } |
@@ -1028,17 +1031,15 @@ new MakeNode, ByteArrayToNybbleList,
                   "id": String,
                   "price": Nil \\/ Int
                 }, true, true) => {
-                  new setReturnCh, setReturn2Ch, savePurseReturnCh  in {
-                    for (@pursesDataThm <<- @(*vault, "pursesData", contractId)) {
-                      for (@pursesThm <<- @(*vault, "purses", contractId)) {
-                        TreeHashMap!("set", pursesThm, purse.get("id"), purse, *setReturnCh) |
-                        TreeHashMap!("set", pursesDataThm, purse.get("id"), data, *setReturn2Ch)
-                      }
-                    } |
-
-                    for (_ <- setReturnCh; _ <- setReturn2Ch) {
-                      savePurseInBoxCh!((contractId, purse.get("boxId"), purse.get("id"), merge, return))
+                  for (@pursesDataThm <<- @(*vault, "pursesData", contractId)) {
+                    for (@pursesThm <<- @(*vault, "purses", contractId)) {
+                      TreeHashMap!("set", pursesThm, purse.get("id"), purse, *ch3) |
+                      TreeHashMap!("set", pursesDataThm, purse.get("id"), data, *ch4)
                     }
+                  } |
+
+                  for (_ <- ch3; _ <- ch4) {
+                    savePurseInBoxCh!((contractId, purse.get("boxId"), purse.get("id"), merge, return))
                   }
                 }
                 _ => {
@@ -1143,18 +1144,18 @@ new MakeNode, ByteArrayToNybbleList,
                 @return!(*tmp)
               }
               Set(last) => {
-                new retCh in {
-                  TreeHashMap!("get", thm, last, *retCh) |
-                  for (properties <- retCh) {
-                    @return!(*tmp.set(last, *properties))
+                new ch1 in {
+                  TreeHashMap!("get", thm, last, *ch1) |
+                  for (@p <- ch1) {
+                    @return!(*tmp.set(last, p))
                   }
                 }
               }
               Set(first ... rest) => {
-                new retCh in {
-                  TreeHashMap!("get", thm, first, *retCh) |
-                  for (properties <- retCh) {
-                    @tmpCh!(*tmp.set(first, *properties)) |
+                new ch1 in {
+                  TreeHashMap!("get", thm, first, *ch1) |
+                  for (@p <- ch1) {
+                    @tmpCh!(*tmp.set(first, p)) |
                     itCh!((tmpCh, rest))
                   }
                 }
@@ -1250,9 +1251,27 @@ new MakeNode, ByteArrayToNybbleList,
     for (@("PUBLIC_REGISTER_BOX", payload, return) <= entryCh) {
       match (payload.get("boxId"), payload.get("publicKey"), payload.get("boxId").length() > 1, payload.get("boxId").length() < 25) {
         (String, String, true, true) => {
-          new ch1, ch2 in {
+          new ch1, ch2, ch3, ch4, ch5, ch6 in {
+            registryLookup!(\`rho:rchain:revVault\`, *ch3) |
+            for (@(_, RevVault) <- ch3) {
+              revAddress!("fromPublicKey", payload.get("publicKey").hexToBytes(), *ch4) |
+              for (@a <- ch4) {
+                @RevVault!("findOrCreate", a, *ch5) |
+                for (@b <- ch5) {
+                  match b {
+                    (true, vaultFromPublicKey) => {
+                      ch6!(true)
+                    }
+                    _ => {
+                      @return!("error: invalid public key, could not get vault")
+                    }
+                  }
+                }
+              }
+            } |
+
             TreeHashMap!("get", boxesThm, payload.get("boxId"), *ch1) |
-            for (@existingBox <- ch1) {
+            for (@existingBox <- ch1; _ <- ch6) {
               if (existingBox == Nil) {
                 new boxCh in {
                   TreeHashMap!("set", boxesThm, payload.get("boxId"), "exists", *ch2) |
@@ -1303,32 +1322,32 @@ new MakeNode, ByteArrayToNybbleList,
 
                         // config
                         @(*vault, "contractConfig", payload.get("contractId"))!(
-                          payload.set("locked", false).set("counter", 0).set("version", "6.0.0")
+                          payload.set("locked", false).set("counter", 1).set("version", "6.0.0").set("fett", payload.get("fee"))
                         ) |
 
-                        new superKey in {
-                          // return the super key
-                          @return!((true, bundle+{*superKey})) |
+                        new superKeyCh in {
+                          // return the bundle+ super key
+                          @return!((true, bundle+{*superKeyCh})) |
 
-                          for (@("LOCK", lockReturnCh) <= superKey) {
+                          for (@("LOCK", return2) <= superKeyCh) {
                             for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {
                               if (contractConfig.get("locked") == true) {
-                                @lockReturnCh!("error: contract is already locked")
+                                @return2!("error: contract is already locked")
                               } else {
                                 for (_ <- @(*vault, "contractConfig", payload.get("contractId"))) {
                                   @(*vault, "contractConfig", payload.get("contractId"))!(contractConfig.set("locked", true)) |
-                                  @lockReturnCh!((true, Nil))
+                                  @return2!((true, Nil))
                                 }
                               }
                             }
                           } |
 
-                          for (@("CREATE_PURSES", createPursesPayload, createPursesReturnCh) <= superKey) {
+                          for (@("CREATE_PURSES", createPursesPayload, return2) <= superKeyCh) {
                             for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {
                               if (contractConfig.get("locked") == true) {
-                                @createPursesReturnCh!("error: contract is locked")
+                                @return2!("error: contract is locked")
                               } else {
-                                createPursesCh!((createPursesPayload, payload.get("contractId"), createPursesReturnCh))
+                                createPursesCh!((createPursesPayload, payload.get("contractId"), return2))
                               }
                             }
                           }
@@ -1417,7 +1436,7 @@ new MakeNode, ByteArrayToNybbleList,
       } |
 
       for (@("WITHDRAW", payload2, return2) <= @boxCh) {
-        new ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10, proceedWithdrawCh, mergeCh, mergeOkCh in {
+        new ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10, ch11, proceedWithdrawCh, mergeCh, mergeOkCh in {
           match payload2 {
             { "quantity": Int, "contractId": String, "purseId": String, "toBoxId": String, "merge": Bool } => {
               getContractPursesThmCh!((payload2.get("contractId"), *ch4)) |
@@ -1431,8 +1450,11 @@ new MakeNode, ByteArrayToNybbleList,
                       if (purse == Nil) {
                         @return2!("error: purse does not exist")
                       } else {
-                        proceedWithdrawCh!((pursesThm, purse))
-
+                        if (purse.get("id") != "0") {
+                          proceedWithdrawCh!((pursesThm, purse))
+                        } else {
+                          @return2!("error: withdraw from special nft 0 is forbidden")
+                        }
                       }
                     }
                   }
@@ -1464,11 +1486,15 @@ new MakeNode, ByteArrayToNybbleList,
             } |
 
             for (@merge <- mergeOkCh) {
-              match (payload2.get("quantity") < purse.get("quantity"), purse.get("quantity") > 0) {
+              match (
+                purse.get("quantity") - payload2.get("quantity") >= 0,
+                purse.get("quantity") > 0,
+                purse.get("quantity") - payload2.get("quantity") > 0
+              ) {
 
                 // ajust quantity in first purse, create a second purse
                 // associated with toBoxId
-                (true, true) => {
+                (true, true, true) => {
                   TreeHashMap!("set", pursesThm, payload2.get("purseId"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")),  *ch5) |
                   for (_ <- ch5) {
                     makePurseCh!((
@@ -1486,34 +1512,42 @@ new MakeNode, ByteArrayToNybbleList,
 
                 // remove first purse, create a second purse
                 // associated with toBoxId
-                (false, true) => {
+                (true, true, false) => {
                   TreeHashMap!("set", pursesThm, payload2.get("purseId"), Nil,  *ch5) |
                   for (@pursesDataThm <<- @(*vault, "pursesData", payload2.get("contractId"))) {
                     TreeHashMap!(
-                      "set",
+                      "get",
                       pursesDataThm,
                       payload2.get("purseId"),
-                      Nil,
                       *ch7
-                    )
-                  } |
-                  for (_ <- ch5; _ <- ch7) {
-                    removePurseInBoxCh!((boxId, payload2.get("contractId"), payload2.get("purseId"), *ch8)) |
-                    for (@r <- ch8) {
-                      match r {
-                        String => {
-                          @return2!(r)
-                        }
-                        _ => {
-                          makePurseCh!((
-                            payload2.get("contractId"),
-                            purse
-                              .set("price", Nil)
-                              .set("boxId", payload2.get("toBoxId")),
-                            Nil,
-                            merge,
-                            return2
-                          )) 
+                    ) |
+                    for (_ <- ch5; @data <- ch7) {
+                      TreeHashMap!(
+                        "set",
+                        pursesDataThm,
+                        payload2.get("purseId"),
+                        Nil,
+                        *ch11
+                      ) |
+                      for (_ <- ch11) {
+                        removePurseInBoxCh!((boxId, payload2.get("contractId"), payload2.get("purseId"), *ch8)) |
+                        for (@r <- ch8) {
+                          match r {
+                            String => {
+                              @return2!(r)
+                            }
+                            _ => {
+                              makePurseCh!((
+                                payload2.get("contractId"),
+                                purse
+                                  .set("price", Nil)
+                                  .set("boxId", payload2.get("toBoxId")),
+                                data,
+                                merge,
+                                return2
+                              )) 
+                            }
+                          }
                         }
                       }
                     }
@@ -1541,62 +1575,41 @@ new MakeNode, ByteArrayToNybbleList,
       } |
 
       for (@("PURCHASE", payload2, return2) <= @boxCh) {
-        stdout!("purse.PURCHASE") |
-        stdout!(payload2) |
         match payload2 {
-          { "quantity": Int, "contractId": String, "merge": Bool, "purseId": String, "publicKey": String, "newId": Nil \\/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
-            new ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10, ch11, ch12, performRefundCh in {
-              // refund if something went wrong
-              for (@message <- performRefundCh) {
-                new refundPurseBalanceCh, refundRevAddressCh, refundResultCh, refundPurseVaultCh, revVaultRefundReturnCh in {
-                  registryLookup!(\`rho:rchain:revVault\`, *revVaultRefundReturnCh) |
-                  for (@(_, RevVault) <- revVaultRefundReturnCh) {
-                    @RevVault!("findOrCreate", payload2.get("purseRevAddr"), *refundPurseVaultCh) |
-                    for (@(true, purseVault) <- refundPurseVaultCh) {
-                      @purseVault!("balance", *refundPurseBalanceCh) |
-                      revAddress!("fromPublicKey", payload2.get("publicKey").hexToBytes(), *refundRevAddressCh) |
-                      for (@balance <- refundPurseBalanceCh; @buyerRevAddress <- refundRevAddressCh) {
-                        @purseVault!("transfer", buyerRevAddress, balance, payload2.get("purseAuthKey"), *refundResultCh) |
-                        for (@refundResult <- refundResultCh) {
-                          match refundResult {
-                            (true, Nil) => {
-                              stdout!(message ++ ", issuer was refunded") |
-                              @return2!(message ++ ", issuer was refunded")
-                            }
-                            _ => {
-                              stdout!(message ++ ", issuer was NOT refunded") |
-                              @return2!(message ++ ", issuer was NOT refunded")
-                            }
-                          }
-                        }
+          { "quantity": Int, "contractId": String, "merge": Bool, "purseId": String, "newId": Nil \\/ String, "data": _, "purseRevAddr": _, "purseAuthKey": _ } => {
+            new ch3, ch4, ch5, ch6, ch7, step2Ch, ch20, ch21, ch22, ch23, ch24, ch25, ch26, ch27, ch28, step3Ch, rollbackCh, ch30, ch31, ch32, ch33, ch34, ch35, ch36, ch37, step4Ch, ch40, ch41, ch42, ch43, ch44, ch45, ch46, ch47, ch48, step5Ch, ch50, ch51, ch52, ch53 in {
+
+              // STEP 1
+              // check box, purse
+              getBoxCh!((boxId, *ch3)) |
+              for (@box <- ch3) {
+                if (box != Nil) {
+                  getContractPursesThmCh!((payload2.get("contractId"), *ch4)) |
+                  getContractPursesDataThmCh!((payload2.get("contractId"), *ch5)) |
+                  for (@pursesThm <- ch4; @pursesDataThm <- ch5) {
+                    if (pursesThm != Nil) {
+                      TreeHashMap!("get", pursesThm, payload2.get("purseId"), *ch6) |
+                      TreeHashMap!("get", pursesDataThm, payload2.get("purseId"), *ch7)
+                    } else {
+                      @return2!("error: contract not found")
+                    } |
+                    for (@purse <- ch6; @purseData <- ch7) {
+                      if (purse != Nil) {
+                        step2Ch!((pursesThm, pursesDataThm, purse, purseData))
+                      } else {
+                        @return2!("error: purse not found")
                       }
                     }
                   }
-                }
-              } |
-
-              getBoxCh!((boxId, *ch3)) |
-              for (@box <- ch3) {
-                stdout!(("box", box)) |
-                if (box != Nil) {
-                  getContractPursesThmCh!((payload2.get("contractId"), *ch4)) |
-                  for (@pursesThm <- ch4) {
-                    TreeHashMap!("get", pursesThm, payload2.get("purseId"), *ch12)
-                  } |
-                  for (@purse <- ch12) {
-                    stdout!(("purse", purse)) |
-                    if (purse != Nil) {
-                      ch5!(purse)
-                    } else {
-                      performRefundCh!("error: purse not found")
-                    }
-                  }
                 } else {
-                  performRefundCh!("error: CRITICAL box not found")
+                  @return2!("error: CRITICAL box not found")
                 }
               } |
 
-              for (@purse <- ch5) {
+              // STEP 2
+              // transfer total amount to temporary escrow purse
+              // check that both emitter and recipient vault exist
+              for (@(pursesThm, pursesDataThm, purse, purseData) <- step2Ch) {
                 match (
                   purse.get("price"),
                   purse.get("quantity") > 0,
@@ -1604,17 +1617,17 @@ new MakeNode, ByteArrayToNybbleList,
                   purse.get("quantity") >= payload2.get("quantity")
                 ) {
                   (Int, true, true, true) => {
-                    registryLookup!(\`rho:rchain:revVault\`, *ch10) |
+                    registryLookup!(\`rho:rchain:revVault\`, *ch20) |
 
                     for (@boxConfig <<- @(*vault, "boxConfig", purse.get("boxId"))) {
-                      revAddress!("fromPublicKey", boxConfig.get("publicKey").hexToBytes(), *ch8)
+                      revAddress!("fromPublicKey", boxConfig.get("publicKey").hexToBytes(), *ch21)
                     } |
 
                     for (@contractConfig <<- @(*vault, "contractConfig", payload2.get("contractId"))) {
-                      calculateFeeCh!((payload2.get("quantity") * purse.get("price"), contractConfig, *ch6))
+                      calculateFeeCh!((payload2.get("quantity") * purse.get("price"), contractConfig, *ch22))
                     } |
 
-                    for (@(_, RevVault) <- ch10; @ownerRevAddress <- ch8; @amountAndFeeAmount <- ch6) {
+                    for (@(_, RevVault) <- ch20; @ownerRevAddress <- ch21; @amountAndFeeAmount <- ch22) {
                       match (
                         payload2.get("purseRevAddr"),
                         ownerRevAddress,
@@ -1622,127 +1635,37 @@ new MakeNode, ByteArrayToNybbleList,
                         amountAndFeeAmount.nth(1),
                         amountAndFeeAmount.nth(2)
                       ) {
-                        (from, to, amount, feeAmount, feePublicKey) => {
-                          stdout!(("amount", amount)) |
-                          stdout!(("feeAmount", feeAmount)) |
-                          stdout!(("feePublicKey", feePublicKey)) |
-                          @RevVault!("findOrCreate", from, *ch11) |
-                          for (@(true, purseVault) <- ch11) {
-                            @purseVault!("balance", *ch7) |
-                            for (@balance <- ch7) {
-                              if (balance == payload2.get("quantity") * purse.get("price")) {
-                                // FEE
-                                match feeAmount > 0 {
-                                  true => {
-                                    new ch15, ch16 in {
-                                      revAddress!("fromPublicKey", feePublicKey.hexToBytes(), *ch15) |
-                                      for (@feeRevAddress <- ch15) {
-                                        @purseVault!("transfer", feeRevAddress, feeAmount, payload2.get("purseAuthKey"), *ch16)
-                                      } |
-                                      for (@transferFeeReturn <- ch16) {
-                                        match transferFeeReturn {
+                        (emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey) => {
+                          @RevVault!("findOrCreate", emitterRevAddress, *ch23) |
+                          @RevVault!("findOrCreate", recipientRevAddress, *ch24) |
+                          for (@a <- ch23; @b <- ch24) {
+                            match (a, b) {
+                              ((true, purseVaultEmitter),  (true, purseVaultRecipient)) => {
+                                new unf in {
+                                  @RevVault!("unforgeableAuthKey", *unf, *ch25) |
+                                  revAddress!("fromUnforgeable", *unf, *ch26) |
+                                  for (@escrowPurseAuthKey <- ch25; @escrowPurseRevAddr <- ch26) {
+                                    @RevVault!("findOrCreate", escrowPurseRevAddr, *ch27) |
+                                    for (@(true, escrowPurseVault) <- ch27) {
+                                      @purseVaultEmitter!("transfer", escrowPurseRevAddr, amount + feeAmount, payload2.get("purseAuthKey"), *ch28) |
+                                      for (@escrowTransferResult <- ch28) {
+                                        match escrowTransferResult {
                                           (true, Nil) => {
-                                            stdout!("fee transfer successful")
+                                            stdout!("transfer to escrow purse successful") |
+                                            step3Ch!((pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey))
                                           }
                                           _ => {
-                                            stdout!("error: CRITICAL could not transfer fee")
+                                            stdout!(escrowTransferResult) |
+                                            @return2!("error: escrow transfer went wrong, invalid rev purse in payload")
                                           }
                                         }
-                                      }
-                                    }
-                                  }
-                                } |
-                                new ch15, ch16, ch17, ch18, ch19 in {
-                                  @purseVault!("transfer", to, amount, payload2.get("purseAuthKey"), *ch19) |
-
-                                  getContractPursesThmCh!((payload2.get("contractId"), *ch15)) |
-                                  getContractPursesDataThmCh!((payload2.get("contractId"), *ch16)) |
-
-                                  for (@result <- ch19; @pursesThm <- ch15; @pursesDataThm <- ch16) {
-                                    match result {
-                                      (true, Nil) => {
-                                        /*
-                                          Check if the purse must be removed because quantity 0
-                                          if fungible: false, we always match 0
-                                          if match 0, remove purse from current box, add it in
-                                          payload2 box
-                                        */
-                                        match purse.get("quantity") - payload2.get("quantity") {
-                                          0 => {
-
-                                            TreeHashMap!("set", pursesThm, purse.get("id"), Nil,  *ch15) |
-                                            TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil,  *ch16) |
-                                            removePurseInBoxCh!((purse.get("boxId"), payload2.get("contractId"), purse.get("id"), *ch17)) |
-
-                                            for (_ <- ch15; _ <- ch16; _ <- ch17) {
-
-                                              makePurseCh!((
-                                                payload2.get("contractId"),
-                                                // keep quantity, type from existing purse
-                                                purse
-                                                  .set("boxId", boxId)
-                                                  .set("price", Nil)
-                                                  .set("newId", payload2.get("newId")),
-                                                payload2.get("data"),
-                                                payload2.get("merge"),
-                                                *ch18
-                                              )) |
-
-                                              for (@r <- ch18) {
-                                                match r {
-                                                  String => {
-                                                    performRefundCh!("error: CRITICAL makePurse went wrong (1) " ++ r)
-                                                  }
-                                                  _ => {
-                                                    @return2!(r)
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                          _ => {
-
-                                            /*
-                                              Just update quantity of current purse, and
-                                              create another one with right quantity
-                                            */
-                                            TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")),  *ch15) |
-
-                                            for (_ <- ch15) {
-                                              makePurseCh!((
-                                                payload2.get("contractId"),
-                                                purse
-                                                  .set("boxId", boxId)
-                                                  .set("quantity", payload2.get("quantity"))
-                                                  .set("price", Nil)
-                                                  .set("newId", payload2.get("newId")),
-                                                payload2.get("data"),
-                                                payload2.get("merge"),
-                                                *ch18
-                                              )) |
-
-                                              for (@r <- ch18) {
-                                                match r {
-                                                  String => {
-                                                    performRefundCh!("error: CRITICAL makePurse went wrong (2) " ++ r)
-                                                  }
-                                                  _ => {
-                                                    @return2!(r)
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                      _ => {
-                                        performRefundCh!("error: REV transfer went wrong")
                                       }
                                     }
                                   }
                                 }
-                              } else {
-                                performRefundCh!("error: balance of purse does not equal quantity * price")
+                              }
+                              _ => {
+                                @return2!("error: could not find or create vaults")
                               }
                             }
                           }
@@ -1750,8 +1673,147 @@ new MakeNode, ByteArrayToNybbleList,
                       }
                     }
                   }
-                  _=> {
-                    performRefundCh!("error: quantity not available or purse not for sale")
+                  _ => {
+                    @return2!("error: quantity not available or purse not for sale")
+                  }
+                }
+              } |
+
+              // STEP 3
+              // listen on rollbackCh and prepare to reset state to original
+              // if step 4 or 5 fails
+              // 
+              for (@(pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey) <- step3Ch) {
+                for (@message <- rollbackCh) {
+                  TreeHashMap!("set", pursesThm, purse.get("id"), purse,  *ch30) |
+                  TreeHashMap!("set", pursesDataThm, purse.get("id"), purseData,  *ch31) |
+                  if (purse.get("quantity") - payload2.get("quantity") == 0) {
+                    savePurseInBoxCh!((payload2.get("contractId"), purse.get("boxId"), purse.get("id"), true, *ch32))
+                  } else {
+                    // the purse has not been removed from box
+                    ch32!((true, Nil))
+                  } |
+                  for (_ <- ch30; _ <- ch31; @a <- ch32) {
+                    match a {
+                      String => {
+                        stdout!("error: CRITICAL could not rollback after makePurse error") |
+                        @return2!("error: CRITICAL could not rollback after makePurse error")
+                      }
+                      _ => {
+                        @RevVault!("findOrCreate", escrowPurseRevAddr, *ch33) |
+                        for (@(true, purseVaultEscrow) <- ch33) {
+                          @purseVaultEscrow!("transfer", emitterRevAddress, amount + feeAmount, escrowPurseAuthKey, *ch34) |
+                          for (@r <- ch34) {
+                            match r {
+                              (true, Nil) => {
+                                stdout!("error: rollback successful, makePurse error, transaction was rolled backed, emitter purse was reimbursed " ++ message) |
+                                @return2!("error: rollback successful, makePurse error, transaction was rolled backed, emitter purse was reimbursed " ++ message)
+                              }
+                              _ => {
+                                stdout!(r) |
+                                stdout!("error: CRITICAL, makePurse error, could rollback but could not reimburse after makePurse error" ++ message) |
+                                @return2!("error: CRITICAL, makePurse error, could rollback but could not reimburse after makePurse error" ++ message)
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                } |
+                step4Ch!((pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey))
+              } |
+
+              // STEP 4
+              // try to makePurse
+              for (@(pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey) <- step4Ch) {
+                for (@makePurseResult <- ch43) {
+                  match makePurseResult {
+                    String => {
+                      rollbackCh!(makePurseResult)
+                    }
+                    _ => {
+                      step5Ch!((pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey))
+                    }
+                  }
+                } |
+
+                // remove completely purse and create a new one
+                // with same id, id may be changed by makePurse
+                // depending on fungible or not
+                if (purse.get("quantity") - payload2.get("quantity") == 0) {
+                  TreeHashMap!("set", pursesThm, purse.get("id"), Nil,  *ch40) |
+                  TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil,  *ch41) |
+                  removePurseInBoxCh!((purse.get("boxId"), payload2.get("contractId"), purse.get("id"), *ch42)) |
+
+                  for (_ <- ch40; _ <- ch41; _ <- ch42) {
+                    makePurseCh!((
+                      payload2.get("contractId"),
+                      // keep quantity and type of existing purse
+                      purse
+                        .set("boxId", boxId)
+                        .set("price", Nil)
+                        // will only considered for nft, purchase from purse "0"
+                        .set("newId", payload2.get("newId")),
+                      payload2.get("data"),
+                      payload2.get("merge"),
+                      *ch43
+                    ))
+                  }
+                } else {
+                  // just update quantity of current purse, and
+                  //  create another one with right quantity
+                  TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")),  *ch40) |
+
+                  for (_ <- ch40) {
+                    makePurseCh!((
+                      payload2.get("contractId"),
+                      purse
+                        .set("boxId", boxId)
+                        .set("quantity", payload2.get("quantity"))
+                        .set("price", Nil)
+                        // will only considered for nft, purchase from purse "0"
+                        .set("newId", payload2.get("newId")),
+                      payload2.get("data"),
+                      payload2.get("merge"),
+                      *ch43
+                    ))
+                  }
+                }
+              } |
+
+              // STEP 5
+              // everything went ok, do final payment
+              for (@(pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feePublicKey) <- step5Ch) {
+                @RevVault!("findOrCreate", escrowPurseRevAddr, *ch50) |
+                for (@(true, purseVaultEscrow) <- ch50) {
+                  @purseVaultEscrow!("transfer", recipientRevAddress, amount, escrowPurseAuthKey, *ch51) |
+                  for (@r <- ch51) {
+                    match r {
+                      (true, Nil) => {
+                        if (feeAmount != 0) {
+                          revAddress!("fromPublicKey", feePublicKey.hexToBytes(), *ch52) |
+                          for (@feeRevAddress <- ch52) {
+                            @purseVaultEscrow!("transfer", feeRevAddress, feeAmount, escrowPurseAuthKey, *ch53)
+                          } |
+                          for (@transferFeeReturn <- ch53) {
+                            match transferFeeReturn {
+                              (true, Nil) => {
+                                stdout!("fee transfer successful")
+                              }
+                              _ => {
+                                stdout!("error: CRITICAL could not transfer fee")
+                              }
+                            }
+                          }
+                        } |
+                        @return2!((true, Nil))
+                      }
+                      _ => {
+                        stdout!("error: CRITICAL, makePurse went fine, but could not do final transfer") |
+                        rollbackCh!("error: CRITICAL, makePurse went fine, but could not do final transfer")
+                      }
+                    }
                   }
                 }
               }

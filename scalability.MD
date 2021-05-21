@@ -165,3 +165,11 @@ PUBLIC_READ_ALL_PURSES 2900 values = 63.7s
 
 Local deploy, 150 values depth = 2
 PUBLIC_READ_ALL_PURSES 150 values = 11.6s, 12.7s, 11.8s, 11.6s, 11.4s, 11.6s
+
+**2021-05-20 6.0.0**
+
+Local deploy, 3300 values depth = 2
+PUBLIC_READ_ALL_PURSES 3300 values = 99.7s, 98.8s
+
+Local deploy, 340 values depth = 2
+PUBLIC_READ_ALL_PURSES 340 values = 43s, 14s, 13s

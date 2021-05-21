@@ -113,12 +113,12 @@ const main = async () => {
       's'
   );
 
-  await checkPursesInBox(masterRegistryUri,"box1", "mytoken", `0`);
+  await checkPursesInBox(masterRegistryUri,"box1", "mytoken", `1`);
   await checkPursesInContract(
     masterRegistryUri,
     "mytoken",
     1,
-    `0`,
+    `1`,
     3 * PURSES_TO_CREATE
   );
   console.log(
@@ -134,23 +134,23 @@ const main = async () => {
     "box1",
     "box2",
     5,
-    `0` // id of the purse to withdraw from
+    `1` // id of the purse to withdraw from
   );
 
   console.log(`✓ 05 withdraw`);
-  await checkPursesInBox(masterRegistryUri, "box2", "mytoken", `${PURSES_TO_CREATE}`);
+  await checkPursesInBox(masterRegistryUri, "box2", "mytoken", `${PURSES_TO_CREATE + 1}`);
   await checkPursesInContract(
     masterRegistryUri,
     "mytoken",
     2,
-    `0`,
+    `1`,
     PURSES_TO_CREATE * 3 - 5
   );
   await checkPursesInContract(
     contractRegistryUri,
     "mytoken",
     2,
-    `${PURSES_TO_CREATE}`,
+    `${PURSES_TO_CREATE + 1}`,
     5
   );
   console.log(
@@ -169,16 +169,16 @@ const main = async () => {
     "box1",
     "box2",
     (PURSES_TO_CREATE * 3) - 5, // everything remaining
-    `0` // id of the purse to withdraw from
+    `1` // id of the purse to withdraw from
   );
 
   await checkPursesInBox(masterRegistryUri, "box1", "mytoken", `none`);
-  await checkPursesInBox(masterRegistryUri, "box2", "mytoken", `${PURSES_TO_CREATE}`);
+  await checkPursesInBox(masterRegistryUri, "box2", "mytoken", `${PURSES_TO_CREATE + 1}`);
   await checkPursesInContract(
     contractRegistryUri,
     "mytoken",
     1,
-    `${PURSES_TO_CREATE}`,
+    `${PURSES_TO_CREATE + 1}`,
     (PURSES_TO_CREATE * 3)
   );
 
@@ -195,11 +195,11 @@ const main = async () => {
     masterRegistryUri,
     "box2",
     "mytoken",
-    `${PURSES_TO_CREATE}`,
+    `${PURSES_TO_CREATE + 1}`,
     'aaa'
   );
   balances2.push(await getBalance(PUBLIC_KEY_2));
-  await checkPurseDataInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE}`, 'aaa');
+  await checkPurseDataInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE + 1}`, 'aaa');
 
   console.log(`✓ 07 update data associated to purse`);
   console.log(
@@ -213,12 +213,12 @@ const main = async () => {
     masterRegistryUri,
     "box2",
     "mytoken",
-    `${PURSES_TO_CREATE}`,
+    `${PURSES_TO_CREATE + 1}`,
     1000
   );
 
   balances2.push(await getBalance(PUBLIC_KEY_2));
-  await checkPursePriceInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE}`, 1000);
+  await checkPursePriceInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE + 1}`, 1000);
   console.log(`✓ 08 set a price to a purse`);
   console.log(
     '  08 dust cost: ' +
@@ -231,7 +231,7 @@ const main = async () => {
     PUBLIC_KEY,
     {
       masterRegistryUri: masterRegistryUri,
-      purseId: `${PURSES_TO_CREATE}`,
+      purseId: `${PURSES_TO_CREATE + 1}`,
       contractId: `mytoken`,
       boxId: `box1`,
       quantity: 'Nil', // invalid payload
@@ -243,12 +243,12 @@ const main = async () => {
     }
   );
   balances1.push(await getBalance(PUBLIC_KEY));
-
   if (
     purchaseFailed1.status !== 'failed' ||
     purchaseFailed1.message !==
       'error: invalid payload, cancelled purchase and payment'
   ) {
+    console.log(purchaseFailed1)
     throw new Error('purchase should have fail with proper error message (1)');
   }
   console.log(`✓ 09 failed purchase because of invalid payload`);
@@ -258,7 +258,7 @@ const main = async () => {
     PUBLIC_KEY,
     {
       masterRegistryUri: masterRegistryUri,
-      purseId: `${PURSES_TO_CREATE}`,
+      purseId: `${PURSES_TO_CREATE + 1}`,
       contractId: `mytoken`,
       boxId: `box1`,
       quantity: (PURSES_TO_CREATE * 3) + 1, // not available
@@ -273,8 +273,9 @@ const main = async () => {
   if (
     purchaseFailed2.status !== 'failed' ||
     purchaseFailed2.message !==
-    'error: quantity not available or purse not for sale, issuer was refunded'
+    `error: purchase failed but was able to refund ${1000 * ((PURSES_TO_CREATE * 3) + 1)} error: quantity not available or purse not for sale`
     ) {
+      console.log(purchaseFailed2)
       throw new Error('purchase should have fail with proper error message (2)');
     }
   console.log(`✓ 10 failed purchase because of invalid quantity`);
@@ -284,7 +285,7 @@ const main = async () => {
     PUBLIC_KEY,
     {
       masterRegistryUri: masterRegistryUri,
-      purseId: `${PURSES_TO_CREATE}`,
+      purseId: `${PURSES_TO_CREATE + 1}`,
       contractId: `mytoken`,
       boxId: `box1`,
       quantity: 1,
@@ -300,25 +301,25 @@ const main = async () => {
     throw new Error('purchase should have been successful');
   }
 
-  await checkPurseDataInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE + 2}`, 'bbb');
+  await checkPurseDataInContract(masterRegistryUri, "mytoken", `${PURSES_TO_CREATE + 3}`, 'bbb');
   await checkPursesInBox(
     masterRegistryUri,
     "box1",
     "mytoken",
-    `${PURSES_TO_CREATE + 2}`
+    `${PURSES_TO_CREATE + 3}`
   );
   await checkPursesInContract(
     masterRegistryUri,
     "mytoken",
     2,
-    `${PURSES_TO_CREATE + 2}`,
+    `${PURSES_TO_CREATE + 3}`,
     1
   );
   await checkPursesInContract(
     masterRegistryUri,
     "mytoken",
     2,
-    `${PURSES_TO_CREATE}`,
+    `${PURSES_TO_CREATE + 1}`,
     (PURSES_TO_CREATE * 3) - 1
   );
   const balance2AfterPurchase = await getBalance(PUBLIC_KEY_2);

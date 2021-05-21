@@ -26,7 +26,7 @@ module.exports.main = async (
     privateKey,
     publicKey,
     1,
-    100000000,
+    200000000,
     vab
   );
   try {

@@ -5,7 +5,7 @@ module.exports.purchaseTerm = (
   return `
 new
   basket,
-  revVaultPurseCh,
+  revVaultCh,
   boxCh,
 
   returnCh,
@@ -41,22 +41,21 @@ in {
 
     registryLookup!(\`rho:id:${payload.masterRegistryUri}\`, *contractExistsCh) |
     for (_ <- contractExistsCh) {
-      stdout!("contractExistsCh") |
       proceed1Ch!(Nil)
     } |
 
-    registryLookup!(\`rho:rchain:revVault\`, *revVaultPurseCh) |
+    registryLookup!(\`rho:rchain:revVault\`, *revVaultCh) |
 
     /*
       Create a vault/purse that is just used once (purse)
     */
-    for(@(_, *RevVaultPurse) <- revVaultPurseCh; _ <- proceed1Ch) {
-      new unf, purseRevAddrCh, purseAuthKeyCh, purseVaultCh, revAddressCh, RevVaultCh in {
+    for(@(_, *RevVault) <- revVaultCh; _ <- proceed1Ch) {
+      new unf, purseRevAddrCh, purseAuthKeyCh, purseVaultCh, deployerRevAddressCh, RevVaultCh, deployerVaultCh, deployerAuthKeyCh in {
         revAddress!("fromUnforgeable", *unf, *purseRevAddrCh) |
-        RevVaultPurse!("unforgeableAuthKey", *unf, *purseAuthKeyCh) |
+        RevVault!("unforgeableAuthKey", *unf, *purseAuthKeyCh) |
         for (@purseAuthKey <- purseAuthKeyCh; @purseRevAddr <- purseRevAddrCh) {
 
-          RevVaultPurse!("findOrCreate", purseRevAddr, *purseVaultCh) |
+          RevVault!("findOrCreate", purseRevAddr, *purseVaultCh) |
 
           for (
             @(true, purseVault) <- purseVaultCh;
@@ -107,87 +106,82 @@ in {
 
             for (_ <- proceed2Ch) {
 
-              revAddress!("fromPublicKey", publicKey.hexToBytes(), *revAddressCh) |
+              revAddress!("fromPublicKey", publicKey.hexToBytes(), *deployerRevAddressCh) |
               registryLookup!(\`rho:rchain:revVault\`, *RevVaultCh) |
-              for (@(_, RevVault) <- RevVaultCh; deployerRevAddress <- revAddressCh) {
-                // send price * quantity REV in purse
-                match (
-                  *deployerRevAddress,
-                  purseRevAddr,
-                  price * quantity
-                ) {
-                  (from, to, amount) => {
-                    new vaultCh, revVaultkeyCh in {
-                      @RevVault!("findOrCreate", from, *vaultCh) |
-                      @RevVault!("deployerAuthKey", *deployerId, *revVaultkeyCh) |
-                      for (@(true, vault) <- vaultCh; key <- revVaultkeyCh) {
+              for (@(_, RevVault) <- RevVaultCh; @deployerRevAddress <- deployerRevAddressCh) {
+                
+                // send price * quantity dust in purse
+                @RevVault!("findOrCreate", deployerRevAddress, *deployerVaultCh) |
+                @RevVault!("deployerAuthKey", *deployerId, *deployerAuthKeyCh) |
+                for (@(true, deployerVault) <- deployerVaultCh; @deployerAuthKey <- deployerAuthKeyCh) {
 
-                        stdout!(("Beginning transfer of ", amount, "REV from", from, "to", to)) |
+                  stdout!(("Beginning transfer of ", price * quantity, "REV from", deployerRevAddress, "to", purseRevAddr)) |
 
-                        new resultCh, entryCh in {
-                          @vault!("transfer", to, amount, *key, *resultCh) |
-                          for (@result <- resultCh) {
+                  new resultCh, entryCh in {
+                    @deployerVault!("transfer", purseRevAddr, price * quantity, deployerAuthKey, *resultCh) |
+                    for (@result <- resultCh) {
 
-                            stdout!(("Finished transfer of ", amount, "REV to", to, "result was:", result)) |
-                            match result {
-                              (true, Nil) => {
-                                stdout!("hitting PURCHASE") |
-                                boxCh!((
-                                  "PURCHASE",
-                                  {
-                                    "contractId": contractId,
-                                    "purseId": purseId,
-                                    "data": data,
-                                    "quantity": quantity,
-                                    "merge": merge,
-                                    "newId": newId,
-                                    "publicKey": publicKey,
-                                    "purseRevAddr": purseRevAddr,
-                                    "purseAuthKey": purseAuthKey
-                                  },
-                                  *returnCh
-                                )) |
-                                for (@r <- returnCh) {
-                                  match r {
-                                    String => {
-                                      new refundPurseBalanceCh, refundResultCh in {
-                                        @purseVault!("balance", *refundPurseBalanceCh) |
-                                        for (@balance <- refundPurseBalanceCh) {
-                                          // the refund was successful
-                                          if (balance == 0) {
-                                            basket!({ "status": "failed", "message": r }) |
-                                            stdout!(("failed", r))
-                                          } else {
-                                            @purseVault!("transfer", from, balance, purseAuthKey, *refundResultCh) |
-                                            for (result <- refundResultCh)  {
-                                              match *result {
-                                                (true, Nil) => {
-                                                  basket!({ "status": "failed", "message": "purchase failed but was able to refund " ++ balance ++ r }) |
-                                                  stdout!(("error: purchase failed but was able to refund " ++ balance ++ r))
-                                                }
-                                                _ => {
-                                                  basket!({ "status": "failed", "message": "CRITICAL purchase failed and was NOT ABLE to refund " ++ balance ++ r }) |
-                                                  stdout!(("error: CRITICAL purchase failed and was NOT ABLE to refund " ++ balance ++ r))
-                                                }
-                                              }
+                      stdout!(("Finished transfer of ", price * quantity, "REV to", purseRevAddr, "result was:", result)) |
+                      match result {
+                        (true, Nil) => {
+                          boxCh!((
+                            "PURCHASE",
+                            {
+                              "contractId": contractId,
+                              "purseId": purseId,
+                              "data": data,
+                              "quantity": quantity,
+                              "merge": merge,
+                              "newId": newId,
+                              "purseRevAddr": purseRevAddr,
+                              "purseAuthKey": purseAuthKey
+                            },
+                            *returnCh
+                          )) |
+                          for (@r <- returnCh) {
+                            match r {
+                              String => {
+                                new refundPurseBalanceCh, refundResultCh in {
+                                  @purseVault!("balance", *refundPurseBalanceCh) |
+                                  for (@balance <- refundPurseBalanceCh) {
+                                    if (balance != price * quantity) {
+                                      stdout!("error: CRITICAL, purchase was not successful and balance of purse is now different from price * quantity")
+                                    } |
+                                    @purseVault!("transfer", deployerRevAddress, balance, purseAuthKey, *refundResultCh) |
+                                    for (@result <- refundResultCh)  {
+                                      match result {
+                                        (true, Nil) => {
+                                          match "error: purchase failed but was able to refund \${balance} " %% { "balance": balance } ++ r {
+                                            s => {
+                                              basket!({ "status": "failed", "message": s }) |
+                                              stdout!(s)
+                                            }
+                                          }
+                                        }
+                                        _ => {
+                                          stdout!(result) |
+                                          match "error: CRITICAL purchase failed and was NOT ABLE to refund \${balance} " %% { "balance": balance } ++ r {
+                                            s => {
+                                              basket!({ "status": "failed", "message": s }) |
+                                              stdout!(s)
                                             }
                                           }
                                         }
                                       }
                                     }
-                                    _ => {
-                                      basket!({ "status": "completed" }) |
-                                      stdout!("completed, purchase successful")
-                                    }
                                   }
                                 }
                               }
                               _ => {
-                                basket!({ "status": "failed", "message": result }) |
-                                stdout!(("failed", result))
+                                basket!({ "status": "completed" }) |
+                                stdout!("completed, purchase successful")
                               }
                             }
                           }
+                        }
+                        _ => {
+                          basket!({ "status": "failed", "message": result }) |
+                          stdout!(("failed", result))
                         }
                       }
                     }
