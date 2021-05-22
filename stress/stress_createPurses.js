@@ -12,8 +12,8 @@ const deploy = require('../tests-fungible/test_deploy').main;
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('../tests-non-fungible/checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE = 10;
-const PURSES_TO_CREATE_INITIAL = 10;
+const PURSES_TO_CREATE = 50;
+const PURSES_TO_CREATE_INITIAL = 50;
 const NEW_BOX_EACH_TIME = true;
 const SKIP_CHECK = false;
 

@@ -138,7 +138,7 @@ module.exports.getPrice = () => {
     ? parseInt(getProcessArgv('--price'), 10)
     : undefined;
   if (typeof price !== 'number' || isNaN(price)) {
-    throw new Error('Missing arguments --price');
+    return null;
   }
   return price;
 };
@@ -172,7 +172,11 @@ module.exports.getToBoxId = () => {
 module.exports.getBoxId = () => {
   let boxId = process.env.BOX_ID;
   if (typeof boxId !== 'string' || boxId.length === 0) {
-    throw new Error('Missing arguments --box or BOX_ID=* in .env file');
+    boxId = getProcessArgv('--box-id');
+    console.log(boxId)
+    if (typeof boxId !== 'string' || boxId.length === 0) {
+      throw new Error('Missing arguments --box-id or BOX_ID=* in .env file');
+    }
   }
   return boxId;
 };
@@ -214,14 +218,6 @@ module.exports.getNewBagId = () => {
     throw new Error('Missing arguments --new-bag');
   }
   return bagId;
-};
-
-module.exports.getBoxId = () => {
-  const boxId = getProcessArgv('--box');
-  if (!boxId) {
-    throw new Error('Missing arguments --box');
-  }
-  return boxId;
 };
 
 module.exports.getFile = () => {

@@ -4,7 +4,7 @@ const fs = require('fs');
 const { deployBoxTerm } = require('../src/');
 const waitForUnforgeable = require('./waitForUnforgeable').main;
 
-const { log, validAfterBlockNumber, prepareDeploy, getMasterRegistryUri, getBoxId } = require('./utils');
+const { log, validAfterBlockNumber, prepareDeploy, getMasterRegistryUri, getProcessArgv } = require('./utils');
 
 module.exports.deployBox = async () => {
   if (typeof process.env.BOX_ID === 'string') {
@@ -13,7 +13,11 @@ module.exports.deployBox = async () => {
   }
 
   const masterRegistryUri = getMasterRegistryUri();
-  const boxId = getBoxId();
+  const boxId = getProcessArgv('--box-id');
+  if (!boxId || boxId.length === 0) {
+    throw new Error('Missing arguments --box-id');
+  }
+
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
@@ -76,5 +80,5 @@ module.exports.deployBox = async () => {
   fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
   log(`✓ updated .env file with BOX_ID=${boxId}`);
-  console.log(`box id    : ${boxId}`);
+  log(`box id    : ${boxId}`);
 };

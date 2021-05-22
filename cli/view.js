@@ -14,6 +14,7 @@ module.exports.view = async () => {
   const purseId = getProcessArgv('--purse');
   const masterRegistryUri = getMasterRegistryUri();
   const contractId = getContractId();
+  const boxId = process.env.BOX_ID;
 
   let term0 = undefined;
   let purses = {};
@@ -68,17 +69,17 @@ module.exports.view = async () => {
       console.log('Purse id ' + purseId + ' not found');
       return;
     }
-    console.log('\n purse id ' + purseId + '\n');
-    console.log(` Box        : ${purses[purseId].boxId}`);
-    console.log(` Type       : ${purses[purseId].type}`);
-    console.log(` Quantity   : ${purses[purseId].quantity}`);
-    console.log(` Price      : ${purses[purseId].price || 'not for sale'}`);
+    console.log('\npurse id ' + purseId + '\n');
+    console.log(`box        : ${purses[purseId].boxId}`);
+    console.log(`type       : ${purses[purseId].type}`);
+    console.log(`quantity   : ${purses[purseId].quantity}`);
+    console.log(`price      : ${purses[purseId].price || 'not for sale'}`);
     return;
   }
   console.log(
-    `\n Purses [0-${ids.length < 99 ? (ids.length - 1) : '99'}] / ${
+    `\nPurses [0-${ids.length < 99 ? (ids.length - 1) : '99'}] / ${
       ids.length
-    }\n purse id          type         box        quantity   price (dust) \n`
+    }\npurse id          type         box        quantity   price (dust) \n`
   );
   ids.slice(0, 100).forEach((id) => {
     let s = '';
@@ -94,16 +95,16 @@ module.exports.view = async () => {
       typeof purses[id].price === 'number'
         ? purses[id].price
         : 'not for sale';
-    if (purses[id].publicKey === publicKey) {
-      console.log('\x1b[32m', s);
+    if (purses[id].boxId === boxId) {
+      console.log('\x1b[32m' + s);
     } else {
-      console.log('\x1b[0m', s);
+      console.log('\x1b[0m' + s);
     }
   });
-  console.log("request took " + (Math.round(100 * (new Date().getTime() - t)) / 100000) + "s");
+  console.log("\nrequest took " + (Math.round(100 * (new Date().getTime() - t)) / 100000) + "s");
   fs.writeFileSync(
     path.join(`./purses-${masterRegistryUri}-${contractId}.json`),
     JSON.stringify(purses, null, 2)
   );
-  console.log('\x1b[0m', `\n✓ wrote purses-${masterRegistryUri}-${contractId}.json file`);
+  console.log('\x1b[0m', `\n✓ wrote purses-${masterRegistryUri}.${contractId}.json file`);
 };

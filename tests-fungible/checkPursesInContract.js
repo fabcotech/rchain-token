@@ -2,7 +2,7 @@ const getAllData = require('./getAllData').main;
 
 module.exports.main = async (masterRegistryUri, contractId, length, id, quantity) => {
   const allData = await getAllData(masterRegistryUri, contractId);
-  console.log(allData);
+
   if (
     Object.keys(allData.purses).length !== length ||
     allData.purses[id].quantity !== quantity

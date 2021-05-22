@@ -13,23 +13,30 @@ Object capabilities is a safe, no-encryption and flexible way to express ownersh
 Rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
 
 ```
-# Deploy a box to store purses
-# This box can store super keys, fungibles and non-fungibles purses
-node cli deploy-box
+# Deploy a master contract, that handles both boxes and contracts
+node cli deploy-master
 ```
 
 ##### non-fungible tokens
 
-Non-fungibles tokens are identified by an ID like "pikachu", "amazon" or "cat123". They are still represented by purses, all purses have `quantity: 1`, a purse cannot be divided. Purse `"0"` is a special mint purse from which you can purchase, and give a `newId` of your choice (See `./tests-fungibles/index.js:L220`).
+Non-fungibles (NFT) tokens are identified by an ID like "pikachu", "amazon" or "cat123". They are still represented by purses, all purses have `quantity: 1`, a NFT purse cannot be divided. Purse `"0"` is a special mint purse from which you can purchase, and give a `newId` of your choice (See `./tests-fungibles/index.js:L229`).
 
 As the owner, be very careful to only give `quantity: 1` when you create purses (except for special purse `"0"`).
 
 ```
+# the following steps assume you have already deployed a master contract
+
+# deploy a box that can store FTs, NFTs and super keys
+node cli deploy-box --box-id mybox
+
 # deploy contract and save super key to box
-node cli deploy --fungible false --name "mynft"
+node cli deploy --fungible false --contract-id "mynft"
 
 # create a non-fungible "cat123" token (quantity is always 1 for non-fungibles)
 node cli create-purse --quantity 1 --type "0" --new-id "cat123"
+
+# after the deployed is processed you can check that your purse is created
+node cli view
 ```
 
 ##### fungible tokens
@@ -37,14 +44,19 @@ node cli create-purse --quantity 1 --type "0" --new-id "cat123"
 Fungibles tokens are identified mainly by the type property, purses can have a quantity superior to one. For examples 100 gold tokens, 1000 shares that can be exchanged, or any ERC-20 tokens will be fungible. The IDs of purses are automatically incremented (0, 1, 2 etc.), they do not matter that much.
 
 ```
+# the following steps assume you have already deployed a master contract and a box
+
 # deploy contract and save super key to box
-node cli deploy --fungible true --name "mytoken"
+node cli deploy --fungible true --contract-id "mytoken"
 
 # Create/mint a purse with 12 tokens "GOLD" using the admin/owner capability
 node cli create-purse --quantity 12 --type "GOLD"
 
 # In the same contract, you can create another purse with another type of tokens
 node cli create-purse --quantity 24 --type "SILVER"
+
+# after the deployed is processed you can check that your purse is created
+node cli view
 ```
 
 ##### CLI
@@ -77,45 +89,40 @@ CLI NOT IMPLEMENTED YET
 
 ro = Read only, it does not change the state of box or contract in any wey
 
-The methods prefixed with `PUBLIC_` are accessible by any rholang execution, the others are protected either by `*deployerId` (contract) or simply by the ownership of a purse (OCAP model).
+The methods prefixed with `PUBLIC_` are accessible by any rholang execution, the others are only available for the owners of a box or super key (contract), following the OCAP paradigm.
+
+###### Master
+
+All methods are public
+
+- `ro PUBLIC_READ_ALL_PURSES: (contractId: String) => String | Map(all purses encoded)`
+- `ro PUBLIC_READ_BOX: (boxId: String) => String | Map(box purses and config)`
+- `ro PUBLIC_READ_PURSES: ({ contractId: String, [purseIds]: Set(String) }) => Map(purses)`
+- `ro PUBLIC_READ_PURSES_DATA: ({ contractId: String, [purseIds]: Set(String) }) => Map(purses data)`
+- `ro PUBLIC_READ_CONFIG: (contractId: String) => String | Map(contract config)`
+- `PUBLIC_REGISTER_BOX: ({ boxId: String, publicKey: String }) => String | (true, box ocap object)`
 
 ###### Box
 
-4 methods are public, and 5 are private (owner only)
+A box (OCAP) is usually stored in a private channel like `@(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")`, see `op_deploy_box.rho` for example.
 
-- `PUBLIC_RECEIVE_PURSE: ({ registryUri: URI, purse: Purse }) => String | (true, Nil)`
-- `ro PUBLIC_READ: () => main values`
-- `ro PUBLIC_READ_PURSES: () => { [URI]: Set(String)}`
-- `ro PUBLIC_READ_SUPER_KEYS: () => Set(URI)`
-- `ro READ_SUPER_KEYS: () => { [URI]: SuperKey }`
-- `ro READ_PURSES: () => { [URI]: { [purseId: string]: Purse } }`
-- `SAVE_PURSE_SEPARATELY: ({ registryUri: URI, purse: Purse }) => String | (true, Nil)`
-- `DELETE_PURSE: ({ registryUri: URI, id: String }) => String | (true, Nil)`
-- `SAVE_SUPER_KEY: ({ registryUri: URI, superKey: SuperKey }) => String | (true, Nil)`
-
-###### Purse (stored in box)
-
-All the methods on a purse are private (owner only).
+All the methods on a box are private (owner of the box only).
 
 - `ro READ: () => Properties of the purse (quantity, price, box, publicKey, type)`
-- `SWAP: ({ box: URI, publicKey: String }) => String | (true, Purse)`
-- `UPDATE_DATA: (ant) => String | (true, Nil)`
-- `SET_PRICE: (Int or Nil) => String | (true, Nil)`
-- `WITHDRAW: (Int (quantity to withdraw from purse)) => String | (true, Purse)`
-- `DEPOSIT: (Purse) => String | (true, Nil)`
+- `PUBLIC_REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, super key ocap object)`
+- `UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: Nil | Int }) => String | (true, super key ocap object)`
+- `UPDATE_PURSE_DATA:  ({ contractId: String, purseId: String, data: any }) => String | (true, super key ocap object)`
+- `WITHDRAW:  ({ contractId: String, purseId: String, quantity: Int, toBoxId: String, merge: Bool }) => String | (true, Nil)`
+- `PURCHASE:  ({ contractId: String, purseId: String, quantity: Int, merge: Bool, newId: String | Nil, data: any, purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)`
 
 ###### Contract
 
-Contract has 6 public methods, only purchase may change the state. And 2 methods for owner only, if the contract is locked, even the owner cannot create purses.
+The ownership of a contract is expressed by the ownership of a super key that is returned by `PUBLIC_REGISTER_CONTRACT` method. A contract's super key (OCAP) is usually stored in a private channel like `@(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")`, see `op_deploy.rho` for example.
 
-- `ro PUBLIC_READ_PURSES_IDS: () => Set()`
-- `ro PUBLIC_READ_PURSES: (Set(String)) => { [purseId: String]: PurseProperties }`
-- `ro PUBLIC_READ_PURSES_DATA: (Set(String)) => { [purseId: String]: any }`
-- `ro PUBLIC_READ: () => main values of the contract`
-- `ro PUBLIC_CHECK_PURSES: (Purse[]) => String | (true, id[])`
-- `PUBLIC_PURCHASE: (see code) => String | (true, purse)`
-- `LOCK: () => String | (true, Nil)`
-- `CREATE_PURSES: ({ purses: { [purseId: String]: Purse }, data: { [purseId: String]: any } }) => String | (true, Nil)`
+All the methods on a super key are private (deployer of the contract only).
+
+- `LOCK: () => String | (true, Nil) // cannot CREATE_PURSES anymore after a contract is locked`
+- `CREATE_PURSES: see cli/createPurse.js`
 
 ##### Using SDK
 
@@ -123,24 +130,19 @@ The SDK files are in `./src`, if you have rchain-token (`fabcotech/rchain-token`
 
 ```
 import {
-  mainTerm,
+  masterTerm,
 } from "rchain-token";
 
 const boxRegistryUri = 'aaa';
-const rholangTerm = mainTerm(boxRegistryUri)
+const rholangTerm = masterTerm({
+  depth: 3,
+  contractDepth: 2,
+})
 ```
-
-Missing in CLI: changing price of a bag of tokens
 
 ##### Compile rholang -> javascript (src/)
 
-\_Generate all javascript source code in `src/` from rholang with `node generateJavascripts.js`
-
-##### Token representation on chain
-
-The paradigm is OCAP (object capabilities).
-
-See `./rholang/main.rho`
+\_Generate all javascript source code in `src/` from rholang with `npm run generate`
 
 ##### Testing
 
