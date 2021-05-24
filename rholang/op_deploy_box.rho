@@ -21,7 +21,7 @@ in {
         }
         (true, box) => {
           @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")!(box) |
-          basket!({ "status": "completed" }) |
+          basket!({ "status": "completed", "message": { "boxId": "BOX_ID" } }) |
           stdout!("completed, box registered")
         }
       }

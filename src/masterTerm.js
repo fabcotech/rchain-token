@@ -1322,7 +1322,7 @@ new MakeNode, ByteArrayToNybbleList,
 
                         // config
                         @(*vault, "contractConfig", payload.get("contractId"))!(
-                          payload.set("locked", false).set("counter", 1).set("version", "6.0.0").set("fett", payload.get("fee"))
+                          payload.set("locked", false).set("counter", 1).set("version", "6.0.0").set("fee", payload.get("fee"))
                         ) |
 
                         new superKeyCh in {
@@ -1706,7 +1706,6 @@ new MakeNode, ByteArrayToNybbleList,
                           for (@r <- ch34) {
                             match r {
                               (true, Nil) => {
-                                stdout!("error: rollback successful, makePurse error, transaction was rolled backed, emitter purse was reimbursed " ++ message) |
                                 @return2!("error: rollback successful, makePurse error, transaction was rolled backed, emitter purse was reimbursed " ++ message)
                               }
                               _ => {

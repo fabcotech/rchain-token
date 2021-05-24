@@ -69,12 +69,12 @@ module.exports.createPurse = async () => {
   const defaultPurses = {};
 
   if (pursesFile) {
-    const bags = JSON.parse(pursesFile);
-    Object.keys(bags).forEach((purseId) => {
-      defaultPursesData[purseId] = bags[purseId].data;
-      delete bags[purseId].data;
-      defaultPurses[purseId] = bags[purseId];
-      defaultPurses[purseId].box = boxId;
+    const purses = JSON.parse(pursesFile);
+    Object.keys(purses).forEach((purseId) => {
+      defaultPursesData[purseId] = purses[purseId].data;
+      delete purses[purseId].data;
+      defaultPurses[purseId] = purses[purseId];
+      defaultPurses[purseId].boxId = boxId;
       defaultPurses[purseId].price = null;
     });
     log(Object.keys(defaultPurses).length + ' purse found in json file');

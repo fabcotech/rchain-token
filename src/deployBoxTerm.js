@@ -25,7 +25,7 @@ in {
         }
         (true, box) => {
           @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")!(box) |
-          basket!({ "status": "completed" }) |
+          basket!({ "status": "completed", "message": { "boxId": "${payload.boxId}" } }) |
           stdout!("completed, box registered")
         }
       }

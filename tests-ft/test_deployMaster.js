@@ -1,4 +1,4 @@
-const { deployTerm } = require('../src/');
+const { masterTerm } = require('../src');
 const rc = require('rchain-toolkit');
 
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
@@ -7,20 +7,13 @@ const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 module.exports.main = async (
   privateKey1,
   publicKey1,
-  masterRegistryUri,
-  boxId,
-  fungible,
-  contractId,
-  fee
 ) => {
-  const term = deployTerm({
-    masterRegistryUri: masterRegistryUri,
-    fungible: fungible,
-    boxId: boxId,
-    contractId: contractId,
-    fee: fee ? fee : null,
+  const term = masterTerm({
+    depth: 3,
+    contractDepth: 2,
   });
-  console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
+
+  console.log('  01 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const pd = await prepareDeploy(
@@ -47,11 +40,11 @@ module.exports.main = async (
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
-      throw new Error('01_deploy 01');
+      throw new Error('01_deployMaster 01');
     }
   } catch (err) {
     console.log(err);
-    throw new Error('01_deploy 02');
+    throw new Error('01_deployMaster 02');
   }
 
   let dataAtNameResponse;
@@ -59,15 +52,15 @@ module.exports.main = async (
     dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
   } catch (err) {
     console.log(err);
-    throw new Error('01_deploy 05');
+    throw new Error('01_deployMaster 05');
   }
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
   if (data.status !== "completed") {
-    console.log(data)
-    throw new Error('01_deploy 06');
+    console.log(data);
+    throw new Error('01_deployMaster 06');
   }
 
   return data;

@@ -7,8 +7,8 @@
     "generate": "node generateJavascripts",
     "build:browser": "npx rollup -c",
     "test": "npm run test test:fungibles && npm run test:non-fungibles",
-    "test:ft": "node tests-fungible/index",
-    "test:nft": "node tests-non-fungible/index"
+    "test:ft": "node tests-ft/index",
+    "test:nft": "node tests-nft/index"
   },
   "repository": {
     "type": "git",

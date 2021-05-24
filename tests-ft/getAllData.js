@@ -2,7 +2,7 @@ const {
   readAllPursesTerm,
   readPursesDataTerm,
   decodePurses,
-} = require('../src/');
+} = require('../src');
 const rc = require('rchain-toolkit');
 
 module.exports.main = async (masterRegistryUri, contractId) => {
