@@ -1194,7 +1194,7 @@ new MakeNode, ByteArrayToNybbleList,
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "6.0.0" }))
               }
             }
           }
