@@ -1,4 +1,4 @@
-const getAllBoxData = require('../tests-fungible/getAllBoxData').main;
+const getAllBoxData = require('../tests-ft/getAllBoxData').main;
 
 module.exports.main = async (boxRegistryUri, contractRegistryUri, length) => {
   const allData = await getAllBoxData(boxRegistryUri);

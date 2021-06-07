@@ -1,4 +1,4 @@
-const getAllData = require('../tests-fungible/getAllData').main;
+const getAllData = require('../tests-ft/getAllData').main;
 
 module.exports.main = async (masterRegistryUri, contractId, ids) => {
   const allData = await getAllData(masterRegistryUri, contractId);
