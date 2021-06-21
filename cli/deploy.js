@@ -12,6 +12,7 @@ const {
   getFungible,
   getContractId,
   logData,
+  getBoxId,
 } = require('./utils');
 
 module.exports.deploy = async () => {
@@ -22,7 +23,7 @@ module.exports.deploy = async () => {
   const masterRegistryUri = getMasterRegistryUri();
   const fungible = getFungible();
   const contractId = getContractId();
-  const boxId = process.env.BOX_ID;
+  const boxId = getBoxId();
 
   console.log(
     `Will deploy a\x1b[36m`,
@@ -94,7 +95,7 @@ module.exports.deploy = async () => {
   const data = rchainToolkit.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
-  if (data.status !== "completed") {
+  if (data.status !== 'completed') {
     console.log(data);
     process.exit();
   }
@@ -102,14 +103,12 @@ module.exports.deploy = async () => {
   envText += `\nCONTRACT_ID=${contractId}`;
   fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
-  log(
-    `✓ updated .env file with CONTRACT_ID=${contractId}`
-  );
+  log(`✓ updated .env file with CONTRACT_ID=${contractId}`);
   logData({
     masterRegistryUri,
     contractId,
     fungible,
     locked: false,
-    version: VERSION
+    version: VERSION,
   });
 };

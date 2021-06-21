@@ -1062,7 +1062,7 @@ new MakeNode, ByteArrayToNybbleList,
             match set {
               Nil => {}
               Set(last) => {
-                new retCh in {
+                new ch1, ch2 in {
                   match payload.get("purses").get(last) {
                     {
                       "quantity": Int,
@@ -1071,20 +1071,27 @@ new MakeNode, ByteArrayToNybbleList,
                       "price": Nil \\/ Int,
                       "boxId": String
                     } => {
-                      makePurseCh!((
-                        contractId,
-                        payload.get("purses").get(last),
-                        payload.get("data").get(last),
-                        true,
-                        *retCh
-                      )) |
-                      for (@r <- retCh) {
-                        match r {
-                          String => {
-                            @return!("error: some purses may have been created until one failed " ++ r)
-                          }
-                          _ => {
-                            @return!((true, Nil))
+                      getBoxCh!((payload.get("purses").get(last).get("boxId"), *ch1)) |
+                      for (@box <- ch1) {
+                        if (box == Nil) {
+                          @return!("error: some purses may have been created until one failed: box not found " ++ payload.get("purses").get(last).get("boxId"))
+                        } else {
+                          makePurseCh!((
+                            contractId,
+                            payload.get("purses").get(last),
+                            payload.get("data").get(last),
+                            true,
+                            *ch2
+                          )) |
+                          for (@r <- ch2) {
+                            match r {
+                              String => {
+                                @return!("error: some purses may have been created until one failed " ++ r)
+                              }
+                              _ => {
+                                @return!((true, Nil))
+                              }
+                            }
                           }
                         }
                       }
@@ -1096,7 +1103,7 @@ new MakeNode, ByteArrayToNybbleList,
                 }
               }
               Set(first ... rest) => {
-                new retCh in {
+                new ch1, ch2 in {
                   match payload.get("purses").get(first) {
                     {
                       "quantity": Int,
@@ -1105,20 +1112,27 @@ new MakeNode, ByteArrayToNybbleList,
                       "price": Nil \\/ Int,
                       "boxId": String
                     } => {
-                      makePurseCh!((
-                        contractId,
-                        payload.get("purses").get(first),
-                        payload.get("data").get(first),
-                        true,
-                        *retCh
-                      )) |
-                      for (@r <- retCh) {
-                        match r {
-                          String => {
-                            @return!("error: some purses may have been created until one failed " ++ r)
-                          }
-                          _ => {
-                            itCh!(rest)
+                      getBoxCh!((payload.get("purses").get(first).get("boxId"), *ch1)) |
+                      for (@box <- ch1) {
+                        if (box == Nil) {
+                          @return!("error: some purses may have been created until one failed: box not found " ++ payload.get("purses").get(first).get("boxId"))
+                        } else {
+                          makePurseCh!((
+                            contractId,
+                            payload.get("purses").get(first),
+                            payload.get("data").get(first),
+                            true,
+                            *ch2
+                          )) |
+                          for (@r <- ch2) {
+                            match r {
+                              String => {
+                                @return!("error: some purses may have been created until one failed " ++ r)
+                              }
+                              _ => {
+                                itCh!(rest)
+                              }
+                            }
                           }
                         }
                       }

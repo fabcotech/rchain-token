@@ -102,6 +102,24 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
+  const createdPursesFailed = await createPurses(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    'mytoken',
+    'box1',
+    'boxdoesnotexist',
+    ['aaa']
+  );
+  if (
+    createdPursesFailed.message !==
+    'error: some purses may have been created until one failed: box not found boxdoesnotexist'
+  ) {
+    throw new Error(
+      'CREATE_PURSES should have failed because of non-existent box'
+    );
+  }
+
   const t = new Date().getTime();
   const ids = [];
   for (let i = 0; i < PURSES_TO_CREATE; i += 1) {

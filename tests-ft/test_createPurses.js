@@ -75,5 +75,5 @@ module.exports.main = async (
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  return;
+  return data;
 };
