@@ -3,6 +3,7 @@ const { deployBoxTerm } = require('./deployBoxTerm');
 const { masterTerm } = require('./masterTerm');
 const { deployTerm } = require('./deployTerm');
 const { createPursesTerm } = require('./createPursesTerm');
+const { lockTerm } = require('./lockTerm');
 const { readPursesTerm } = require('./readPursesTerm');
 const { readAllPursesTerm } = require('./readAllPursesTerm');
 const { readBoxTerm } = require('./readBoxTerm');
@@ -24,6 +25,7 @@ module.exports = {
   deployBoxTerm,
   deployTerm,
   createPursesTerm,
+  lockTerm,
   updatePurseDataTerm,
   updatePursePriceTerm,
   purchaseTerm,

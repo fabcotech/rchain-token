@@ -74,8 +74,6 @@ const main = async () => {
 
   const lockArg = process.argv.findIndex((arg) => arg === 'lock') !== -1;
   if (lockArg) {
-    console.log('not implemented');
-    process.exit();
     lock();
     return;
   }

@@ -102,6 +102,20 @@ module.exports.deployBoxTerm = (
 `
 );
 
+const lockFile = fs
+  .readFileSync('./rholang/op_lock.rho')
+  .toString('utf8');
+fs.writeFileSync(
+  './src/lockTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.lockTerm = (
+  payload
+) => {
+  return \`${replaceEverything(lockFile)}\`;
+};
+`
+);
+
 const updatePursePriceFile = fs
   .readFileSync('./rholang/op_update_purse_price.rho')
   .toString('utf8');

@@ -1,35 +1,33 @@
 const rchainToolkit = require('rchain-toolkit');
-const uuidv4 = require('uuid/v4');
 
-const { setLockedTerm } = require('../src/');
+const { lockTerm } = require('../src/');
 
 const {
-  getContractNonce,
-  getRegistryUri,
-  generateSignature,
   log,
+  getMasterRegistryUri,
+  getContractId,
   validAfterBlockNumber,
 } = require('./utils');
 
 module.exports.lock = async () => {
+  const masterRegistryUri = getMasterRegistryUri();
+  const contractId = getContractId();
   log(
-    'Make sure the private key provided is the one of the contract owner (initial deploy)'
+    'Make sure the private key provided is the one of the contract'
   );
-  const registryUri = getRegistryUri();
-  const contractNonce = getContractNonce();
-  const newNonce = uuidv4().replace(/-/g, '');
-  const payload = {
-    nonce: contractNonce,
-    newNonce: newNonce,
-  };
-
-  const ba = rchainToolkit.utils.toByteArray(payload);
-  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
-  const term = setLockedTerm(registryUri, payload, signature);
+  log('Make sure the contract is not locked');
 
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
     process.env.PRIVATE_KEY
   );
+
+  let payload = {
+    masterRegistryUri: masterRegistryUri,
+    contractId: contractId,
+  };
+
+  const term = lockTerm(payload);
+
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
@@ -39,7 +37,7 @@ module.exports.lock = async () => {
     process.env.PRIVATE_KEY,
     publicKey,
     1,
-    1000000,
+    100000000,
     vab
   );
 
