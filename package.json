@@ -8,7 +8,9 @@
     "build:browser": "npx rollup -c",
     "test": "npm run test test:fungibles && npm run test:non-fungibles",
     "test:ft": "node tests-ft/index",
-    "test:nft": "node tests-nft/index"
+    "test:nft": "node tests-nft/index",
+    "deploy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --price 50000000 --quantity 100000000 --type 0",
+    "deploy:namesystemanddefaults": "npm run deploy:namesystem && node cli create-purse --purses-file name-purses.json"
   },
   "repository": {
     "type": "git",
