@@ -10,7 +10,7 @@ const { lock } = require('./cli/lock');
 const { updateBagData } = require('./cli/updateBagData');
 const { updateTokenData } = require('./cli/updateTokenData');
 const { viewData } = require('./cli/viewData');
-const { changePrice } = require('./cli/changePrice');
+const { updatePursePrice } = require('./cli/updatePursePrice');
 
 const { log } = require('./cli/utils');
 
@@ -119,12 +119,10 @@ const main = async () => {
     return;
   }
 
-  const changePriceArg =
-    process.argv.findIndex((arg) => arg === 'change-price') !== -1;
-  if (changePriceArg) {
-    console.log('not implemented');
-    process.exit();
-    changePrice();
+  const updatePursePriceArg =
+    process.argv.findIndex((arg) => arg === 'update-purse-price') !== -1;
+  if (updatePursePriceArg) {
+    updatePursePrice();
     return;
   }
 

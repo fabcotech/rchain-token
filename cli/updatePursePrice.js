@@ -1,37 +1,32 @@
 const rchainToolkit = require('rchain-toolkit');
 const uuidv4 = require('uuid/v4');
 
-const { changePriceTerm } = require('../src/');
+const { updatePursePriceTerm } = require('../src');
 
 const {
-  getRegistryUri,
-  getNonce,
-  generateSignature,
   log,
   validAfterBlockNumber,
+  getBoxId,
+  getContractId,
+  getMasterRegistryUri,
   getProcessArgv,
 } = require('./utils');
 
-module.exports.changePrice = async () => {
-  const registryUri = getRegistryUri();
-  const bagId = getProcessArgv('--bag');
-  if (!bagId) {
-    throw new Error('Missing arguments --bag');
+module.exports.updatePursePrice = async () => {
+  const masterRegistryUri = getMasterRegistryUri();
+  const contractId = getContractId();
+  const boxId = getBoxId();
+
+  const purseId = getProcessArgv('--purse-id');
+  if (typeof purseId !== "string") {
+    throw new Error('Missing arguments --purse-id');
   }
+
   const price = getProcessArgv('--price')
     ? parseInt(getProcessArgv('--price'), 10)
     : undefined;
 
-  const payload = {
-    nonce: getNonce(),
-    bagNonce: uuidv4().replace(/-/g, ''),
-    bagId: bagId,
-    price: price || null,
-  };
-
-  const ba = rchainToolkit.utils.toByteArray(payload);
-  const signature = generateSignature(ba, process.env.PRIVATE_KEY);
-  const term = changePriceTerm(registryUri, payload, signature);
+  const term = updatePursePriceTerm({ masterRegistryUri, boxId, contractId, price, purseId });
 
   const timestamp = new Date().getTime();
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
