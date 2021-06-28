@@ -2,10 +2,11 @@ const fs = require('fs');
 
 const csv = fs.readFileSync('./top-1m.csv', 'utf8');
 const lines = csv.split('\r\n');
-const NAMES_TO_PERFORM = 3000;
-const ADDRESS = 'h8z1b6iy1b68ft6m4psns5myzhmhryhfsu3wettoj8jna9z3sqn4c4';
-const ALSO_RESERVE_NATIONAL_CODES = true;
-const ALSO_RESERVE_GENERIC_CODES = true;
+
+const NAMES_TO_PERFORM = 50;
+const ADDRESS = 'coolcontract2.coucou';
+const ALSO_RESERVE_NATIONAL_CODES = false;
+const ALSO_RESERVE_GENERIC_CODES = false;
 
 const ids = {};
 const duplicates = {};
