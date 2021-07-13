@@ -291,7 +291,9 @@ const main = async () => {
       'error: invalid payload, cancelled purchase and payment'
   ) {
     console.log(purchaseFailed1);
-    throw new Error('purchase should have fail with proper error message (1)');
+    throw new Error(
+      'purchase should have failed with proper error message (1)'
+    );
   }
   console.log(`✓ 09 failed purchase because of invalid payload`);
 
@@ -316,7 +318,9 @@ const main = async () => {
       } error: quantity not available or purse not for sale`
   ) {
     console.log(purchaseFailed2);
-    throw new Error('purchase should have fail with proper error message (2)');
+    throw new Error(
+      'purchase should have failed with proper error message (2)'
+    );
   }
   console.log(`✓ 10 failed purchase because of invalid quantity`);
 
@@ -365,7 +369,7 @@ const main = async () => {
   );
   const balance2AfterPurchase = await getBalance(PUBLIC_KEY_2);
   if (balance2BeforePurchase + 980 !== balance2AfterPurchase) {
-    throw new Error('owner of box 1 did not receive payment from purchase');
+    throw new Error('owner of box 2 did not receive payment from purchase');
   }
 
   const balance3AfterPurchase = await getBalance(PUBLIC_KEY_3);

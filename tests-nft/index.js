@@ -2,7 +2,10 @@ const rc = require('rchain-toolkit');
 require('dotenv').config();
 
 const checkPursesInContract = require('./checkPursesInContract.js').main;
+const checkPursesSameTimestampInContract =
+  require('./checkPursesSameTimestampInContract.js').main;
 const createPurses = require('./test_createPurses.js').main;
+const deleteExpiredPurse = require('./test_deleteExpiredPurse.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const getRandomName = require('./getRandomName.js').main;
 
@@ -253,7 +256,9 @@ const main = async () => {
       'error: invalid payload, cancelled purchase and payment'
   ) {
     console.log(purchaseFailed1);
-    throw new Error('purchase should have fail with proper error message (1)');
+    throw new Error(
+      'purchase should have failed with proper error message (1)'
+    );
   }
   console.log(`✓ 10 failed purchase because of invalid payload`);
 
@@ -278,7 +283,9 @@ const main = async () => {
       } error: quantity not available or purse not for sale`
   ) {
     console.log(purchaseFailed2);
-    throw new Error('purchase should have fail with proper error message (2)');
+    throw new Error(
+      'purchase should have failed with proper error message (2)'
+    );
   }
   console.log(`✓ 11 failed purchase because of invalid quantity`);
 
@@ -307,7 +314,10 @@ const main = async () => {
   );
   await checkPursesInBox(masterRegistryUri, 'box2', 'mytoken', []);
   await checkPursesInContract(masterRegistryUri, 'mytoken', ids);
-
+  await checkPursesSameTimestampInContract(masterRegistryUri, 'mytoken', [
+    ids[0],
+    ids[1],
+  ]);
   const balance2AfterPurchase = await getBalance(PUBLIC_KEY_2);
   if (balance2BeforePurchase + 980 !== balance2AfterPurchase) {
     throw new Error('owner of box 1 did not receive payment from purchase');
@@ -410,6 +420,26 @@ const main = async () => {
     '  14 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
+
+  const deletedPurse = await deleteExpiredPurse(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    'mytoken',
+    ids[0]
+  );
+  balances1.push(await getBalance(PUBLIC_KEY));
+  console.log(
+    '  15 dust cost: ' +
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+  );
+  await checkPursesInBox(
+    masterRegistryUri,
+    'box1',
+    'mytoken',
+    ['0'].concat(ids.slice(1))
+  );
+  console.log(`✓ 15 deleted expired purse`);
 };
 
 main();

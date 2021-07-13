@@ -102,9 +102,7 @@ module.exports.deployBoxTerm = (
 `
 );
 
-const lockFile = fs
-  .readFileSync('./rholang/op_lock.rho')
-  .toString('utf8');
+const lockFile = fs.readFileSync('./rholang/op_lock.rho').toString('utf8');
 fs.writeFileSync(
   './src/lockTerm.js',
   `/* GENERATED CODE, only edit rholang/*.rho files*/
@@ -130,7 +128,9 @@ module.exports.updatePursePriceTerm = (
 `
 );
 
-const readConfigFile = fs.readFileSync('./rholang/read_config.rho').toString('utf8');
+const readConfigFile = fs
+  .readFileSync('./rholang/read_config.rho')
+  .toString('utf8');
 fs.writeFileSync(
   './src/readConfigTerm.js',
   `
@@ -138,6 +138,20 @@ module.exports.readConfigTerm = (
   payload
 ) => {
   return \`${replaceEverything(readConfigFile)}\`;
+};
+`
+);
+
+const deleteExpiredPurseFile = fs
+  .readFileSync('./rholang/op_delete_expired_purse.rho')
+  .toString('utf8');
+fs.writeFileSync(
+  './src/deleteExpiredPurseTerm.js',
+  `
+module.exports.deleteExpiredPurseTerm = (
+  payload
+) => {
+  return \`${replaceEverything(deleteExpiredPurseFile)}\`;
 };
 `
 );
@@ -273,6 +287,7 @@ module.exports.deployTerm = (payload) => {
         /FEE/g,
         '${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
       )
+      .replace(/EXPIRES/g, '${payload.expires ? payload.expires : "Nil"}')
       .replace(/CONTRACT_ID/g, '${payload.contractId}')
       .replace(/BOX_ID/g, '${payload.boxId}')
       .replace(/MASTER_REGISTRY_URI/g, '${payload.masterRegistryUri}')

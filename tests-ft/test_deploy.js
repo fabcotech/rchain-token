@@ -19,6 +19,7 @@ module.exports.main = async (
     boxId: boxId,
     contractId: contractId,
     fee: fee ? fee : null,
+    expires: 10000,
   });
   console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const timestamp = new Date().getTime();
@@ -65,8 +66,8 @@ module.exports.main = async (
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (data.status !== "completed") {
-    console.log(data)
+  if (data.status !== 'completed') {
+    console.log(data);
     throw new Error('01_deploy 06');
   }
 

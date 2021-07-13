@@ -3,11 +3,11 @@ const rc = require('rchain-toolkit');
 require('dotenv').config();
 
 const { readAllPursesTerm, decodePurses } = require('../src');
-const getBalance = require('../tests-fungible/getBalance').main;
+const getBalance = require('../tests-ft/getBalance').main;
 const getRandomName = require('./getRandomName').main;
-const deployBox = require('../tests-fungible/test_deployBox').main;
-const deploy = require('../tests-fungible/test_deploy').main;
-const checkDefaultPurses = require('../tests-fungible/test_checkDefaultPurses')
+const deployBox = require('../tests-ft/test_deployBox').main;
+const deploy = require('../tests-ft/test_deploy').main;
+const checkDefaultPurses = require('../tests-ft/test_checkDefaultPurses')
   .main;
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;

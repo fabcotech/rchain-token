@@ -3,14 +3,14 @@ const fs = require('fs');
 
 require('dotenv').config();
 
-const getBalance = require('../tests-fungible/getBalance').main;
-const getRandomName = require('../tests-non-fungible/getRandomName').main;
-const deployBox = require('../tests-fungible/test_deployBox').main;
-const deployMaster = require('../tests-fungible/test_deployMaster').main;
-const deploy = require('../tests-fungible/test_deploy').main;
+const getBalance = require('../tests-ft/getBalance').main;
+const getRandomName = require('../tests-nft/getRandomName').main;
+const deployBox = require('../tests-ft/test_deployBox').main;
+const deployMaster = require('../tests-ft/test_deployMaster').main;
+const deploy = require('../tests-ft/test_deploy').main;
 
 const createPurses = require('./test_createPurses.js').main;
-const checkPursesInBox = require('../tests-non-fungible/checkPursesInBox.js').main;
+const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 
 const PURSES_TO_CREATE = 50;
 const PURSES_TO_CREATE_INITIAL = 50;
@@ -117,7 +117,7 @@ const main = async () => {
   };
 
   const time = (new Date().getTime() + '').slice(0, 10);
-  const filename = `./stress_create_purses_logs_${time}.txt`;
+  const filename = `./stresslogs/stress_create_purses_logs_${time}.txt`;
 
   for (let j = 0; j < 1000000; j += 1) {
     if (j === 0) {

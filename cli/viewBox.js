@@ -13,7 +13,6 @@ module.exports.viewBox = async () => {
   const boxId = process.env.BOX_ID;
 
   const term = readBoxTerm({ boxId, masterRegistryUri });
-  console.log(term);
 
   const result0 = await rchainToolkit.http.exploreDeploy(
     process.env.READ_ONLY_HOST,
