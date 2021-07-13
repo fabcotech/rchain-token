@@ -13,17 +13,39 @@ const getProcessArgv = (param) => {
 module.exports.getProcessArgv = getProcessArgv;
 
 module.exports.logData = (data) => {
-  console.log(`Master registry URI   : ${data.masterRegistryUri.replace('rho:id:', '')}`);
+  console.log(
+    `Master registry URI   : ${data.masterRegistryUri.replace('rho:id:', '')}`
+  );
   console.log(`Contract id           : ${data.contractId}`);
   if (data.fungible) {
-    console.log(`Fungibility           :\x1b[36m`, 'fungible tokens', '\x1b[0m');
+    console.log(
+      `Fungibility           :\x1b[36m`,
+      'FT / fungible tokens',
+      '\x1b[0m'
+    );
   } else {
-    console.log(`Fungibility           :\x1b[36m`, 'non-fungible tokens', '\x1b[0m');
+    console.log(
+      `Fungibility           :\x1b[36m`,
+      'NFT / non-fungible tokens',
+      '\x1b[0m'
+    );
   }
   if (data.locked) {
     console.log(`Locked                : locked`, '\x1b[0m');
   } else {
     console.log('Locked                :\x1b[31m NOT LOCKED \x1b[0m');
+  }
+  if (data.fee) {
+    console.log(
+      `Fee                   : ${data.fee[1]} / 10000 (${data.fee / 100}%)`
+    );
+  }
+  if (data.expires) {
+    console.log(
+      `Expires               : ${data.expires / (1000 * 60 * 60)}h / ${
+        data.expires / (1000 * 60 * 60 * 24)
+      }d`
+    );
   }
   console.log(`Version               : ${data.version}`);
 };
@@ -173,7 +195,6 @@ module.exports.getBoxId = () => {
   let boxId = process.env.BOX_ID;
   if (typeof boxId !== 'string' || boxId.length === 0) {
     boxId = getProcessArgv('--box-id');
-    console.log(boxId)
     if (typeof boxId !== 'string' || boxId.length === 0) {
       throw new Error('Missing arguments --box-id or BOX_ID=* in .env file');
     }
@@ -210,6 +231,18 @@ module.exports.getContractId = () => {
     }
   }
   return contractId;
+};
+
+module.exports.getExpires = () => {
+  const expires = getProcessArgv('--expires')
+    ? parseInt(getProcessArgv('--expires'), 10)
+    : undefined;
+
+  if (expires < 1000 * 60 * 60 * 2) {
+    throw new Error('--expires must be minimum 2 hours');
+  }
+
+  return expires;
 };
 
 module.exports.getNewBagId = () => {

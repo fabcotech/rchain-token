@@ -11,6 +11,7 @@ const {
   getMasterRegistryUri,
   getFungible,
   getContractId,
+  getExpires,
   logData,
   getBoxId,
 } = require('./utils');
@@ -23,6 +24,7 @@ module.exports.deploy = async () => {
   const masterRegistryUri = getMasterRegistryUri();
   const fungible = getFungible();
   const contractId = getContractId();
+  const expires = getExpires();
   const boxId = getBoxId();
 
   console.log(
@@ -48,6 +50,7 @@ module.exports.deploy = async () => {
     fungible: fungible,
     contractId: contractId,
     fee: null,
+    expires: expires,
   });
 
   //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)

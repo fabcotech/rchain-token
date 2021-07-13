@@ -904,6 +904,12 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
       }
     } |
 
+    for (@("PUBLIC_READ_CONFIG", contractId, return) <= entryCh) {
+      for (@config <<- @(*vault, "contractConfig", contractId)) {
+        @return!(config)
+      }
+    } |
+
     for (@("PUBLIC_READ_BOX", boxId, return) <= entryCh) {
       new ch1 in {
         getBoxCh!((boxId, *ch1)) |
@@ -1261,7 +1267,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                 // ajust quantity in first purse, create a second purse
                 // associated with toBoxId
                 (true, true, true) => {
-                  TreeHashMap!("set", pursesThm, payload2.get("purseId"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")),  *ch5) |
+                  TreeHashMap!("set", pursesThm, payload2.get("purseId"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")), *ch5) |
                   for (_ <- ch5) {
                     makePurseCh!((
                       payload2.get("contractId"),
@@ -1279,7 +1285,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                 // remove first purse, create a second purse
                 // associated with toBoxId
                 (true, true, false) => {
-                  TreeHashMap!("set", pursesThm, payload2.get("purseId"), Nil,  *ch5) |
+                  TreeHashMap!("set", pursesThm, payload2.get("purseId"), Nil, *ch5) |
                   for (@pursesDataThm <<- @(*vault, "pursesData", payload2.get("contractId"))) {
                     TreeHashMap!(
                       "get",
@@ -1381,7 +1387,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                 }
               }
             }
-
           }
         }
       } |
@@ -1485,8 +1490,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
               // 
               for (@(pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feeRevAddress) <- step3Ch) {
                 for (@message <- rollbackCh) {
-                  TreeHashMap!("set", pursesThm, purse.get("id"), purse,  *ch30) |
-                  TreeHashMap!("set", pursesDataThm, purse.get("id"), purseData,  *ch31) |
+                  TreeHashMap!("set", pursesThm, purse.get("id"), purse, *ch30) |
+                  TreeHashMap!("set", pursesDataThm, purse.get("id"), purseData, *ch31) |
                   if (purse.get("quantity") - payload2.get("quantity") == 0) {
                     savePurseInBoxCh!((payload2.get("contractId"), purse.get("boxId"), purse.get("id"), true, *ch32))
                   } else {
@@ -1541,8 +1546,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                 // with same id, id may be changed by makePurse
                 // depending on fungible or not
                 if (purse.get("quantity") - payload2.get("quantity") == 0) {
-                  TreeHashMap!("set", pursesThm, purse.get("id"), Nil,  *ch40) |
-                  TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil,  *ch41) |
+                  TreeHashMap!("set", pursesThm, purse.get("id"), Nil, *ch40) |
+                  TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil, *ch41) |
                   removePurseInBoxCh!((purse.get("boxId"), payload2.get("contractId"), purse.get("id"), *ch42)) |
                   for (_ <- ch40; _ <- ch41; _ <- ch42) {
                     makePurseCh!((
@@ -1561,7 +1566,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                 } else {
                   // just update quantity of current purse, and
                   //  create another one with right quantity
-                  TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")),  *ch40) |
+                  TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("quantity", purse.get("quantity") - payload2.get("quantity")), *ch40) |
 
                   // purchase NFT from "0", new timestamp
                   if (purse.get("id") == "0") {
