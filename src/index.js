@@ -12,6 +12,7 @@ const { readConfigTerm } = require('./readConfigTerm');
 const { updatePurseDataTerm } = require('./updatePurseDataTerm');
 const { readPursesDataTerm } = require('./readPursesDataTerm');
 const { updatePursePriceTerm } = require('./updatePursePriceTerm');
+const { renewTerm } = require('./renewTerm');
 const { purchaseTerm } = require('./purchaseTerm');
 const { withdrawTerm } = require('./withdrawTerm');
 
@@ -31,6 +32,7 @@ module.exports = {
   updatePurseDataTerm,
   updatePursePriceTerm,
   purchaseTerm,
+  renewTerm,
   withdrawTerm,
 
   readPursesTerm,

@@ -88,6 +88,18 @@ module.exports.purchaseTerm = (
 `
 );
 
+const renewFile = fs.readFileSync('./rholang/op_renew.rho').toString('utf8');
+fs.writeFileSync(
+  './src/renewTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.renewTerm = (
+  payload
+) => {
+  return \`${replaceEverything(renewFile)}\`;
+};
+`
+);
+
 const deployBoxFile = fs
   .readFileSync('./rholang/op_deploy_box.rho')
   .toString('utf8');
