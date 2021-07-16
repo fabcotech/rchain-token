@@ -24,7 +24,7 @@ for (let i = 0; i < lines.length - 1; i += 1) {
   }
   const name = domainName.split('.')[domainName.split('.').length - 2];
   const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
-  if (!match || match.length !== 1 && match[0].length !== name.length) {
+  if (!match || (match.length !== 1 && match[0].length !== name.length)) {
     invalids[name] = 'regexp';
   } else if (!name || name.length > 24 || name.length < 1) {
     invalids[name] = 'length';

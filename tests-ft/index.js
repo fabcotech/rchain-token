@@ -339,6 +339,7 @@ const main = async () => {
     publicKey: PUBLIC_KEY,
   });
   balances1.push(await getBalance(PUBLIC_KEY));
+  balances3.push(await getBalance(PUBLIC_KEY_3));
   if (purchaseSuccess.status !== 'completed') {
     throw new Error('purchase should have been successful');
   }
@@ -374,8 +375,10 @@ const main = async () => {
     throw new Error('owner of box 2 did not receive payment from purchase');
   }
 
-  const balance3AfterPurchase = await getBalance(PUBLIC_KEY_3);
-  if (balances3[0] + 20 !== balance3AfterPurchase) {
+  if (
+    balances3[balances3.length - 2] + 20 !==
+    balances3[balances3.length - 1]
+  ) {
     throw new Error('owner of public key 3 did not receive fee from purchase');
   }
   console.log(`✓ 11 purchase`);
