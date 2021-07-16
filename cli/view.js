@@ -11,6 +11,17 @@ const {
 } = require('./utils');
 const { decodePurses } = require('../src/decodePurses');
 
+const formatDuration = (t) => {
+  let sa = t;
+  const d = Math.floor(sa / 1000 / 60 / 60 / 24);
+  sa = sa - d * 24 * 60 * 60 * 1000;
+  const h = Math.floor(sa / 1000 / 60 / 60);
+  sa = sa - h * 60 * 60 * 1000;
+  const m = Math.floor(sa / 1000 / 60);
+  sa = sa - m * 60 * 1000;
+  return `${d}d${h}h${m}m`;
+};
+
 module.exports.view = async () => {
   const purseId = getProcessArgv('--purse');
   const masterRegistryUri = getMasterRegistryUri();
@@ -89,12 +100,30 @@ module.exports.view = async () => {
     console.log(`price      : ${purses[purseId].price || 'not for sale'}`);
     return;
   }
+  let expiration = '       ';
+  if (data.fungible === false) {
+    expiration = 'expiration';
+  }
   console.log(
     `\nPurses [0-${ids.length < 99 ? ids.length - 1 : '99'}] / ${
       ids.length
-    }\npurse id          type         box        quantity   price (dust) \n`
+    }\npurse id          type         box        quantity     price (dust)       ${expiration} \n`
   );
+  const now = new Date().getTime();
   ids.slice(0, 100).forEach((id) => {
+    let expires = '-';
+    if (data.fungible === false) {
+      expires = '';
+    }
+    if (data.fungible === false && data.expires && id !== '0') {
+      const timestamp = purses[id].timestamp;
+      if (now - timestamp > data.expires) {
+        expires =
+          'expired for ' + formatDuration(now - timestamp - data.expires);
+      } else {
+        expires = 'in ' + formatDuration(timestamp - now + data.expires);
+      }
+    }
     let s = '';
     s += id;
     s = s.padEnd(18, ' ');
@@ -103,9 +132,11 @@ module.exports.view = async () => {
     s += purses[id].boxId;
     s = s.padEnd(42, ' ');
     s += purses[id].quantity;
-    s = s.padEnd(53, ' ');
+    s = s.padEnd(55, ' ');
     s +=
       typeof purses[id].price === 'number' ? purses[id].price : 'not for sale';
+    s = s.padEnd(74, ' ');
+    s += expires;
     if (purses[id].boxId === boxId) {
       console.log('\x1b[32m' + s);
     } else {

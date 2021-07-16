@@ -7,9 +7,15 @@ const rc = require('rchain-toolkit');
 
 module.exports.main = async (masterRegistryUri, contractId) => {
   const term0 = readAllPursesTerm({ masterRegistryUri, contractId });
+  const t = new Date().getTime();
   const result0 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term0,
   });
+  console.log(
+    '  getAllData took',
+    Math.round((new Date().getTime() - t) / 1000),
+    'seconds'
+  );
   const pursesAsBytes = JSON.parse(result0).expr[0];
 
   const purses = decodePurses(

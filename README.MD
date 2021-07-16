@@ -102,6 +102,7 @@ ro PUBLIC_READ_PURSES: ({ contractId: String, [purseIds]: Set(String) }) => Map(
 ro PUBLIC_READ_PURSES_DATA: ({ contractId: String, [purseIds]: Set(String) }) => Map(purses data)
 ro PUBLIC_READ_CONFIG: (contractId: String) => String | Map(contract config)
 PUBLIC_REGISTER_BOX: ({ boxId: String, publicKey: String }) => String | (true, box ocap object)
+PUBLIC_DELETE_EXPIRED_PURSE: (contractId: String, purseId: String) => String | (true, Nil)
 ```
 
 ###### Box
@@ -117,6 +118,7 @@ UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: Nil | Int }) 
 UPDATE_PURSE_DATA:  ({ contractId: String, purseId: String, data: any }) => String | (true, super key ocap object)
 WITHDRAW:  ({ contractId: String, purseId: String, quantity: Int, toBoxId: String, merge: Bool }) => String | (true, Nil)
 PURCHASE:  ({ contractId: String, purseId: String, quantity: Int, merge: Bool, newId: String | Nil, data: any, purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)
+RENEW:  ({ contractId: String, purseId: String, purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)
 ```
 
 ###### Contract

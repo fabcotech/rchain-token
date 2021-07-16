@@ -57,8 +57,8 @@ module.exports.masterTerm = (payload) => {
     have the following structure:
     pursesThm:
     {
-      "1": { quantity: 2, timestamp: 12562173658, type: "0", box: "box1", price: Nil},
-      "2": { quantity: 12, timestamp: 12562173658, type: "0", box: "box1", price: 2},
+      "1": { quantity: 2, timestamp: 12562173658, type: "0", boxId: "box1", price: Nil},
+      "2": { quantity: 12, timestamp: 12562173658, type: "0", boxId: "box1", price: 2},
     }
   */
   boxesReadyCh,
@@ -77,7 +77,6 @@ module.exports.masterTerm = (payload) => {
   stdout(\`rho:io:stdout\`),
   revAddress(\`rho:rev:address\`),
   registryLookup(\`rho:registry:lookup\`),
-  deployerId(\`rho:rchain:deployerId\`),
   blockData(\`rho:block:data\`)
 in {
 
@@ -1251,10 +1250,10 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
             for (_, @timestamp, _ <- ch20) {
               match expires / 10 {
                 grace => {
-                  stdout!(("grace", grace)) |
                   match purse.get("timestamp") + expires - grace {
                     startOfGracePeriod => {
                       stdout!(("startOfGracePeriod", startOfGracePeriod)) |
+                      stdout!(("timestamp", timestamp)) |
                       if (timestamp > startOfGracePeriod) {
                         renewStep3!((pursesThm, purseZero, purse, expires))
                       } else {
@@ -1274,22 +1273,30 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
           } |
 
           for (@(pursesThm, purseZero, purse, expires) <- renewStep3) {
-            getBoxCh!(purseZero.get("boxId"), *ch31) |
-            registryLookup!(\`rho:rchain:revVault\`, *ch33) |
+            stdout!("renewStep3 ok") |
+            stdout!(purseZero) |
 
-            for (@purseZeroBox <- ch31; @(_, RevVault) <- ch33) {
-              @RevVault!("findOrCreate", payload2.get("purseRevAddr"), *ch34) |
-              revAddress!("fromPublicKey", purseZeroBox.get("publicKey").hexToBytes(), *ch32)
+            for (@boxConfig <<- @(*vault, "boxConfig", purseZero.get("boxId"))) {
+              registryLookup!(\`rho:rchain:revVault\`, *ch33) |
+              for (@(_, RevVault) <- ch33) {
+                stdout!(("boxConfig")) |
+                stdout!(boxConfig) |
+                @RevVault!("findOrCreate", payload2.get("purseRevAddr"), *ch34) |
+                revAddress!("fromPublicKey", boxConfig.get("publicKey").hexToBytes(), *ch32)
+              }
             } |
 
             for (@revAddr <- ch32; @r <- ch34) {
+              stdout!(("revAddr", revAddr)) |
+              stdout!(r) |
+              stdout!(purseZero.get("price")) |
               match r {
                 (true, purseVaultEmitter) => {
                   if (purseZero.get("price") == Nil) {
                     @purseVaultEmitter!("transfer", revAddr, 1, payload2.get("purseAuthKey"), *ch35)
-                  } /* else if (purseZero.get("price") == 0) {
+                  } else if (purseZero.get("price") == 0) {
                     @purseVaultEmitter!("transfer", revAddr, 1, payload2.get("purseAuthKey"), *ch35)
-                  }  */else {
+                  } else {
                     @purseVaultEmitter!("transfer", revAddr, purseZero.get("price"), payload2.get("purseAuthKey"), *ch35)
                   }
                 }
@@ -1302,7 +1309,9 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
             for (@paymentResult <- ch35) {
               match paymentResult {
                 (true, Nil) => {
-                  TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("timestamp", purse.get("timestamp") + expires + expires), *ch36) |
+                  stdout!(("expires", expires)) |
+                  stdout!(("timestamp current",  purse.get("timestamp"))) |
+                  TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("timestamp", purse.get("timestamp") + expires), *ch36) |
                   for (_ <- ch36) {
                     @return2!((true, Nil))
                   }
@@ -1554,6 +1563,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                     } |
 
                     for (@(_, RevVault) <- ch20; @ownerRevAddress <- ch21; @amountAndFeeAmount <- ch22) {
+                      stdout!(amountAndFeeAmount) |
                       match (
                         payload2.get("purseRevAddr"),
                         ownerRevAddress,
@@ -1712,6 +1722,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
               // STEP 5
               // everything went ok, do final payment
               for (@(pursesThm, pursesDataThm, purse, purseData, RevVault, escrowPurseRevAddr, escrowPurseAuthKey, emitterRevAddress, recipientRevAddress, amount, feeAmount, feeRevAddress) <- step5Ch) {
+                stdout!(("feeAmount", feeAmount)) |
+                stdout!(("amount", amount)) |
                 @RevVault!("findOrCreate", escrowPurseRevAddr, *ch50) |
                 for (@(true, purseVaultEscrow) <- ch50) {
                   @purseVaultEscrow!("transfer", recipientRevAddress, amount, escrowPurseAuthKey, *ch51) |

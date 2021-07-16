@@ -11,6 +11,7 @@ const { updateBagData } = require('./cli/updateBagData');
 const { updateTokenData } = require('./cli/updateTokenData');
 const { viewData } = require('./cli/viewData');
 const { updatePursePrice } = require('./cli/updatePursePrice');
+const { renew } = require('./cli/renew');
 
 const { log } = require('./cli/utils');
 
@@ -59,7 +60,8 @@ const main = async () => {
     return;
   }
 
-  const deployMasterArg = process.argv.findIndex((arg) => arg === 'deploy-master') !== -1;
+  const deployMasterArg =
+    process.argv.findIndex((arg) => arg === 'deploy-master') !== -1;
   if (deployMasterArg) {
     deployMaster();
     return;
@@ -123,6 +125,12 @@ const main = async () => {
     process.argv.findIndex((arg) => arg === 'update-purse-price') !== -1;
   if (updatePursePriceArg) {
     updatePursePrice();
+    return;
+  }
+
+  const renewArg = process.argv.findIndex((arg) => arg === 'renew') !== -1;
+  if (renewArg) {
+    renew();
     return;
   }
 

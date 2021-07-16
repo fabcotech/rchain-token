@@ -111,13 +111,13 @@ in {
                 @RevVault!("deployerAuthKey", *deployerId, *deployerAuthKeyCh) |
                 for (@(true, deployerVault) <- deployerVaultCh; @deployerAuthKey <- deployerAuthKeyCh) {
 
-                  stdout!(("Beginning transfer of ", price * quantity, "REV from", deployerRevAddress, "to", purseRevAddr)) |
+                  stdout!(("Beginning transfer of ", price * quantity, "dust from", deployerRevAddress, "to", purseRevAddr)) |
 
                   new resultCh, entryCh in {
                     @deployerVault!("transfer", purseRevAddr, price * quantity, deployerAuthKey, *resultCh) |
                     for (@result <- resultCh) {
 
-                      stdout!(("Finished transfer of ", price * quantity, "REV to", purseRevAddr, "result was:", result)) |
+                      stdout!(("Finished transfer of ", price * quantity, "dust to", purseRevAddr, "result was:", result)) |
                       match result {
                         (true, Nil) => {
                           boxCh!((

@@ -1,6 +1,7 @@
 const rc = require('rchain-toolkit');
 require('dotenv').config();
 
+const getAllData = require('../tests-ft/getAllData').main;
 const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPursesSameTimestampInContract =
   require('./checkPursesSameTimestampInContract.js').main;
@@ -8,6 +9,7 @@ const createPurses = require('./test_createPurses.js').main;
 const deleteExpiredPurse = require('./test_deleteExpiredPurse.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const getRandomName = require('./getRandomName.js').main;
+const renew = require('./test_renew.js').main;
 
 const checkPursePriceInContract =
   require('../tests-ft/checkPursePriceInContract.js').main;
@@ -24,6 +26,9 @@ const updatePursePrice = require('../tests-ft/test_updatePursePrice.js').main;
 const purchase = require('../tests-ft/test_purchase').main;
 
 const PURSES_TO_CREATE = 10;
+// the goal is that step 17 fails multiple time
+// and then succeeds
+const EXPIRES = 570000;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
@@ -92,7 +97,7 @@ const main = async () => {
     // 2% fee
     // 2.000 is 2% of 100.000
     [PUBLIC_KEY_3, 2000],
-    2
+    EXPIRES
   );
   // If you purchase a token at 100 REV
   // seller gets 98 REV
@@ -211,7 +216,7 @@ const main = async () => {
 
   balances1.push(await getBalance(PUBLIC_KEY));
   await checkPursePriceInContract(masterRegistryUri, 'mytoken', '0', 1000);
-  console.log(`✓ 08 set a price to a purse 0`);
+  console.log(`✓ 08 set a price to purse "0"`);
   console.log(
     '  08 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
@@ -302,6 +307,7 @@ const main = async () => {
     publicKey: PUBLIC_KEY,
   });
   balances1.push(await getBalance(PUBLIC_KEY));
+  balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
   if (purchaseSuccess.status !== 'completed') {
     throw new Error('purchase should have been successful');
@@ -318,13 +324,15 @@ const main = async () => {
     ids[0],
     ids[1],
   ]);
-  const balance2AfterPurchase = await getBalance(PUBLIC_KEY_2);
-  if (balance2BeforePurchase + 980 !== balance2AfterPurchase) {
+
+  if (
+    balances2[balances2.length - 2] + 980 !==
+    balances2[balances2.length - 1]
+  ) {
     throw new Error('owner of box 1 did not receive payment from purchase');
   }
 
-  const balance3AfterPurchase = await getBalance(PUBLIC_KEY_3);
-  if (balances3[0] + 20 !== balance3AfterPurchase) {
+  if (balances3[0] + 20 !== balances3[1]) {
     throw new Error('owner of public key 3 did not receive fee from purchase');
   }
   console.log(`✓ 12 purchase`);
@@ -333,7 +341,7 @@ const main = async () => {
 
   console.log(
     '  12 dust cost: ' +
-      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
   const purchaseFromZeroFailed1 = await purchase(PRIVATE_KEY_2, PUBLIC_KEY_2, {
@@ -381,6 +389,8 @@ const main = async () => {
     price: 1000,
     publicKey: PUBLIC_KEY_2,
   });
+  balances3.push(await getBalance(PUBLIC_KEY_3));
+  balances2.push(await getBalance(PUBLIC_KEY_2));
 
   await checkPurseDataInContract(
     masterRegistryUri,
@@ -406,8 +416,7 @@ const main = async () => {
     throw new Error('owner of box 1 did not receive payment from purchase');
   }
 
-  const balance3AfterPurchaseFromZero = await getBalance(PUBLIC_KEY_3);
-  if (balances3[1] + 20 !== balance3AfterPurchaseFromZero) {
+  if (balances3[1] + 20 !== balances3[2]) {
     throw new Error('owner of public key 3 did not receive fee from purchase');
   }
 
@@ -415,23 +424,22 @@ const main = async () => {
   console.log(`✓ 14 balance of purse's owner checked and has +980 dust`);
   console.log(`✓ 14 2% fee was earned by owner of public key 3`);
 
-  balances2.push(await getBalance(PUBLIC_KEY_2));
   console.log(
     '  14 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 
   const deletedPurse = await deleteExpiredPurse(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
     masterRegistryUri,
     'mytoken',
     ids[0]
   );
-  balances1.push(await getBalance(PUBLIC_KEY));
+  balances2.push(await getBalance(PUBLIC_KEY_2));
   console.log(
     '  15 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+      (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
   await checkPursesInBox(
     masterRegistryUri,
@@ -440,6 +448,78 @@ const main = async () => {
     ['0'].concat(ids.slice(1))
   );
   console.log(`✓ 15 deleted expired purse`);
+
+  await withdraw(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    'box1',
+    'box2',
+    1,
+    ids[1]
+  );
+  balances1.push(await getBalance(PUBLIC_KEY));
+
+  const allData = await getAllData(masterRegistryUri, 'mytoken');
+  const timestampBeforeRenew = allData.purses[ids[1]].timestamp;
+
+  // try to renew until we enter grace period
+  await new Promise((resolve) => {
+    let i = 0;
+    const s = setInterval(() => {
+      i += 1;
+      renew(PRIVATE_KEY_2, PUBLIC_KEY_2, {
+        masterRegistryUri: masterRegistryUri,
+        purseId: ids[1],
+        contractId: `mytoken`,
+        publicKey: PUBLIC_KEY_2,
+        boxId: `box2`,
+        price: 1000,
+      }).then((renewSuccess) => {
+        if (renewSuccess.status === 'completed') {
+          resolve();
+          clearInterval(s);
+        } else {
+          if (
+            renewSuccess.message ===
+            'error: renew failed but was able to refund 1000 error: to soon to renew'
+          ) {
+            console.log(
+              '  tried to renew',
+              i,
+              'time(s), it may be too soon, will retry'
+            );
+          } else {
+            throw new Error('should have received to soon error');
+          }
+        }
+      });
+    }, 40000);
+  });
+
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+  balances1.push(await getBalance(PUBLIC_KEY));
+
+  const allData2 = await getAllData(masterRegistryUri, 'mytoken');
+  const timestampAfterRenew = allData2.purses[ids[1]].timestamp;
+
+  if (
+    balances1[balances1.length - 2] + 1000 !==
+    balances1[balances1.length - 1]
+  ) {
+    throw new Error('owner of public key 1 did not receive fee from renew');
+  }
+
+  if (timestampAfterRenew !== timestampBeforeRenew + EXPIRES) {
+    throw new Error(
+      'timestamp do not match + ' +
+        EXPIRES +
+        timestampBeforeRenew +
+        ' ' +
+        timestampAfterRenew
+    );
+  }
+  console.log(`✓ 17 renewed purse, owner of purse 0 has +1000 dust`);
 };
 
 main();

@@ -10,6 +10,7 @@ new
 
   returnCh,
   priceCh,
+  publicKeyCh,
   purseIdCh,
   contractIdCh,
 
@@ -24,6 +25,7 @@ new
 in {
 
   purseIdCh!!("${payload.purseId}") |
+  publicKeyCh!!("${payload.publicKey}") |
   contractIdCh!!("${payload.contractId}") |
   priceCh!!(${payload.price || "Nil"}) |
 
@@ -52,22 +54,26 @@ in {
             @purseId <- purseIdCh;
             @contractId <- contractIdCh;
             @price <- priceCh;
+            @publicKey <- publicKeyCh
           ) {
 
             stdout!({
               "price": price,
               "purseId": purseId,
               "contractId": contractId,
+              "publicKey": publicKey
             }) |
             match {
               "price": price,
               "purseId": purseId,
               "contractId": contractId,
+              "publicKey": publicKey
             } {
               {
                 "price": Int,
                 "purseId": String,
                 "contractId": String,
+                "publicKey": String
               } => {
                 proceed2Ch!(Nil)
               }
@@ -83,18 +89,18 @@ in {
               registryLookup!(\`rho:rchain:revVault\`, *RevVaultCh) |
               for (@(_, RevVault) <- RevVaultCh; @deployerRevAddress <- deployerRevAddressCh) {
                 
-                // send price * quantity dust in purse
+                // send price dust in purse
                 @RevVault!("findOrCreate", deployerRevAddress, *deployerVaultCh) |
                 @RevVault!("deployerAuthKey", *deployerId, *deployerAuthKeyCh) |
                 for (@(true, deployerVault) <- deployerVaultCh; @deployerAuthKey <- deployerAuthKeyCh) {
 
-                  stdout!(("Beginning transfer of ", price * quantity, "REV from", deployerRevAddress, "to", purseRevAddr)) |
+                  stdout!(("Beginning transfer of ", price, "dust from", deployerRevAddress, "to", purseRevAddr)) |
 
                   new resultCh, entryCh in {
-                    @deployerVault!("transfer", purseRevAddr, price * quantity, deployerAuthKey, *resultCh) |
+                    @deployerVault!("transfer", purseRevAddr, price, deployerAuthKey, *resultCh) |
                     for (@result <- resultCh) {
 
-                      stdout!(("Finished transfer of ", price * quantity, "REV to", purseRevAddr, "result was:", result)) |
+                      stdout!(("Finished transfer of ", price, "dust to", purseRevAddr, "result was:", result)) |
                       match result {
                         (true, Nil) => {
                           boxCh!((
@@ -113,8 +119,8 @@ in {
                                 new refundPurseBalanceCh, refundResultCh in {
                                   @purseVault!("balance", *refundPurseBalanceCh) |
                                   for (@balance <- refundPurseBalanceCh) {
-                                    if (balance != price * quantity) {
-                                      stdout!("error: CRITICAL, renew was not successful and balance of purse is now different from price * quantity")
+                                    if (balance != price) {
+                                      stdout!("error: CRITICAL, renew was not successful and balance of purse is now different from price")
                                     } |
                                     @purseVault!("transfer", deployerRevAddress, balance, purseAuthKey, *refundResultCh) |
                                     for (@result <- refundResultCh)  {

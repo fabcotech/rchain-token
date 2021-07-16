@@ -2,13 +2,13 @@
 module.exports.deleteExpiredPurseTerm = (
   payload
 ) => {
-  return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
+  return `new basket, entryCh, lookup(\`rho:registry:lookup\`), stdout(\`rho:io:stdout\`) in {
   lookup!(\`rho:id:${payload.masterRegistryUri}\`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
       entry!(("PUBLIC_DELETE_EXPIRED_PURSE", "${payload.contractId}", "${payload.purseId}", *x)) |
-      for (@y <- x) {
-        match y {
+      for (@r <- x) {
+        match r {
           String => {
             basket!({ "status": "failed", "message": r }) |
             stdout!(("failed", r))

@@ -1,10 +1,10 @@
-new return, entryCh, readCh, lookup(`rho:registry:lookup`) in {
+new basket, entryCh, lookup(`rho:registry:lookup`), stdout(`rho:io:stdout`) in {
   lookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
   for(entry <- entryCh) {
     new x in {
       entry!(("PUBLIC_DELETE_EXPIRED_PURSE", "CONTRACT_ID", "PURSE_ID", *x)) |
-      for (@y <- x) {
-        match y {
+      for (@r <- x) {
+        match r {
           String => {
             basket!({ "status": "failed", "message": r }) |
             stdout!(("failed", r))
