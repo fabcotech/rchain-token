@@ -6,14 +6,11 @@ module.exports.masterTerm = (payload) => {
   entryCh,
   entryUriCh,
 
-  byteArraySafeToStoreCh,
   iterateOnThmKeysCh,
   createPursesCh,
   makePurseCh,
   transferToEscrowPurseCh,
   calculateFeeCh,
-  pursesTreeHashMapCh,
-  pursesForSaleTreeHashMapCh,
   initializeOCAPOnBoxCh,
 
   /*
@@ -33,7 +30,7 @@ module.exports.masterTerm = (payload) => {
     // box's configs
     config <- @(*vault, "boxConfig", "box01")
 
-    // boxes
+    // boxes (rholang Map)
     box <- @(*vault, "boxes", "box01")
 
     // super keys of a given box
@@ -55,7 +52,7 @@ module.exports.masterTerm = (payload) => {
 
     Each contract has its own tree hash map, and
     have the following structure:
-    pursesThm:
+    pursesThm, example of FT purses:
     {
       "1": { quantity: 2, timestamp: 12562173658, type: "0", boxId: "box1", price: Nil},
       "2": { quantity: 12, timestamp: 12562173658, type: "0", boxId: "box1", price: 2},
@@ -918,7 +915,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "6.0.1" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "7.0.0" }))
               }
             }
           }
@@ -1103,7 +1100,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
 
                   // config
                   @(*vault, "contractConfig", payload.get("contractId"))!(
-                    payload.set("locked", false).set("counter", 1).set("version", "6.0.1").set("fee", payload.get("fee"))
+                    payload.set("locked", false).set("counter", 1).set("version", "7.0.0").set("fee", payload.get("fee"))
                   ) |
 
                   new superKeyCh in {
@@ -1273,23 +1270,15 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
           } |
 
           for (@(pursesThm, purseZero, purse, expires) <- renewStep3) {
-            stdout!("renewStep3 ok") |
-            stdout!(purseZero) |
-
             for (@boxConfig <<- @(*vault, "boxConfig", purseZero.get("boxId"))) {
               registryLookup!(\`rho:rchain:revVault\`, *ch33) |
               for (@(_, RevVault) <- ch33) {
-                stdout!(("boxConfig")) |
-                stdout!(boxConfig) |
                 @RevVault!("findOrCreate", payload2.get("purseRevAddr"), *ch34) |
                 revAddress!("fromPublicKey", boxConfig.get("publicKey").hexToBytes(), *ch32)
               }
             } |
 
             for (@revAddr <- ch32; @r <- ch34) {
-              stdout!(("revAddr", revAddr)) |
-              stdout!(r) |
-              stdout!(purseZero.get("price")) |
               match r {
                 (true, purseVaultEmitter) => {
                   if (purseZero.get("price") == Nil) {
@@ -1309,8 +1298,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
             for (@paymentResult <- ch35) {
               match paymentResult {
                 (true, Nil) => {
-                  stdout!(("expires", expires)) |
-                  stdout!(("timestamp current",  purse.get("timestamp"))) |
                   TreeHashMap!("set", pursesThm, purse.get("id"), purse.set("timestamp", purse.get("timestamp") + expires), *ch36) |
                   for (_ <- ch36) {
                     @return2!((true, Nil))
@@ -1451,6 +1438,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
           }
         }
       } |
+
+      // keep review from here
 
       for (@(amount, contractConfig, return2) <= calculateFeeCh) {
         if (contractConfig.get("fee") == Nil) {
