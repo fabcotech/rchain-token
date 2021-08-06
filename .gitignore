@@ -7,8 +7,6 @@ purse-*
 token-*
 dist
 purses.json
-stress_create*
-stress_purchase*
-stress_logs*
+stresslogs/*
 rnode.data*
 name-*

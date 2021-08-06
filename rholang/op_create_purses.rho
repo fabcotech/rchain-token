@@ -1,8 +1,6 @@
 /* example of creating 5 NFT purses (fungible=false contract) */
 
 new basket,
-  returnCh,
-  boxCh,
   itCh,
   idsCh,
   resultsCh,

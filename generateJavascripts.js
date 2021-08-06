@@ -131,7 +131,7 @@ const readConfigFile = fs
   .toString('utf8');
 fs.writeFileSync(
   './src/readConfigTerm.js',
-  `
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.readConfigTerm = (
   payload
 ) => {
@@ -145,7 +145,7 @@ const deleteExpiredPurseFile = fs
   .toString('utf8');
 fs.writeFileSync(
   './src/deleteExpiredPurseTerm.js',
-  `
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.deleteExpiredPurseTerm = (
   payload
 ) => {
@@ -158,7 +158,7 @@ const readBoxFile = fs.readFileSync('./rholang/read_box.rho').toString('utf8');
 
 fs.writeFileSync(
   './src/readBoxTerm.js',
-  `
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.readBoxTerm = (
   payload
 ) => {

@@ -1,4 +1,4 @@
-
+/* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.readConfigTerm = (
   payload
 ) => {

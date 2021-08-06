@@ -1,5 +1,5 @@
 /* This example is for a base 12 depth 1 contract */
-new return, entryCh, readCh, lookup(`rho:registry:lookup`) in {
+new return, entryCh, lookup(`rho:registry:lookup`) in {
   lookup!(`rho:id:5gqjsh6d8yc69g9tswg7g15qf1qkkyd7bmdmar45scto9cth84pakb`, *entryCh) |
   for(entry <- entryCh) {
     new channel0,channel1,channel2,channel3,channel4,channel5,channel6,channel7,channel8,channel9,channel10,channel11 in {
