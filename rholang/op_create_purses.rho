@@ -1,35 +1,43 @@
+/* example of creating 5 NFT purses (fungible=false contract) */
+
 new basket,
   returnCh,
   boxCh,
+  itCh,
+  idsCh,
+  resultsCh,
   stdout(`rho:io:stdout`),
   deployerId(`rho:rchain:deployerId`),
   registryLookup(`rho:registry:lookup`)
 in {
 
-  for (superKey <<- @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")) {
-    superKey!((
-      "CREATE_PURSES",
-      {
-        // example
-        // "purses": { "0": { "box": "abc", "type": "gold", "quantity": 3, "data": Nil }}
-        "purses": CREATE_PURSESS,
-        // example
-        // "data": { "0": "this bag is mine" }
-        "data": CREATE_PURSESS_DATA,
-      },
-      *returnCh
-    )) |
-    for (@r <- returnCh) {
-      match r {
-        String => {
-          basket!({ "status": "failed", "message": r }) |
-          stdout!(("failed", r))
-        }
-        _ => {
-          stdout!("completed, purses created and saved to box") |
-          basket!({ "status": "completed" })
+  for (superKey <<- @(*deployerId, "rchain-token-contract", "sdspd56g1ym16it8x3iaxu7pn1zsnx44qy6o39o6rk4hczps5q5pcn", "mytoken")) {
+
+    for (@ids <- idsCh) {
+      for (@i <= itCh) {
+        match i {
+          5 => {
+            for (@results <- resultsCh) {
+              stdout!("completed, purses created, check results to see errors/successes") |
+              basket!({ "status": "completed", "results": results})
+            }
+          }
+          _ => {
+            new x in {
+              superKey!(("CREATE_PURSE", {"7qd69x":{"id":"7qd69x","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"h1o2è2":{"id":"h1o2è2","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"ijzrè3":{"id":"ijzrè3","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"o4y701":{"id":"o4y701","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"x8iz5ê":{"id":"x8iz5ê","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil}}.get(ids.nth(i)), *x)) |
+              for (@y <- x) {
+                for (@results <- resultsCh) {
+                  resultsCh!(results.set(ids.nth(i), y)) |
+                  itCh!(i + 1)
+                }
+              }
+            }
+          }
         }
       }
-    }
+    } |
+    idsCh!(["7qd69x", "h1o2è2", "ijzrè3", "o4y701", "x8iz5ê"]) |
+    itCh!(0) |
+    resultsCh!({})
   }
 }

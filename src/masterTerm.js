@@ -6,7 +6,6 @@ module.exports.masterTerm = (payload) => {
   entryCh,
   entryUriCh,
 
-  createPurseCh,
   makePurseCh,
   transferToEscrowPurseCh,
   calculateFeeCh,
@@ -795,53 +794,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
       }
     } |
 
-    for (@(payload, contractId, return) <= createPurseCh) {
-      stdout!(payload) |
-      new blockDataCh, ch1, ch2 in {
-        blockData!(*blockDataCh) |
-        for (_, @timestamp, _ <- blockDataCh) {
-          match (payload, payload.get("price") == 0) {
-            ({
-              "data": _,
-              "quantity": Int,
-              "type": String,
-              "id": String,
-              "price": Nil \\/ Int,
-              "boxId": String
-            }, false) => {
-              getBoxCh!((payload.get("boxId"), *ch1)) |
-              for (@box <- ch1) {
-                if (box == Nil) {
-                  @return!("error: box not found " ++ payload.get("boxId"))
-                } else {
-                  makePurseCh!((
-                    contractId,
-                    payload.delete("data").set("timestamp", timestamp),
-                    payload.get("data"),
-                    true,
-                    *ch2
-                  )) |
-                  for (@r <- ch2) {
-                    match r {
-                      String => {
-                        @return!(r)
-                      }
-                      _ => {
-                        @return!(true)
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            _ => {
-              @return!("error: invalid purse payload")
-            }
-          }
-        }
-      }
-    } |
-
     // ====================================
     // ===== ANY USER / PUBLIC capabilities
     // ====================================
@@ -1142,8 +1094,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
 
       for (@("UPDATE_PURSE_PRICE", payload2, return2) <= @boxCh) {
         new ch3, ch4, ch5 in {
-          match payload2 {
-            { "price": Int \\/ Nil, "contractId": String, "purseId": String } => {
+          match (payload2, payload2.get("price") == 0) {
+            ({ "price": Int \\/ Nil, "contractId": String, "purseId": String }, false) => {
               getBoxCh!((boxId, *ch3)) |
               for (@box <- ch3) {
                 if (box != Nil) {

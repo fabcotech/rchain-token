@@ -24,7 +24,8 @@ in {
         match i {
           ${ids.length} => {
             for (@results <- resultsCh) {
-              basket!(results)
+              stdout!("completed, purses created, check results to see errors/successes") |
+              basket!({ "status": "completed", "results": results})
             }
           }
           _ => {
