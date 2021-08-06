@@ -60,20 +60,6 @@ const replaceEverything = (a) => {
   );
 };
 
-const createPursesFile = fs
-  .readFileSync('./rholang/op_create_purses.rho')
-  .toString('utf8');
-fs.writeFileSync(
-  './src/createPursesTerm.js',
-  `/* GENERATED CODE, only edit rholang/*.rho files*/
-module.exports.createPursesTerm = (
-  payload
-) => {
-  return \`${replaceEverything(createPursesFile)}\`;
-};
-`
-);
-
 const purchaseFile = fs
   .readFileSync('./rholang/op_purchase.rho')
   .toString('utf8');
@@ -166,58 +152,6 @@ module.exports.deleteExpiredPurseTerm = (
   return \`${replaceEverything(deleteExpiredPurseFile)}\`;
 };
 `
-);
-
-const readAllPursesFile = fs
-  .readFileSync('./rholang/read_all_purses.rho')
-  .toString('utf8');
-
-fs.writeFileSync(
-  './src/readAllPursesTerm.js',
-  `
-module.exports.readAllPursesTerm = (
-  payload
-) => {
-  return \`${replaceEverything(readAllPursesFile)}\`;
-    }`
-);
-
-const readPursesFile = fs
-  .readFileSync('./rholang/read_purses.rho')
-  .toString('utf8');
-
-fs.writeFileSync(
-  './src/readPursesTerm.js',
-  `
-module.exports.readPursesTerm = (
-  payload
-) => {
-  return \`${replaceEverything(readPursesFile).replace(
-    'PURSES_IDS',
-    `\${payload.pursesIds
-  .map((id) => '"' + id + '"')
-  .join(',')}`
-  )}\`;
-    }`
-);
-
-const readPursesDataFile = fs
-  .readFileSync('./rholang/read_purses_data.rho')
-  .toString('utf8');
-
-fs.writeFileSync(
-  './src/readPursesDataTerm.js',
-  `
-module.exports.readPursesDataTerm = (
-  payload
-) => {
-  return \`${replaceEverything(readPursesDataFile).replace(
-    'PURSES_IDS',
-    `\${payload.pursesIds
-  .map((id) => '"' + id + '"')
-  .join(',')}`
-  )}\`;
-    }`
 );
 
 const readBoxFile = fs.readFileSync('./rholang/read_box.rho').toString('utf8');

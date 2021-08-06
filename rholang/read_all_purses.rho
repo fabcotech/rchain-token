@@ -1,10 +1,22 @@
+/* This example is for a base 12 depth 1 contract */
 new return, entryCh, readCh, lookup(`rho:registry:lookup`) in {
-  lookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
+  lookup!(`rho:id:5gqjsh6d8yc69g9tswg7g15qf1qkkyd7bmdmar45scto9cth84pakb`, *entryCh) |
   for(entry <- entryCh) {
-    new x in {
-      entry!(("PUBLIC_READ_ALL_PURSES", "CONTRACT_ID", *x)) |
-      for (y <- x) {
-        return!(*y)
+    new channel0,channel1,channel2,channel3,channel4,channel5,channel6,channel7,channel8,channel9,channel10,channel11 in {
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 0, *channel0)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 1, *channel1)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 2, *channel2)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 3, *channel3)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 4, *channel4)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 5, *channel5)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 6, *channel6)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 7, *channel7)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 8, *channel8)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 9, *channel9)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 10, *channel10)) |
+      entry!(("PUBLIC_READ_PURSES_AT_INDEX", CONTRACT_ID, 11, *channel11)) |
+      for (@value0 <- channel0; @value1 <- channel1; @value2 <- channel2; @value3 <- channel3; @value4 <- channel4; @value5 <- channel5; @value6 <- channel6; @value7 <- channel7; @value8 <- channel8; @value9 <- channel9; @value10 <- channel10; @value11 <- channel11) {
+        return!({}.union(value0).union(value1).union(value2).union(value3).union(value4).union(value5).union(value6).union(value7).union(value8).union(value9).union(value10).union(value11))
       }
     }
   }

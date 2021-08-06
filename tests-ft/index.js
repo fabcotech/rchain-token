@@ -109,12 +109,9 @@ const main = async () => {
     'boxdoesnotexist',
     1
   );
-  if (
-    createdPursesFailed.message !==
-    'error: some purses may have been created until one failed: box not found boxdoesnotexist'
-  ) {
+  if (createdPursesFailed['0'] !== 'error: box not found boxdoesnotexist') {
     throw new Error(
-      'CREATE_PURSES should have failed because of non-existent box'
+      'CREATE_PURSE should have failed because of non-existent box'
     );
   }
 

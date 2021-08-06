@@ -20,7 +20,6 @@ module.exports.main = async (
     timestamp
   );
 
-
   const payload = {
     purses: {},
     data: {},
@@ -77,5 +76,5 @@ module.exports.main = async (
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  return;
+  return data;
 };

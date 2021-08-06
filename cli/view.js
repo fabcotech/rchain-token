@@ -27,7 +27,7 @@ module.exports.view = async () => {
   const masterRegistryUri = getMasterRegistryUri();
   const contractId = getContractId();
   const boxId = process.env.BOX_ID;
-
+  console.log("[warning] we assume the depth of the contract's thm is 2");
   let term0 = undefined;
   let purses = {};
   const t = new Date().getTime();
@@ -35,6 +35,7 @@ module.exports.view = async () => {
     term0 = readAllPursesTerm({
       masterRegistryUri: masterRegistryUri,
       contractId: contractId,
+      depth: 2,
     });
     const result1 = await rchainToolkit.http.exploreDeploy(
       process.env.READ_ONLY_HOST,

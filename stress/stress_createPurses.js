@@ -15,7 +15,6 @@ const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 const PURSES_TO_CREATE = 50;
 const PURSES_TO_CREATE_INITIAL = 50;
 const NEW_BOX_EACH_TIME = true;
-const SKIP_CHECK = false;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
@@ -26,14 +25,16 @@ const balances1 = [];
 const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
 
-  const data = await deployMaster(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-  );
+  const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
 
-  const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, "box");
-  let boxId = "box";
+  const dataBox = await deployBox(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    'box'
+  );
+  let boxId = 'box';
   balances1.push(await getBalance(PUBLIC_KEY));
 
   console.log('✓ 00 deploy box');
@@ -74,9 +75,9 @@ const main = async () => {
 
     let newBoxRegistryUri;
     if (NEW_BOX_EACH_TIME && j !== 0) {
-      const newBoxId = "box" + j;
+      const newBoxId = 'box' + j;
       await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, newBoxId);
-      boxId = newBoxId
+      boxId = newBoxId;
       balances1.push(await getBalance(PUBLIC_KEY));
     }
 
@@ -84,30 +85,34 @@ const main = async () => {
       PRIVATE_KEY,
       PUBLIC_KEY,
       masterRegistryUri,
-      "mytoken",
-      "box",
+      'mytoken',
+      'box',
       boxId,
       ids
     );
 
     balances1.push(await getBalance(PUBLIC_KEY));
-    
+
     if (NEW_BOX_EACH_TIME) {
-      await checkPursesInBox(masterRegistryUri, boxId, "mytoken", ids);
+      await checkPursesInBox(masterRegistryUri, boxId, 'mytoken', ids);
     }
     const dustCost =
-    balances1[balances1.length - 2] - balances1[balances1.length - 1];
+      balances1[balances1.length - 2] - balances1[balances1.length - 1];
     if (j === 0) {
-      firstDustCost = dustCost
+      firstDustCost = dustCost;
     }
     const dustCostDiff = lastDustCost ? dustCost - lastDustCost : 0;
     lastDustCost = dustCost;
 
-    const a = ((dustCost / firstDustCost) * 100) - 100;
+    const a = (dustCost / firstDustCost) * 100 - 100;
     const dustCostDiffFirst = Math.round(a * 100) / 100;
     let s = '';
-    s += `✓ ${j} create ${j === 0 ? PURSES_TO_CREATE_INITIAL : PURSES_TO_CREATE} purses\n`;
-    s += `  ${j} dust cost: ${dustCost} dust diff with prec: ${dustCostDiff}, dust diff with first: ${dustCostDiffFirst > 0 ? "+" + dustCostDiffFirst : dustCostDiffFirst}%\n`;
+    s += `✓ ${j} create ${
+      j === 0 ? PURSES_TO_CREATE_INITIAL : PURSES_TO_CREATE
+    } purses\n`;
+    s += `  ${j} dust cost: ${dustCost} dust diff with prec: ${dustCostDiff}, dust diff with first: ${
+      dustCostDiffFirst > 0 ? '+' + dustCostDiffFirst : dustCostDiffFirst
+    }%\n`;
     s +=
       `  ${j} avg time of deploy+propose : ` +
       (new Date().getTime() - t) / 1000 +
@@ -130,7 +135,7 @@ const main = async () => {
     const res = await createPursesBatch(j);
     let s = '';
     if (j === 0) {
-      s += `MASTER_REGISTRY_URI=${masterRegistryUri}\n`
+      s += `MASTER_REGISTRY_URI=${masterRegistryUri}\n`;
     }
     s += '  ' + new Date().toString() + '\n';
     '  batch no ' +

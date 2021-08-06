@@ -6,7 +6,7 @@ const {
 const rc = require('rchain-toolkit');
 
 module.exports.main = async (masterRegistryUri, contractId) => {
-  const term0 = readAllPursesTerm({ masterRegistryUri, contractId });
+  const term0 = readAllPursesTerm({ masterRegistryUri, contractId, depth: 2 });
   const t = new Date().getTime();
   const result0 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term0,

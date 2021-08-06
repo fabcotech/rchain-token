@@ -1,10 +1,10 @@
 new return, entryCh, readCh, lookup(`rho:registry:lookup`) in {
   lookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
   for(entry <- entryCh) {
-    new x in {
-      entry!(("PUBLIC_READ_PURSES", { "contractId": "CONTRACT_ID", "purseIds": Set(PURSES_IDS) }, *x)) |
-      for (y <- x) {
-        return!(*y)
+    new purse0Ch in {
+      entry!(("PUBLIC_READ_PURSE", { "contractId": "CONTRACT_ID", "purseId": PURSE_ID }, *purse0Ch)) |
+      for (@purse0 <- purse0Ch) {
+        return!({}.set(PURSE_ID, purse0))
       }
     }
   }

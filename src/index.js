@@ -20,6 +20,7 @@ const { withdrawTerm } = require('./withdrawTerm');
 const { decodePurses } = require('./decodePurses');
 
 const { VERSION } = require('../constants');
+
 module.exports = {
   version: VERSION,
 

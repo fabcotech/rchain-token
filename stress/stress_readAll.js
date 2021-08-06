@@ -6,11 +6,15 @@ const { readAllPursesTerm, decodePurses } = require('../src');
 
 const MASTER_REGISTRY_URI =
   'irprk97ucyjez6xedunk7qrnfo7opj83mdtg3dqhn14psx3wxcdcj8';
-const CONTRACT_ID = "mytoken";
+const CONTRACT_ID = 'mytoken';
 
 const main = async () => {
   const t = new Date().getTime();
-  const term1 = readAllPursesTerm({ masterRegistryUri: MASTER_REGISTRY_URI, contractId: CONTRACT_ID });
+  const term1 = readAllPursesTerm({
+    masterRegistryUri: MASTER_REGISTRY_URI,
+    contractId: CONTRACT_ID,
+    depth: 2,
+  });
   const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
     term: term1,
   });

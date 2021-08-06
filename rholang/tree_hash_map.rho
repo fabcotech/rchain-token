@@ -122,8 +122,10 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
         }
       } |
   
+      // not used anymore, now getValuesAtIndex is used to get all values
+      // this way we avoid iteration
       contract TreeHashMap(@"getAllValues", @map, ret) = {
-        new hashCh, resultCh, howManyPrefixesCh, iterateOnPrefixesCh, nybListCh in {
+        new howManyPrefixesCh, iterateOnPrefixesCh, nybListCh in {
           HowManyPrefixes!(map, *howManyPrefixesCh) |
           for (@depth <<- @(map, "depth")) {
             for (@alsoStoreAsBytes <<- @(map, "alsoStoreAsBytes")) {
@@ -205,6 +207,50 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, HowMa
                 } |
 
                 iterateOnPrefixesCh!()
+              }
+            }
+          }
+        }
+      } |
+
+      contract TreeHashMap(@"getValuesAtIndex", @map, @i, ret) = {
+        new howManyPrefixesCh, nybListCh in {
+          HowManyPrefixes!(map, *howManyPrefixesCh) |
+          for (@depth <<- @(map, "depth")) {
+            for (@alsoStoreAsBytes <<- @(map, "alsoStoreAsBytes")) {
+              for (@howManyPrefixes <- howManyPrefixesCh ) {
+                new TreeHashMapGetterValues in {
+                  // do not move it up, the goal is reduce the number of serializatin / dezerialization
+                  contract TreeHashMapGetterValues(@channel, @nybList, @n, @len, @i) = {
+                    // channel is either map or (map, "bytes")
+                    // Look up the value of the node at (channel, nybList.slice(0, n + 1))
+                    for (@val <<- @[(channel, nybList.slice(0, n)), *storeToken]) {
+                      if (n == len) {
+                        ret!(val)
+                      } else {
+                        // Otherwise check if the rest of the path exists.
+                        // Bit k set means node k exists.
+                        // nybList.nth(n) is the node number
+                        // val & powers.nth(nybList.nth(n)) is nonzero if the node exists
+                        // (val / powers.nth(nybList.nth(n))) % 2 is 1 if the node exists
+                        if ((val / powers.nth(nybList.nth(n))) % 2 == 0) {
+                          ret!({})
+                        } else {
+                          TreeHashMapGetterValues!(channel, nybList, n + 1, len, i)
+                        }
+                      }
+                    }
+                  } |
+
+                  NybbleListForI!(map, i, depth, *nybListCh) |
+                  for (@nybList <- nybListCh) {
+                    if (alsoStoreAsBytes == true) {
+                      TreeHashMapGetterValues!((map, "bytes"), nybList, 0, depth, i)
+                    } else {
+                      TreeHashMapGetterValues!(map, nybList, 0, depth, i)
+                    }
+                  }
+                }
               }
             }
           }
