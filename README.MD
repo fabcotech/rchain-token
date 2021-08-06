@@ -1,4 +1,4 @@
-### Rholang (RChain) token (v6.0.1)
+### Rholang (RChain) token
 
 Fungibles and non-fungibles tokens on the RChain blockchain.
 
@@ -96,14 +96,16 @@ The methods prefixed with `PUBLIC_` are accessible by any rholang execution, the
 All methods are public
 
 ```
-ro PUBLIC_READ_ALL_PURSES: (contractId: String) => String | Map(all purses encoded)
+ro PUBLIC_READ_PURSES_AT_INDEX: (contractId: String, index: Int) => String | Map(purses at index)
 ro PUBLIC_READ_BOX: (boxId: String) => String | Map(box purses and config)
-ro PUBLIC_READ_PURSES: ({ contractId: String, [purseIds]: Set(String) }) => Map(purses)
-ro PUBLIC_READ_PURSES_DATA: ({ contractId: String, [purseIds]: Set(String) }) => Map(purses data)
+ro PUBLIC_READ_PURSE: ({ contractId: String, purseId: String }) => Map(purses)
+ro PUBLIC_READ_PURSE_DATA: ({ contractId: String, purseId: String }) => Map(purses data)
 ro PUBLIC_READ_CONFIG: (contractId: String) => String | Map(contract config)
 PUBLIC_REGISTER_BOX: ({ boxId: String, publicKey: String }) => String | (true, box ocap object)
 PUBLIC_DELETE_EXPIRED_PURSE: (contractId: String, purseId: String) => String | (true, Nil)
 ```
+
+Check files in `./src` if you want to know how to get many purses, or all purses using the methods above.
 
 ###### Box
 
@@ -121,15 +123,15 @@ PURCHASE:  ({ contractId: String, purseId: String, quantity: Int, merge: Bool, n
 RENEW:  ({ contractId: String, purseId: String, purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)
 ```
 
-###### Contract
+###### Contract (super key)
 
 The ownership of a contract is expressed by the ownership of a super key that is returned by `PUBLIC_REGISTER_CONTRACT` method. A contract's super key (OCAP) is usually stored in a private channel like `@(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")`, see `op_deploy.rho` for example.
 
 All the methods on a super key are private (deployer of the contract only).
 
 ```
-LOCK: () => String | (true, Nil) // cannot CREATE_PURSES anymore after a contract is locked
-CREATE_PURSES: see cli/createPurse.js
+LOCK: () => String | (true, Nil) // cannot CREATE_PURSE anymore after a contract is locked
+CREATE_PURSE: see `cli/createPurse.js` or `src/createPursesTerm`.
 ```
 
 ##### Using SDK
@@ -141,7 +143,6 @@ import {
   masterTerm,
 } from "rchain-token";
 
-const boxRegistryUri = 'aaa';
 const rholangTerm = masterTerm({
   depth: 3,
   contractDepth: 2,
@@ -154,7 +155,7 @@ const rholangTerm = masterTerm({
 
 ##### Testing
 
-Have a local rnode instance running with the following bonds and wallets file. And automatic propose every x seconds. The private keys used for deployments are in `tests/index.js`.
+Have a local rnode instance running with the following bonds and wallets file. And automatic propose every x seconds. The private keys used for deployments are in `tests-ft/index.js` and `tests-nft/index.js`.
 
 wallets.txt
 
@@ -184,4 +185,8 @@ VALIDATOR_HOST=http://127.0.0.1:40403
 Many stress tests exist, see `stress/stress_*` files, you might want to change the variables on the top of each file.
 
 example:
-`node stress/stress_createPurses.js`
+
+```
+node stress/stress_createPurses.js
+node stress/stress_createPursesAndReadAll.js
+```
