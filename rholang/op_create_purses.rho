@@ -9,7 +9,7 @@ new basket,
   registryLookup(`rho:registry:lookup`)
 in {
 
-  for (superKey <<- @(*deployerId, "rchain-token-contract", "sdspd56g1ym16it8x3iaxu7pn1zsnx44qy6o39o6rk4hczps5q5pcn", "mytoken")) {
+  for (superKey <<- @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")) {
 
     for (@ids <- idsCh) {
       for (@i <= itCh) {
