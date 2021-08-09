@@ -3,10 +3,10 @@ const fs = require('fs');
 const csv = fs.readFileSync('./top-1m.csv', 'utf8');
 const lines = csv.split('\r\n');
 
-const NAMES_TO_PERFORM = 50;
+const NAMES_TO_PERFORM = 5000;
 const ADDRESS = 'coolcontract2.coucou';
-const ALSO_RESERVE_NATIONAL_CODES = false;
-const ALSO_RESERVE_GENERIC_CODES = false;
+const ALSO_RESERVE_NATIONAL_CODES = true;
+const ALSO_RESERVE_GENERIC_CODES = true;
 
 const ids = {};
 const duplicates = {};
@@ -48,19 +48,19 @@ const data = Buffer.from(
   })
 ).toString('hex');
 
-
 if (ALSO_RESERVE_NATIONAL_CODES) {
+  console.log('\n');
   let nationals = [];
   let generics = [];
   const tlds = fs.readFileSync('./topLevelDomains.csv', 'utf8');
-  tlds.split('\n').forEach(tld => {
-    const a= tld.split(',')
+  tlds.split('\n').forEach((tld) => {
+    const a = tld.split(',');
     const name = a[0].replace('.', '');
     if (ALSO_RESERVE_NATIONAL_CODES && a[1] === 'country-code') {
       const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
       if (match && match[0] && match[0].length === name.length) {
         if (ids[name]) {
-          console.warn('national tld ' +name + ' is duplicate')
+          console.warn('national tld ' + name + ' is duplicate');
           if (!duplicates[name]) {
             duplicates[name] = [name];
           } else {
@@ -71,16 +71,17 @@ if (ALSO_RESERVE_NATIONAL_CODES) {
           nationals.push(name);
         }
       } else {
-        console.warn('national tld ' +name + ' is invalid')
+        console.warn('national tld ' + name + ' is invalid');
         invalids[name] = 'regexp';
       }
     }
 
     if (ALSO_RESERVE_GENERIC_CODES && a[1] === 'generic') {
+      console.log('\n');
       const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
       if (match && match[0] && match[0].length === name.length) {
         if (ids[name]) {
-          console.warn('generic tld ' +name + ' is duplicate')
+          console.warn('generic tld ' + name + ' is duplicate');
           if (!duplicates[name]) {
             duplicates[name] = [name];
           } else {
@@ -91,16 +92,16 @@ if (ALSO_RESERVE_NATIONAL_CODES) {
           generics.push(name);
         }
       } else {
-        console.warn('generic tld ' +name + ' is invalid')
+        console.warn('generic tld ' + name + ' is invalid');
         invalids[name] = 'regexp';
       }
     }
   });
 
   console.log(`Also added ${nationals.length} national tld names :`);
-  console.log(nationals.join(', '))
+  console.log(nationals.join(', '));
   console.log(`Also added ${generics.length} generic tld names :`);
-  console.log(generics.join(', '))
+  console.log(generics.join(', '));
 }
 
 fs.writeFileSync('./name-duplicates.json', JSON.stringify(duplicates, null, 2));
@@ -119,6 +120,14 @@ Object.keys(ids).forEach((id) => {
 
 fs.writeFileSync('./name-purses.json', JSON.stringify(ids, null, 2));
 
-console.log(`\nPrepared a total of ${Object.keys(ids).length} purses in name-purses.json`);
-console.log(`${Object.keys(invalids).length} invalid names (regexp or length) see name-invalids.json`);
-console.log(`${Object.keys(duplicates).length} duplicates names see name-duplicates.json`);
+console.log(
+  `\nPrepared a total of ${Object.keys(ids).length} purses in name-purses.json`
+);
+console.log(
+  `${
+    Object.keys(invalids).length
+  } invalid names (regexp or length) see name-invalids.json`
+);
+console.log(
+  `${Object.keys(duplicates).length} duplicates names see name-duplicates.json`
+);
