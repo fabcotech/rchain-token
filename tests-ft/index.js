@@ -109,7 +109,9 @@ const main = async () => {
     'boxdoesnotexist',
     1
   );
-  if (createdPursesFailed['0'] !== 'error: box not found boxdoesnotexist') {
+  if (
+    createdPursesFailed.results['0'] !== 'error: box not found boxdoesnotexist'
+  ) {
     throw new Error(
       'CREATE_PURSE should have failed because of non-existent box'
     );

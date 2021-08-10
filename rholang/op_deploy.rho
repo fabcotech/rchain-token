@@ -12,7 +12,7 @@ in {
   registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *masterEntryCh) |
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")) {
-    boxCh!(("PUBLIC_REGISTER_CONTRACT", { "contractId": "CONTRACT_ID", "fungible": FUNGIBLE, "fee": FEE, "expires": EXPIRES }, *registerContractReturnCh)) |
+    boxCh!(("REGISTER_CONTRACT", { "contractId": "CONTRACT_ID", "fungible": FUNGIBLE, "fee": FEE, "expires": EXPIRES }, *registerContractReturnCh)) |
     for (@r <- registerContractReturnCh) {
       match r {
         String => {

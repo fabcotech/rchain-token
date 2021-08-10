@@ -115,7 +115,7 @@ All the methods on a box are private (owner of the box only).
 
 ```
 ro READ: () => Properties of the purse (quantity, price, box, publicKey, type)
-PUBLIC_REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, super key ocap object)
+REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, super key ocap object)
 UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: Nil | Int }) => String | (true, super key ocap object)
 UPDATE_PURSE_DATA:  ({ contractId: String, purseId: String, data: any }) => String | (true, super key ocap object)
 WITHDRAW:  ({ contractId: String, purseId: String, quantity: Int, toBoxId: String, merge: Bool }) => String | (true, Nil)
@@ -125,7 +125,7 @@ RENEW:  ({ contractId: String, purseId: String, purseRevAddr: String, purseRevAd
 
 ###### Contract (super key)
 
-The ownership of a contract is expressed by the ownership of a super key that is returned by `PUBLIC_REGISTER_CONTRACT` method. A contract's super key (OCAP) is usually stored in a private channel like `@(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")`, see `op_deploy.rho` for example.
+The ownership of a contract is expressed by the ownership of a super key that is returned by `REGISTER_CONTRACT` method. A contract's super key (OCAP) is usually stored in a private channel like `@(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")`, see `op_deploy.rho` for example.
 
 All the methods on a super key are private (deployer of the contract only).
 

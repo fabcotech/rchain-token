@@ -119,7 +119,10 @@ const main = async () => {
     'boxdoesnotexist',
     ['aaa']
   );
-  if (createdPursesFailed['aaa'] !== 'error: box not found boxdoesnotexist') {
+  if (
+    createdPursesFailed.results['aaa'] !==
+    'error: box not found boxdoesnotexist'
+  ) {
     throw new Error(
       'CREATE_PURSE should have failed because of non-existent box'
     );
@@ -481,6 +484,7 @@ const main = async () => {
             renewSuccess.message ===
             'error: renew failed but was able to refund 1000 error: to soon to renew'
           ) {
+            console.log(renewSuccess.message);
             console.log(
               '  tried to renew',
               i,
