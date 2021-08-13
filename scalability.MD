@@ -173,3 +173,8 @@ PUBLIC_READ_ALL_PURSES 3300 values = 99.7s, 98.8s
 
 Local deploy, 340 values depth = 2
 PUBLIC_READ_ALL_PURSES 340 values = 43s, 14s, 13s
+
+**2021-08-06 8.0.0**
+
+Local deploy, 5000 values depth = 2
+read all purses (src.readAllPursesTerm) 5000 values = 49.7s, 49.8s

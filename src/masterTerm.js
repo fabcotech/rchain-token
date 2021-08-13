@@ -544,8 +544,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
   @(*vault, "PURCHASE_LOCK")!(Nil) |
 
   for (@boxId <= initLocksForBoxCh) {
-    stdout!("registering locks") |
-    stdout!(boxId) |
     @(*vault, "RENEW_LOCK", boxId)!(Nil) |
     @(*vault, "UPDATE_PURSE_PRICE_LOCK", boxId)!(Nil) |
     @(*vault, "UPDATE_PURSE_DATA_LOCK", boxId)!(Nil) |
@@ -936,7 +934,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "8.0.0" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "9.0.0" }))
               }
             }
           }
@@ -1127,7 +1125,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
                     // config
                     @(*vault, "contractConfig", payload.get("contractId"))!(
-                      payload.set("locked", false).set("counter", 1).set("version", "8.0.0").set("fee", payload.get("fee"))
+                      payload.set("locked", false).set("counter", 1).set("version", "9.0.0").set("fee", payload.get("fee"))
                     ) |
 
                     new superKeyCh in {

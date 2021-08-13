@@ -40,7 +40,7 @@ const main = async () => {
     (new Date().getTime() - t2) / 1000 +
     's\n';
 
-  console.log(`  ${Object.keys(purses).length} purses`);
+  s = `  ${Object.keys(purses).length} purses\n` + s;
 
   console.log(s);
   process.exit();
