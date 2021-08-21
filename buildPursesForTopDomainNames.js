@@ -19,7 +19,9 @@ for (let i = 0; i < lines.length - 1; i += 1) {
     console.log(i, domainName);
   }
   if (j === NAMES_TO_PERFORM) {
-    console.log('reached ' + NAMES_TO_PERFORM + ' names');
+    console.log(
+      'reached ' + NAMES_TO_PERFORM + ' names at index ' + i + ' in csv file'
+    );
     break;
   }
   const name = domainName.split('.')[domainName.split('.').length - 2];
@@ -49,7 +51,6 @@ const data = Buffer.from(
 ).toString('hex');
 
 if (ALSO_RESERVE_NATIONAL_CODES) {
-  console.log('\n');
   let nationals = [];
   let generics = [];
   const tlds = fs.readFileSync('./topLevelDomains.csv', 'utf8');
@@ -77,7 +78,6 @@ if (ALSO_RESERVE_NATIONAL_CODES) {
     }
 
     if (ALSO_RESERVE_GENERIC_CODES && a[1] === 'generic') {
-      console.log('\n');
       const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
       if (match && match[0] && match[0].length === name.length) {
         if (ids[name]) {

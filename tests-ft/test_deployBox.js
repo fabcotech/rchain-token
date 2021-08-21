@@ -4,8 +4,17 @@ const rc = require('rchain-toolkit');
 const waitForUnforgeable = require('../cli/waitForUnforgeable.js').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (privateKey, publicKey, masterRegistryUri, boxId) => {
-  const term = deployBoxTerm({ publicKey: publicKey, boxId: boxId, masterRegistryUri: masterRegistryUri });
+module.exports.main = async (
+  privateKey,
+  publicKey,
+  masterRegistryUri,
+  boxId
+) => {
+  const term = deployBoxTerm({
+    publicKey: publicKey,
+    boxId: boxId,
+    masterRegistryUri: masterRegistryUri,
+  });
   console.log(
     '  02 deploy box is ' + Buffer.from(term).length / 1000000 + 'mb'
   );
