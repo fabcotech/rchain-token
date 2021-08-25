@@ -116,7 +116,8 @@ const main = async () => {
       }
     );
     await checkPursesInBox(masterRegistryUri, 'box2', 'mytoken', ids);
-    console.log(purchaseFromZeroSuccess);
+    console.log('purchase from zero successful');
+    console.log('checked purses in box: ', ids.join(', '));
 
     if (i < 10) {
       purchaseFromZero();

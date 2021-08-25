@@ -67,8 +67,10 @@ module.exports.main = async (
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (data.status !== "completed") {
+  if (data.status !== 'completed') {
     console.log(data);
-    throw new Error('test_updatePurseData')
+    throw new Error('test_updatePurseData');
   }
+
+  return data;
 };
