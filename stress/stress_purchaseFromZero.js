@@ -3,17 +3,16 @@ const fs = require('fs');
 
 require('dotenv').config();
 
-const { purchaseTerm } = require('../src');
 const getBalance = require('../tests-ft/getBalance').main;
-const purchase = require('./test_purchaseBatch').main;
-const setPrice = require('../tests-ft/test_setPrice').main;
-const getRandomName = require('./getRandomName').main;
+const purchase = require('../tests-ft/test_purchase').main;
+const updatePursePrice = require('../tests-ft/test_updatePursePrice').main;
+const getRandomName = require('../tests-nft/getRandomName').main;
 const deployBox = require('../tests-ft/test_deployBox').main;
 const deploy = require('../tests-ft/test_deploy').main;
-const checkDefaultPurses = require('../tests-ft/test_checkDefaultPurses')
-  .main;
-const createPurses = require('./test_createPurseZero.js').main;
-const checkPursesInBox = require('./checkPursesInBox.js').main;
+const checkDefaultPurses = require('../tests-ft/test_checkDefaultPurses').main;
+const createPurses = require('../tests-nft/test_createPurses.js').main;
+const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
+const deployMaster = require('../tests-ft/test_deployMaster').main;
 
 const PURSES_TO_PURCHASE_EACH_TIME = 40;
 
@@ -32,132 +31,101 @@ const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
 
-  const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY);
-  const boxRegistryUri = dataBox.registryUri.replace('rho:id:', '');
-  balances1.push(await getBalance(PUBLIC_KEY));
+  const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
+  const masterRegistryUri = data.registryUri.replace('rho:id:', '');
+  console.log('masterRegistryUri', masterRegistryUri);
 
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 00 deploy boxes');
-  console.log(
-    '  00 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-
-  const data = await deploy(
+  const dataBox = await deployBox(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
+    masterRegistryUri,
+    'box'
+  );
+  balances1.push(await getBalance(PUBLIC_KEY));
+
+  const dataBox2 = await deployBox(
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    masterRegistryUri,
+    'box2'
+  );
+  balances2.push(await getBalance(PUBLIC_KEY_2));
+
+  const deployData = await deploy(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    'box',
     false,
     'mytoken',
     null,
-    2
+    null
   );
 
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 01 deploy');
-  console.log(
-    '  01 dust cost: ' +
-      (balances1[balances1.length - 2] - balances1[balances1.length - 1])
-  );
-  await checkDefaultPurses(boxRegistryUri);
-  console.log('✓ 02 check initial bags and data');
-
-  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
-  await createPurses(
-    contractRegistryUri,
+  const c = await createPurses(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
-    boxRegistryUri
+    masterRegistryUri,
+    'mytoken',
+    'box',
+    'box',
+    []
   );
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('  purses created');
+  if (c.status !== 'completed') {
+    console.log(c);
+    throw new Error('could not update purse price');
+  }
+  console.log('create 0 successful');
 
-  await setPrice(
-    contractRegistryUri,
+  const d = await updatePursePrice(
     PRIVATE_KEY,
     PUBLIC_KEY,
-    boxRegistryUri,
-    1,
-    `0` // ID of the purse to set a price to
+    masterRegistryUri,
+    'box',
+    'mytoken',
+    '0',
+    1000
   );
-  balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('  price set');
+  if (d.status !== 'completed') {
+    console.log(d);
+    throw new Error('could not update purse price');
+  }
+  console.log('update purse 0 price successful');
 
-  let lastDustCost;
-  const purchasePurseBatch = async (j) => {
-    const t = new Date().getTime();
+  let i = 0;
+  let ids = [];
+  const purchaseFromZero = async () => {
+    i += 1;
+    const newId = getRandomName();
+    ids.push(newId);
 
-    let newBoxRegistryUri;
-    const newDataBox = await deployBox(PRIVATE_KEY_2, PUBLIC_KEY_2);
-    newBoxRegistryUri = newDataBox.registryUri.replace('rho:id:', '');
-    balances2.push(await getBalance(PUBLIC_KEY_2));
-
-    const ids = [];
-    const terms = [];
-    for (let i = 0; i < PURSES_TO_PURCHASE_EACH_TIME; i += 1) {
-      ids.push(getRandomName());
-      terms.push(
-        purchaseTerm(contractRegistryUri, {
-          toBoxRegistryUri: newBoxRegistryUri,
-          purseId: `0`,
-          quantity: 1,
-          data: 'bbb',
-          newId: ids[i],
-          price: 1,
-          publicKey: PUBLIC_KEY_2,
-        })
-      );
-    }
-
-    await purchase(PRIVATE_KEY_2, PUBLIC_KEY_2, terms.join(' | \n'));
-
-    balances2.push(await getBalance(PUBLIC_KEY_2));
-
-    const dustCost =
-      balances2[balances2.length - 2] - balances2[balances2.length - 1];
-    const dustCostDiff = lastDustCost ? dustCost - lastDustCost : 0;
-    lastDustCost = dustCost;
-    let s = '';
-    s += `✓ ${j} purchase ${ids.length} purses from purse 0\n`;
-    s +=
-      `  ${j} dust cost (setPrice): ` +
-      dustCost +
-      '(diff: ' +
-      dustCostDiff +
-      ')\n';
-    s +=
-      `  ${j} avg time of deploy+propose : ` +
-      (new Date().getTime() - t) / 1000 +
-      's\n';
-    await checkPursesInBox(
-      newBoxRegistryUri,
-      contractRegistryUri,
-      PURSES_TO_PURCHASE_EACH_TIME
+    const purchaseFromZeroSuccess = await purchase(
+      PRIVATE_KEY_2,
+      PUBLIC_KEY_2,
+      {
+        masterRegistryUri: masterRegistryUri,
+        purseId: '0',
+        contractId: `mytoken`,
+        boxId: `box2`,
+        quantity: 1,
+        data: 'bbb',
+        newId: newId,
+        merge: true,
+        price: 1000,
+        publicKey: PUBLIC_KEY_2,
+      }
     );
-    return s;
+    await checkPursesInBox(masterRegistryUri, 'box2', 'mytoken', ids);
+    console.log(purchaseFromZeroSuccess);
+
+    if (i < 10) {
+      purchaseFromZero();
+    }
   };
 
-  const time = (new Date().getTime() + '').slice(0, 10);
-  const filename = `./stress_purchaseFromZero_logs_${time}.txt`;
+  purchaseFromZero();
 
-  for (let j = 0; j < 1000000; j += 1) {
-    if (j === 0) {
-      fs.writeFileSync(
-        filename,
-        `PURCHASE_PURSE_FROM_PURSE_ZERO\nPURSES_TO_PURCHASE_EACH_TIME: ${PURSES_TO_PURCHASE_EACH_TIME}\nHOST=${process.env.VALIDATOR_HOST}\n`,
-        'utf8'
-      );
-    }
-    const s = '  ' + new Date().toString() + '\n';
-    '  batch no ' + j + ' will purchase 1 purse\n';
-    const res = await purchasePurseBatch(j);
-    let logs = '';
-    try {
-      logs = fs.readFileSync(filename, 'utf8');
-    } catch (e) {}
-    fs.writeFileSync(filename, logs + s + res, 'utf8');
-  }
+  return;
 };
 
 main();
