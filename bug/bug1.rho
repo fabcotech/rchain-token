@@ -1,0 +1,41 @@
+new 
+  basket,
+
+  entryCh,
+  entryUriCh,
+
+  box, 
+
+  insertArbitrary(`rho:registry:insertArbitrary`),
+  stdout(`rho:io:stdout`),
+  revAddress(`rho:rev:address`),
+  registryLookup(`rho:registry:lookup`),
+  blockData(`rho:block:data`)
+in {
+
+  box!(Set()) |
+
+  for (@("INSERT_VALUE", value, return) <= entryCh) {
+    stdout!("inserting " ++ value) |
+    for (@set <- box) {
+      box!(set.union(Set(value))) |
+      box!(set) |
+      @return!(Nil)
+    }
+  } |
+
+  for (@("READ", return) <= entryCh) {
+    for (@set <<- box) {
+      @return!(set)
+    }
+  } |
+
+  insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
+
+  for (entryUri <- entryUriCh) {
+    basket!({
+      "registryUri": *entryUri
+    }) |
+    stdout!(("contract registered at", *entryUri))
+  }
+}

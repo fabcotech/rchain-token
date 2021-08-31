@@ -739,8 +739,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                             contractId,
                             box.get(contractId).union(Set(purse.get("id")))
                           )) |
-                          @return!((true, Nil)) |
-                          @(*vault, "boxes", boxId)!(box)
+                          @return!((true, Nil))
                         }
                       }
                     }
