@@ -11,6 +11,7 @@ const checkPursesInBox = require('./checkPursesInBox.js').main;
 const getRandomName = require('./getRandomName.js').main;
 const renew = require('./test_renew.js').main;
 
+const checkLogsInContract = require('../tests-ft/checkLogsInContract').main;
 const checkPursePriceInContract =
   require('../tests-ft/checkPursePriceInContract.js').main;
 const checkPurseDataInContract =
@@ -521,6 +522,12 @@ const main = async () => {
     );
   }
   console.log(`✓ 17 renewed purse, owner of purse 0 has +1000 dust`);
+
+  await checkLogsInContract(
+    masterRegistryUri,
+    'mytoken',
+    `p,box1,box2,1,1000,mynewnft;p,box2,box1,1,1000,${ids[0]};`
+  );
 };
 
 main();

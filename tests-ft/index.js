@@ -7,6 +7,7 @@ const checkPursePriceInContract =
   require('./checkPursePriceInContract.js').main;
 const checkPurseDataInContract = require('./checkPurseDataInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
+const checkLogsInContract = require('./checkLogsInContract').main;
 
 const deployBox = require('./test_deployBox').main;
 const deploy = require('./test_deploy').main;
@@ -388,6 +389,12 @@ const main = async () => {
   console.log(
     '  11 dust cost: ' +
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
+  );
+
+  await checkLogsInContract(
+    masterRegistryUri,
+    'mytoken',
+    `p,box2,box1,1,1000,13;`
   );
 };
 
