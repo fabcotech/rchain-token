@@ -12,6 +12,7 @@ const { updateTokenData } = require('./cli/updateTokenData');
 const { viewData } = require('./cli/viewData');
 const { updatePursePrice } = require('./cli/updatePursePrice');
 const { renew } = require('./cli/renew');
+const { viewLogs } = require('./cli/viewLogs');
 
 const { log } = require('./cli/utils');
 
@@ -131,6 +132,13 @@ const main = async () => {
   const renewArg = process.argv.findIndex((arg) => arg === 'renew') !== -1;
   if (renewArg) {
     renew();
+    return;
+  }
+
+  const viewLogsArg =
+    process.argv.findIndex((arg) => arg === 'view-logs') !== -1;
+  if (viewLogsArg) {
+    viewLogs();
     return;
   }
 

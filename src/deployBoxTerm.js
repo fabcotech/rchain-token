@@ -5,9 +5,6 @@ module.exports.deployBoxTerm = (
   return `new basket,
   masterEntryCh,
   registerBoxReturnCh,
-  sendReturnCh,
-  deletePurseReturnCh,
-  boxCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
   registryLookup(\`rho:registry:lookup\`)

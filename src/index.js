@@ -19,6 +19,7 @@ const { readLogsTerm } = require('./readLogsTerm');
 
 // utils
 const { decodePurses } = require('./decodePurses');
+const { logs } = require('./logs');
 
 const { VERSION } = require('../constants');
 
@@ -46,4 +47,5 @@ module.exports = {
 
   // utils
   decodePurses,
+  logs: logs,
 };

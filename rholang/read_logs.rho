@@ -1,0 +1,18 @@
+new return, entryCh, lookup(`rho:registry:lookup`), stdout(`rho:io:stdout`) in {
+  lookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
+  for(entry <- entryCh) {
+    new a in {
+      entry!(("PUBLIC_READ_LOGS", "CONTRACT_ID", *a)) |
+      for (@logs <- a) {
+        match logs {
+          String => {
+            return!("")
+          }
+          (true, logss) => {
+            return!(logss)
+          }
+        }
+      }
+    }
+  }
+}

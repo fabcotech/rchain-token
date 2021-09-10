@@ -3,8 +3,6 @@ module.exports.deployTerm = (payload) => {
     return `new basket,
   masterEntryCh,
   registerContractReturnCh,
-  sendReturnCh,
-  deletePurseReturnCh,
   boxCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
