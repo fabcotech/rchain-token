@@ -13,6 +13,7 @@ module.exports.viewBox = async () => {
   const boxId = process.env.BOX_ID;
 
   const term = readBoxTerm({ boxId, masterRegistryUri });
+  console.log(term);
 
   const result0 = await rchainToolkit.http.exploreDeploy(
     process.env.READ_ONLY_HOST,
@@ -21,9 +22,8 @@ module.exports.viewBox = async () => {
     }
   );
   const data = rchainToolkit.utils.rhoValToJs(JSON.parse(result0).expr[0]);
-  console.log(
-    `Box id     : ${boxId}`
-  );
+  console.log(JSON.stringify(JSON.parse(result0).expr[0], null, 1));
+  console.log(`Box id     : ${boxId}`);
   if (Object.keys(data.superKeys).length > 0) {
     console.log(`\nSuper keys :`);
     data.superKeys.forEach((sk) => {
@@ -38,11 +38,21 @@ module.exports.viewBox = async () => {
     console.log(`\nPurses (${keys.length} contracts) :`);
     keys.forEach((k) => {
       if (data.purses[k].length > 99) {
-        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `      : ${k}`)
-        console.log('\x1b[34m', `  Purses IDs 0-99/${data.purses[k].length}`,'\x1b[0m', `: ${data.purses[k].slice(0,100).join(', ')}`);
+        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `      : ${k}`);
+        console.log(
+          '\x1b[34m',
+          `  Purses IDs 0-99/${data.purses[k].length}`,
+          '\x1b[0m',
+          `: ${data.purses[k].slice(0, 100).join(', ')}`
+        );
       } else {
-        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `      : ${k}`)
-        console.log('\x1b[34m', `    Purses IDs 0-${data.purses[k].length - 1}`, '\x1b[0m', `: ${data.purses[k].join(', ')}`);
+        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `      : ${k}`);
+        console.log(
+          '\x1b[34m',
+          `    Purses IDs 0-${data.purses[k].length - 1}`,
+          '\x1b[0m',
+          `: ${data.purses[k].join(', ')}`
+        );
       }
     });
   }

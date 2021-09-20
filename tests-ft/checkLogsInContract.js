@@ -13,10 +13,15 @@ module.exports.main = async (masterRegistryUri, contractId, expectedLogs) => {
     'seconds'
   );
 
-  const logs = rc.utils.rhoValToJs(JSON.parse(result0).expr[0]);
-  if (logs !== expectedLogs) {
-    console.log('logs :');
-    console.log(logs);
+  let logs = rc.utils.rhoValToJs(JSON.parse(result0).expr[0]);
+  let logsWithoutTimestamps = '';
+  logs.split(';').forEach((l) => {
+    logsWithoutTimestamps +=
+      l.split(',').slice(0, 1).concat(l.split(',').slice(2)).join(',') + ';';
+  });
+  if (logsWithoutTimestamps !== expectedLogs) {
+    console.log('logs (without timestamp) :');
+    console.log(logsWithoutTimestamps);
     console.log('expected logs :');
     console.log(expectedLogs);
     throw new Error('checkLogsInContract invalid logs');

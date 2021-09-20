@@ -99,23 +99,19 @@ const main = async () => {
     const newId = getRandomName();
     ids.push(newId);
 
-    const purchaseFromZeroSuccess = await purchase(
-      PRIVATE_KEY_2,
-      PUBLIC_KEY_2,
-      {
-        masterRegistryUri: masterRegistryUri,
-        purseId: '0',
-        contractId: `mytoken`,
-        boxId: `box2`,
-        quantity: 1,
-        data: 'bbb',
-        newId: newId,
-        merge: true,
-        price: 1000,
-        publicKey: PUBLIC_KEY_2,
-      }
-    );
-    await checkPursesInBox(masterRegistryUri, 'box2', 'mytoken', ids);
+    const purchaseFromZeroSuccess = await purchase(PRIVATE_KEY, PUBLIC_KEY, {
+      masterRegistryUri: masterRegistryUri,
+      purseId: '0',
+      contractId: `mytoken`,
+      boxId: `box`,
+      quantity: 1,
+      data: 'bbb',
+      newId: newId,
+      merge: true,
+      price: 1000,
+      publicKey: PUBLIC_KEY,
+    });
+    await checkPursesInBox(masterRegistryUri, 'box', 'mytoken', ids);
     console.log('purchase from zero successful');
     console.log('checked purses in box: ', ids.join(', '));
 

@@ -73,11 +73,9 @@ const main = async () => {
       ids.push(getRandomName());
     }
 
-    let newBoxRegistryUri;
     if (NEW_BOX_EACH_TIME && j !== 0) {
-      const newBoxId = 'box' + j;
-      await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, newBoxId);
-      boxId = newBoxId;
+      boxId = 'box' + j;
+      await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, boxId);
       balances1.push(await getBalance(PUBLIC_KEY));
     }
 

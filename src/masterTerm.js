@@ -572,15 +572,19 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     }
   } |
 
-  for (@(contractId, str) <= appendLogsForContract) {
-    for (@current <- @(*vault, "LOGS", contractId)) {
-      stdout!(current) |
-      match current.length() > 2600 {
-        true => {
-          @(*vault, "LOGS", contractId)!(str ++ current.slice(0,2200))
-        }
-        false => {
-          @(*vault, "LOGS", contractId)!(str ++ current)
+  for (@(contractId, type, str) <= appendLogsForContract) {
+    new blockDataCh in {
+      blockData!(*blockDataCh) |
+      for (_, @timestamp, _ <- blockDataCh) {
+        for (@current <- @(*vault, "LOGS", contractId)) {
+          match current.length() > 2600 {
+            true => {
+              @(*vault, "LOGS", contractId)!("\${type},\${ts}," %% { "type": type, "ts": timestamp } ++ str ++ current.slice(0,2200))
+            }
+            false => {
+              @(*vault, "LOGS", contractId)!("\${type},\${ts}," %% { "type": type, "ts": timestamp } ++ str ++ current)
+            }
+          }
         }
       }
     }
@@ -1902,7 +1906,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                           }
                         } |
                         unlock!((true, Nil)) |
-                        appendLogsForContract!((payload.get("contractId"), "p,\${toBox},\${fromBox},\${q},\${p},\${id},\${newId};" %% { "fromBox": boxId, "toBox": purse.get("boxId"), "q": payload.get("quantity"), "p": purse.get("price"), "newId": newPurse.get("id"), "id": payload.get("purseId") }))
+                        appendLogsForContract!((payload.get("contractId"), "p", "\${toBox},\${fromBox},\${q},\${p},\${id},\${newId};" %% { "fromBox": boxId, "toBox": purse.get("boxId"), "q": payload.get("quantity"), "p": purse.get("price"), "newId": newPurse.get("id"), "id": payload.get("purseId") }))
                       }
                       _ => {
                         stdout!("error: CRITICAL, makePurse went fine, but could not do final transfer") |

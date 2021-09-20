@@ -32,7 +32,7 @@ PUBLIC_READ_ALL_PURSES 100 names (deploy 1) = 142s
 Local deploy, around 594 names depth = 2
 PUBLIC_READ_ALL_PURSES 100 names (deploy 1) = 243s
 
-**2021-04-19 release 5.0.3 (not fixed)**
+**2021-04-19 release 5.0.3 (not fixed) - rnode 0.12.0**
 
 Local deploy, 20 names depth = 1
 PUBLIC_READ_ALL_PURSES 20 names = 2.22s
@@ -121,7 +121,7 @@ PUBLIC_READ_ALL_PURSES 200 values = 11.3s
 
 Great ! So even value (3) can be recovered as quick as value 1 and 2, it just has to be stored as byte array
 
-**2021-04-21**
+**2021-04-21 - rnode 0.12.0**
 
 Tree hash map can also store process as bytes, the hard work of deserialisation etc. is done in javascript off-chain
 
@@ -155,7 +155,7 @@ Local deploy, 100 values depth = 2
 PUBLIC_READ_ALL_PURSES 100 values = 11.8s
 time to create purse (time between purse.SWAP logs) = 1,2s
 
-**2021-04-22**
+**2021-04-22 - rnode 0.12.0**
 
 Local deploy, 2900 values depth = 2
 PUBLIC_READ_ALL_PURSES 2900 values = 66.7s
@@ -166,7 +166,7 @@ PUBLIC_READ_ALL_PURSES 2900 values = 63.7s
 Local deploy, 150 values depth = 2
 PUBLIC_READ_ALL_PURSES 150 values = 11.6s, 12.7s, 11.8s, 11.6s, 11.4s, 11.6s
 
-**2021-05-20 6.0.0**
+**2021-05-20 6.0.0 - rnode 0.12.0**
 
 Local deploy, 3300 values depth = 2
 PUBLIC_READ_ALL_PURSES 3300 values = 99.7s, 98.8s
@@ -174,7 +174,7 @@ PUBLIC_READ_ALL_PURSES 3300 values = 99.7s, 98.8s
 Local deploy, 340 values depth = 2
 PUBLIC_READ_ALL_PURSES 340 values = 43s, 14s, 13s
 
-**2021-08-06 8.0.0**
+**2021-08-06 8.0.0 - rnode 0.12.0**
 
 Local deploy, 5000 values depth = 2
 read all purses (src.readAllPursesTerm) 5000 values = 49.7s, 49.8s

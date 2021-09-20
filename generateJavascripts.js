@@ -167,6 +167,21 @@ module.exports.readBoxTerm = (
 `
 );
 
+const readLogsFile = fs
+  .readFileSync('./rholang/read_logs.rho')
+  .toString('utf8');
+
+fs.writeFileSync(
+  './src/readLogsTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.readLogsTerm = (
+  payload
+) => {
+  return \`${replaceEverything(readLogsFile)}\`;
+};
+`
+);
+
 const withdrawFile = fs
   .readFileSync('./rholang/op_withdraw.rho')
   .toString('utf8');

@@ -526,7 +526,7 @@ const main = async () => {
   await checkLogsInContract(
     masterRegistryUri,
     'mytoken',
-    `p,box1,box2,1,1000,mynewnft;p,box2,box1,1,1000,${ids[0]};`
+    `p,box1,box2,1,1000,0,mynewnft;p,box2,box1,1,1000,${ids[0]},${ids[0]};`
   );
 };
 

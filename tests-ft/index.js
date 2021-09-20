@@ -52,6 +52,21 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
+  let boxFailed = false;
+  try {
+    const dataBoxFailed = await deployBox(
+      PRIVATE_KEY,
+      PUBLIC_KEY,
+      masterRegistryUri,
+      'box,'
+    );
+  } catch (e) {
+    boxFailed = true;
+  }
+  if (boxFailed == false) {
+    throw new Error('Box deploy with invalid character should have failed');
+  }
+
   const dataBox = await deployBox(
     PRIVATE_KEY,
     PUBLIC_KEY,
@@ -394,7 +409,7 @@ const main = async () => {
   await checkLogsInContract(
     masterRegistryUri,
     'mytoken',
-    `p,box2,box1,1,1000,13;`
+    `p,box2,box1,1,1000,11,13;`
   );
 };
 
