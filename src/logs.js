@@ -72,7 +72,7 @@ module.exports.logs = {
         if (split[5] === '0') {
           return ` ${ts} box ${split[2]} minted new NFT ${split[7]} at price ${split[5]}`;
         } else {
-          return ` ${ts} box ${split[2]} purchased NFT ${split[7]} from box ${split[3]} at price ${split[4]}`;
+          return ` ${ts} box ${split[2]} purchased NFT ${split[7]} from box ${split[3]} at price ${split[5]}`;
         }
       } else {
         return ` ${ts} box ${split[2]} purchased ${split[4]} token${
