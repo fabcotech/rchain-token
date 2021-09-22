@@ -22,7 +22,7 @@ in {
           }
           _ => {
             new x in {
-              superKey!(("CREATE_PURSE", {"7qd69x":{"id":"7qd69x","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"h1o2è2":{"id":"h1o2è2","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"ijzrè3":{"id":"ijzrè3","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"o4y701":{"id":"o4y701","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil},"x8iz5ê":{"id":"x8iz5ê","boxId":"box","type":"0","quantity":1,"price": Nil,"data": Nil}}.get(ids.nth(i)), *x)) |
+              superKey!(("CREATE_PURSE", {"7qd69x":{"id":"7qd69x","boxId":"box","quantity":1,"price": Nil,"data": Nil},"h1o2è2":{"id":"h1o2è2","boxId":"box","quantity":1,"price": Nil,"data": Nil},"ijzrè3":{"id":"ijzrè3","boxId":"box","quantity":1,"price": Nil,"data": Nil},"o4y701":{"id":"o4y701","boxId":"box","quantity":1,"price": Nil,"data": Nil},"x8iz5ê":{"id":"x8iz5ê","boxId":"box","quantity":1,"price": Nil,"data": Nil}}.get(ids.nth(i)), *x)) |
               for (@y <- x) {
                 for (@results <- resultsCh) {
                   resultsCh!(results.set(ids.nth(i), y)) |

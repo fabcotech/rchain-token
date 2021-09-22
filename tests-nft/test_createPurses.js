@@ -25,7 +25,6 @@ module.exports.main = async (
       ['0']: {
         id: '0',
         boxId: toBoxId,
-        type: '0',
         quantity: 1000000,
         price: null,
       },
@@ -39,7 +38,6 @@ module.exports.main = async (
     payload.purses[ids[i]] = {
       id: ids[i], // will be checked and use as id if available (non-fungible)
       boxId: toBoxId,
-      type: '0',
       quantity: 1,
       price: null,
     };

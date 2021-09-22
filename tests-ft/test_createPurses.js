@@ -30,7 +30,6 @@ module.exports.main = async (
     payload.purses[i] = {
       id: '', // will be ignored, contract is fugible contract
       boxId: boxId,
-      type: '0',
       quantity: 3,
       price: null,
     };

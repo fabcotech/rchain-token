@@ -8,7 +8,6 @@ const {
   getQuantity,
   getContractId,
   getMasterRegistryUri,
-  getType,
   getNewId,
   getPrice,
   log,
@@ -19,13 +18,10 @@ const {
 module.exports.createPurse = async () => {
   const masterRegistryUri = getMasterRegistryUri();
   const contractId = getContractId();
-  log(
-    'Make sure the private key provided is the one of the contract'
-  );
+  log('Make sure the private key provided is the one of the contract');
   log('Make sure the contract is not locked');
   const boxId = getBoxId();
 
-  const type = getType();
   const newId = getNewId();
 
   const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
@@ -41,9 +37,6 @@ module.exports.createPurse = async () => {
   if (pursesFile === '') {
     quantity = getQuantity();
     price = getPrice();
-    if (!type) {
-      throw new Error('Please provide a type with --type option');
-    }
     if (!quantity) {
       throw new Error('Please provide a quantity with --quantity option');
     }
@@ -54,7 +47,6 @@ module.exports.createPurse = async () => {
     purses: {
       [`newbag1`]: {
         id: newId || '', // will be ignored if fungible = true
-        type: type,
         price: price,
         boxId: boxId,
         quantity: quantity,

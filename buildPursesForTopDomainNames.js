@@ -113,7 +113,6 @@ Object.keys(ids).forEach((id) => {
   ids[id] = {
     id: id,
     data: data,
-    type: '0',
     quantity: 1,
   };
 });

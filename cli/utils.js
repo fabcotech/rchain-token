@@ -165,6 +165,17 @@ module.exports.getPrice = () => {
   return price;
 };
 
+module.exports.getMerge = () => {
+  const merge = getProcessArgv('--merge');
+  if (merge === 'true') {
+    return true;
+  }
+  if (merge === 'false') {
+    return false;
+  }
+  throw new Error('Missing arguments --merge');
+};
+
 module.exports.getQuantity = () => {
   const quantity = getProcessArgv('--quantity')
     ? parseInt(getProcessArgv('--quantity'), 10)

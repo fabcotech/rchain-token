@@ -33,7 +33,7 @@ node cli deploy-box --box-id mybox
 node cli deploy --fungible false --contract-id "mynft"
 
 # create a non-fungible "cat123" token (quantity is always 1 for non-fungibles)
-node cli create-purse --quantity 1 --type "0" --new-id "cat123"
+node cli create-purse --quantity 1 --new-id "cat123"
 
 # after the deployed is processed you can check that your purse is created
 node cli view
@@ -41,7 +41,7 @@ node cli view
 
 ##### fungible tokens
 
-Fungibles tokens are identified mainly by the type property, purses can have a quantity superior to one. For examples 100 gold tokens, 1000 shares that can be exchanged, or any ERC-20 tokens will be fungible. The IDs of purses are automatically incremented (0, 1, 2 etc.), they do not matter that much.
+Fungibles tokens purses can have a quantity superior to one. For examples 100 gold tokens, 1000 shares that can be exchanged, or any ERC-20 tokens will be fungible. The IDs of purses are automatically incremented (0, 1, 2 etc.), they do not matter that much.
 
 ```
 # the following steps assume you have already deployed a master contract and a box
@@ -50,10 +50,7 @@ Fungibles tokens are identified mainly by the type property, purses can have a q
 node cli deploy --fungible true --contract-id "mytoken"
 
 # Create/mint a purse with 12 tokens "GOLD" using the admin/owner capability
-node cli create-purse --quantity 12 --type "GOLD"
-
-# In the same contract, you can create another purse with another type of tokens
-node cli create-purse --quantity 24 --type "SILVER"
+node cli create-purse --quantity 12
 
 # after the deployed is processed you can check that your purse is created
 node cli view
@@ -114,7 +111,7 @@ A box (OCAP) is usually stored in a private channel like `@(*deployerId, "rchain
 All the methods on a box are private (owner of the box only).
 
 ```
-ro READ: () => Properties of the purse (quantity, price, box, publicKey, type)
+ro READ: () => Properties of the purse (quantity, price, box, publicKey)
 REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, super key ocap object)
 UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: Nil | Int }) => String | (true, super key ocap object)
 UPDATE_PURSE_DATA:  ({ contractId: String, purseId: String, data: any }) => String | (true, super key ocap object)

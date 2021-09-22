@@ -96,7 +96,6 @@ module.exports.view = async () => {
     }
     console.log('\npurse id ' + purseId + '\n');
     console.log(`box        : ${purses[purseId].boxId}`);
-    console.log(`type       : ${purses[purseId].type}`);
     console.log(`quantity   : ${purses[purseId].quantity}`);
     console.log(`price      : ${purses[purseId].price || 'not for sale'}`);
     return;
@@ -108,7 +107,7 @@ module.exports.view = async () => {
   console.log(
     `\nPurses [0-${ids.length < 99 ? ids.length - 1 : '99'}] / ${
       ids.length
-    }\npurse id          type         box        quantity     price (dust)       ${expiration} \n`
+    }\npurse id          box        quantity     price (dust)       ${expiration} \n`
   );
   const now = new Date().getTime();
   ids.slice(0, 100).forEach((id) => {
@@ -128,15 +127,13 @@ module.exports.view = async () => {
     let s = '';
     s += id;
     s = s.padEnd(18, ' ');
-    s += purses[id].type;
-    s = s.padEnd(31, ' ');
     s += purses[id].boxId;
-    s = s.padEnd(42, ' ');
+    s = s.padEnd(29, ' ');
     s += purses[id].quantity;
-    s = s.padEnd(55, ' ');
+    s = s.padEnd(42, ' ');
     s +=
       typeof purses[id].price === 'number' ? purses[id].price : 'not for sale';
-    s = s.padEnd(74, ' ');
+    s = s.padEnd(55, ' ');
     s += expires;
     if (purses[id].boxId === boxId) {
       console.log('\x1b[32m' + s);

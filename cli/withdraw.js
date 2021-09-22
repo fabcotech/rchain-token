@@ -6,6 +6,8 @@ const {
   getQuantity,
   getPurseId,
   getToBoxId,
+  getBoxId,
+  getMerge,
   log,
   validAfterBlockNumber,
   getMasterRegistryUri,
@@ -31,8 +33,8 @@ module.exports.withdraw = async () => {
     toBoxId: toBoxId,
     boxId: boxId,
     contractId: contractId,
-    merge: true
-  }
+    merge: getMerge(),
+  };
   const term = withdrawTerm(payload);
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);

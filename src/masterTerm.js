@@ -57,8 +57,8 @@ module.exports.masterTerm = (payload) => {
     have the following structure:
     pursesThm, example of FT purses:
     {
-      "1": { quantity: 2, timestamp: 12562173658, type: "0", boxId: "box1", price: Nil},
-      "2": { quantity: 12, timestamp: 12562173658, type: "0", boxId: "box1", price: 2},
+      "1": { quantity: 2, timestamp: 12562173658, boxId: "box1", price: Nil},
+      "2": { quantity: 12, timestamp: 12562173658, boxId: "box1", price: 2},
     }
   */
   boxesReadyCh,
@@ -553,7 +553,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
   } |
 
-  // validate string, used for .type , purse ID, box ID, contract ID
+  // validate string, used for purse ID, box ID, contract ID
   for (@(str, ret) <= validateStringCh) {
     match (str, Set("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) {
       (String, valids) => {
@@ -725,8 +725,9 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
             }
           }
         } |
+
         // if contract is fungible, we may find a
-        // purse with same .price and .type property
+        // purse with same .price property
         // if found, then merge and delete current purse
         for (@(box, pursesThm) <- iterateAndMergePursesCh) {
           new tmpCh, itCh in {
@@ -741,8 +742,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   new ch4, ch5, ch6, ch7 in {
                     TreeHashMap!("get", pursesThm, last, *ch4) |
                     for (@purse2 <- ch4) {
-                      match (purse2.get("type") == purse.get("type"), purse2.get("price") == purse.get("price")) {
-                        (true, true) => {
+                      match purse2.get("price") == purse.get("price") {
+                        true => {
                           TreeHashMap!(
                             "set",
                             pursesThm,
@@ -789,8 +790,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   new ch4, ch5, ch6, ch7 in {
                     TreeHashMap!("get", pursesThm, first, *ch4) |
                     for (@purse2 <- ch4) {
-                      match (purse2.get("type") == purse.get("type"), purse2.get("price") == purse.get("price")) {
-                        (true, true) => {
+                      match purse2.get("price") == purse.get("price") {
+                        true => {
                           TreeHashMap!(
                             "set",
                             pursesThm,
@@ -900,7 +901,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                 ({
                   "quantity": Int,
                   "timestamp": Int,
-                  "type": String,
                   "boxId": String,
                   "id": String,
                   "price": Nil \\/ Int
@@ -1218,13 +1218,12 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                     ({
                                       "data": _,
                                       "quantity": Int,
-                                      "type": String,
                                       "id": String,
                                       "price": Nil \\/ Int,
                                       "boxId": String
                                     }, false) => {
                                       getBoxCh!((createPursePayload.get("boxId"), *ch1)) |
-                                      validateStringCh!((createPursePayload.get("id") ++ createPursePayload.get("type"), *ch3)) |
+                                      validateStringCh!((createPursePayload.get("id"), *ch3)) |
                                       for (@box <- ch1; @valid <- ch3) {
                                         if (valid == true) {
                                           if (box == Nil) {
@@ -1251,7 +1250,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                             }
                                           }
                                         } else {
-                                          @return2!("error: invalid id or type property") |
+                                          @return2!("error: invalid id property") |
                                           @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
                                         }
                                       }
@@ -1835,7 +1834,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   for (_ <- ch40; _ <- ch41; _ <- ch42) {
                     makePurseCh!((
                       payload.get("contractId"),
-                      // keep quantity and type of existing purse
+                      // keep quantity of existing purse
                       purse
                         .set("boxId", boxId)
                         .set("price", Nil)
