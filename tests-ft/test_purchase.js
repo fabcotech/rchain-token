@@ -4,11 +4,7 @@ const { purchaseTerm } = require('../src');
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
-module.exports.main = async (
-  privateKey,
-  publicKey,
-  payload
-) => {
+module.exports.main = async (privateKey, publicKey, payload) => {
   const timestamp = new Date().getTime();
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
@@ -17,6 +13,8 @@ module.exports.main = async (
   );
 
   const term = purchaseTerm(payload);
+  console.log(term);
+  //return;
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
@@ -34,6 +32,7 @@ module.exports.main = async (
       process.env.VALIDATOR_HOST,
       deployOptions
     );
+    console.log(deployResponse);
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
       throw new Error('07_updateBagData 01');
@@ -53,6 +52,7 @@ module.exports.main = async (
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
+  console.log(data);
 
   return data;
 };

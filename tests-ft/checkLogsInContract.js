@@ -16,6 +16,9 @@ module.exports.main = async (masterRegistryUri, contractId, expectedLogs) => {
   let logs = rc.utils.rhoValToJs(JSON.parse(result0).expr[0]);
   let logsWithoutTimestamps = '';
   logs.split(';').forEach((l) => {
+    if (!l) {
+      return;
+    }
     logsWithoutTimestamps +=
       l.split(',').slice(0, 1).concat(l.split(',').slice(2)).join(',') + ';';
   });

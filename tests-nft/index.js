@@ -1,6 +1,7 @@
 const rc = require('rchain-toolkit');
 require('dotenv').config();
 
+const fillBalances = require('../tests-ft/fillBalances').main;
 const getAllData = require('../tests-ft/getAllData').main;
 const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPursesSameTimestampInContract =
@@ -47,6 +48,7 @@ const balances2 = [];
 const balances3 = [];
 
 const main = async () => {
+  fillBalances(PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY_2, PUBLIC_KEY_3);
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
