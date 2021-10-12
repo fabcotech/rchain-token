@@ -1,4 +1,7 @@
 module.exports.readPursesDataTerm = (payload) => {
+  if (payload.pursesIds.length === 0) {
+    return `new return in { return!({}) }`;
+  }
   let rholang = `new ${payload.pursesIds.map((id, i) => 'channel' + i)} in {`;
   payload.pursesIds.forEach((p, i) => {
     rholang +=
