@@ -3,9 +3,8 @@ const fs = require('fs');
 const csv = fs.readFileSync('./top-1m.csv', 'utf8');
 const lines = csv.split('\r\n');
 
-const NAMES_TO_PERFORM = 5000;
+const NAMES_TO_PERFORM = 10000;
 const ADDRESS = 'coolcontract2.coucou';
-const ALSO_RESERVE_NATIONAL_CODES = true;
 const ALSO_RESERVE_GENERIC_CODES = true;
 
 const ids = {};
@@ -50,56 +49,29 @@ const data = Buffer.from(
   })
 ).toString('hex');
 
-if (ALSO_RESERVE_NATIONAL_CODES) {
-  let nationals = [];
+if (ALSO_RESERVE_GENERIC_CODES) {
   let generics = [];
-  const tlds = fs.readFileSync('./topLevelDomains.csv', 'utf8');
-  tlds.split('\n').forEach((tld) => {
-    const a = tld.split(',');
-    const name = a[0].replace('.', '');
-    if (ALSO_RESERVE_NATIONAL_CODES && a[1] === 'country-code') {
-      const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
-      if (match && match[0] && match[0].length === name.length) {
-        if (ids[name]) {
-          console.warn('national tld ' + name + ' is duplicate');
-          if (!duplicates[name]) {
-            duplicates[name] = [name];
-          } else {
-            duplicates[name].push(name);
-          }
+  const tlds2 = fs.readFileSync('./tlds.txt', 'utf8');
+  tlds2.split('\n').forEach((tld) => {
+    const name = tld.toLowerCase();
+    const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
+    if (match && match[0] && match[0].length === name.length) {
+      if (ids[name]) {
+        console.warn('generic tld ' + name + ' is duplicate');
+        if (!duplicates[name]) {
+          duplicates[name] = [name];
         } else {
-          ids[name] = true;
-          nationals.push(name);
+          duplicates[name].push(name);
         }
       } else {
-        console.warn('national tld ' + name + ' is invalid');
-        invalids[name] = 'regexp';
+        ids[name] = true;
+        generics.push(name);
       }
-    }
-
-    if (ALSO_RESERVE_GENERIC_CODES && a[1] === 'generic') {
-      const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
-      if (match && match[0] && match[0].length === name.length) {
-        if (ids[name]) {
-          console.warn('generic tld ' + name + ' is duplicate');
-          if (!duplicates[name]) {
-            duplicates[name] = [name];
-          } else {
-            duplicates[name].push(name);
-          }
-        } else {
-          ids[name] = true;
-          generics.push(name);
-        }
-      } else {
-        console.warn('generic tld ' + name + ' is invalid');
-        invalids[name] = 'regexp';
-      }
+    } else {
+      console.warn('generic tld ' + name + ' is invalid');
+      invalids[name] = 'regexp';
     }
   });
-
-  console.log(`Also added ${nationals.length} national tld names :`);
-  console.log(nationals.join(', '));
   console.log(`Also added ${generics.length} generic tld names :`);
   console.log(generics.join(', '));
 }
@@ -117,7 +89,17 @@ Object.keys(ids).forEach((id) => {
   };
 });
 
-fs.writeFileSync('./name-purses.json', JSON.stringify(ids, null, 2));
+fs.writeFileSync('./name-purses.csv', Object.keys(ids).join(`;\n`), 'utf8');
+fs.writeFileSync('./name-purses.json', JSON.stringify(ids, null, 2), 'utf8');
+/* let blacklist = {};
+Object.keys(ids).forEach((id) => {
+  blacklist[id] = true;
+});
+fs.writeFileSync(
+  './blacklist.json',
+  JSON.stringify(blacklist, null, 2),
+  'utf8'
+); */
 
 console.log(
   `\nPrepared a total of ${Object.keys(ids).length} purses in name-purses.json`

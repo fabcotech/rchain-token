@@ -7,6 +7,7 @@ const { viewBox } = require('./cli/viewBox');
 const { withdraw } = require('./cli/withdraw');
 const { createPurse } = require('./cli/createPurse');
 const { lock } = require('./cli/lock');
+const { deletePurse } = require('./cli/deletePurse');
 const { updateBagData } = require('./cli/updateBagData');
 const { updateTokenData } = require('./cli/updateTokenData');
 const { viewData } = require('./cli/viewData');
@@ -78,6 +79,13 @@ const main = async () => {
   const lockArg = process.argv.findIndex((arg) => arg === 'lock') !== -1;
   if (lockArg) {
     lock();
+    return;
+  }
+
+  const deletePurseArg =
+    process.argv.findIndex((arg) => arg === 'delete-purse') !== -1;
+  if (deletePurseArg) {
+    deletePurse();
     return;
   }
 

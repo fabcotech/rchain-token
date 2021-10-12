@@ -10,3 +10,4 @@ purses.json
 stresslogs/*
 rnode.data*
 name-*
+blacklist.json

@@ -25,7 +25,7 @@ const PURSES_TO_CREATE = 10;
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
 const PUBLIC_KEY = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
-
+console.log(PUBLIC_KEY);
 const PRIVATE_KEY_2 =
   'a2803d16030f83757a5043e5c0e28573685f6d8bf4e358bf1385d82bffa8e698';
 const PUBLIC_KEY_2 = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY_2);

@@ -49,7 +49,7 @@ Fungibles tokens purses can have a quantity superior to one. For examples 100 go
 # deploy contract and save super key to box
 node cli deploy --fungible true --contract-id "mytoken"
 
-# Create/mint a purse with 12 tokens "GOLD" using the admin/owner capability
+# Create/mint a purse with 12 tokens "fGOLD" using the admin/owner capability
 node cli create-purse --quantity 12
 
 # after the deployed is processed you can check that your purse is created
@@ -127,8 +127,9 @@ The ownership of a contract is expressed by the ownership of a super key that is
 All the methods on a super key are private (deployer of the contract only).
 
 ```
-LOCK: () => String | (true, Nil) // cannot CREATE_PURSE anymore after a contract is locked
+LOCK: () => String | (true, Nil) // cannot CREATE_PURSE/DELETE_PURSE anymore after a contract is locked
 CREATE_PURSE: see `cli/createPurse.js` or `src/createPursesTerm`.
+DELETE_PURSE: see `cli/deletePurse.js` or `src/deletePursesTerm`.
 ```
 
 ##### Using SDK
@@ -192,4 +193,4 @@ node stress/stress_createPursesAndReadAll.js
 
 The dappy name system uses a rchain-token NFT contract. By default some purseswill be reserved, probably the top 3000 or top 5000 domain names. The list can be found on this page [amazonaws.com/umbrella-static/index.html](http://s3-us-west-1.amazonaws.com/umbrella-static/index.html)
 
-Top ever domain sales [alter.com/blog/top-domain-name-sales](https://alter.com/blog/top-domain-name-sales)
+Top TLDs with private/brand TLDs tlds.txt https://data.iana.org/TLD/tlds-alpha-by-domain.txt

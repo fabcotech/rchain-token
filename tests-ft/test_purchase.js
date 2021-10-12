@@ -13,8 +13,6 @@ module.exports.main = async (privateKey, publicKey, payload) => {
   );
 
   const term = purchaseTerm(payload);
-  console.log(term);
-  //return;
 
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(

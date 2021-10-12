@@ -665,11 +665,11 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     for (@(boxId, contractId, purseId, return) <= removePurseInBoxCh) {
       for (@box <- @(*vault, "boxes", boxId)) {
         if (box.get(contractId) == Nil) {
-          @return!("error: CRITICAL purse not found") |
+          @return!("error: CRITICAL contract id not found in box") |
           @(*vault, "boxes", boxId)!(box)
         } else {
           if (box.get(contractId).contains(purseId) == false) {
-            @return!("error: CRITICAL purse already exists in box") |
+            @return!("error: CRITICAL purse does not exists in box") |
             @(*vault, "boxes", boxId)!(box)
           } else {
             stdout!(contractId ++ "/" ++ boxId ++ " purse " ++ purseId ++ " removed from box") |
@@ -958,7 +958,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "12.0.1" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "14.0.0" }))
               }
             }
           }
@@ -1178,7 +1178,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
                     // config
                     @(*vault, "contractConfig", payload.get("contractId"))!(
-                      payload.set("locked", false).set("counter", 1).set("version", "12.0.1").set("fee", payload.get("fee"))
+                      payload.set("locked", false).set("counter", 1).set("version", "14.0.0").set("fee", payload.get("fee"))
                     ) |
 
                     new superKeyCh in {
@@ -1198,6 +1198,53 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                 @(*vault, "contractConfig", payload.get("contractId"))!(contractConfig.set("locked", true)) |
                                 @return2!((true, Nil)) |
                                 @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                              }
+                            }
+                          }
+                        }
+                      } |
+
+                      for (@("DELETE_PURSE", payload2, return2) <= superKeyCh) {
+                        for (_ <- @(*vault, "CONTRACT_LOCK", payload.get("contractId"))) {
+                          for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {
+                            if (contractConfig.get("locked") == true) {
+                              @return2!("error: contract is locked") |
+                              @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                            } else {
+                              match payload2 {
+                                { "purseId": String } => {
+                                  new ch1, ch2, ch3, ch4 in {
+                                    for (@pursesThm <<- @(*vault, "purses", payload.get("contractId"))) {
+                                      TreeHashMap!("get", pursesThm, payload2.get("purseId"), *ch2) |
+                                      for (@purseToDelete <- ch2) {
+                                        if (purseToDelete == Nil) {
+                                          @return2!("error: purse does not exist") |
+                                          @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                        } else {
+                                          removePurseInBoxCh!((purseToDelete.get("boxId"), payload.get("contractId"), payload2.get("purseId"), *ch4)) |
+                                          TreeHashMap!("set", pursesThm, payload2.get("purseId"), Nil, *ch3) |
+                                          for (@a <- ch3; @b <- ch4) {
+                                            @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil) |
+                                            match (a, b) {
+                                              (Nil, (true, Nil)) => {
+                                                @return2!((true, Nil))
+                                              }
+                                              _ => {
+                                                stdout!(a) |
+                                                stdout!(b) |
+                                                @return2!("error: CRITICAL purse removal went wrong")
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                                _ => {
+                                  @return2!("error: payload.purseId should be a string") |
+                                  @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                }
                               }
                             }
                           }
@@ -1303,7 +1350,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       }
                     }
                   } else {
-                    unlock!("error: CRITICAL box not found")
+                    unlock!("error: CRITICAL purse removal went wrong box not found")
                   }
                 }
               }

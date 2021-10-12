@@ -112,6 +112,20 @@ module.exports.lockTerm = (
 `
 );
 
+const deletePurseFile = fs
+  .readFileSync('./rholang/op_delete_purse.rho')
+  .toString('utf8');
+fs.writeFileSync(
+  './src/deletePurseTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.deletePurseTerm = (
+  payload
+) => {
+  return \`${replaceEverything(deletePurseFile)}\`;
+};
+`
+);
+
 const updatePursePriceFile = fs
   .readFileSync('./rholang/op_update_purse_price.rho')
   .toString('utf8');

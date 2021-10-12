@@ -37,7 +37,7 @@ module.exports.logData = (data) => {
   }
   if (data.fee) {
     console.log(
-      `Fee                   : ${data.fee[1]} / 10000 (${data.fee / 100}%)`
+      `Fee                   : ${data.fee[1]} / 10000 (${data.fee[1] / 100}%)`
     );
   }
   if (data.expires) {

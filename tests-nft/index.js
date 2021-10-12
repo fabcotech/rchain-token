@@ -7,6 +7,7 @@ const checkPursesInContract = require('./checkPursesInContract.js').main;
 const checkPursesSameTimestampInContract =
   require('./checkPursesSameTimestampInContract.js').main;
 const createPurses = require('./test_createPurses.js').main;
+const deletePurse = require('./test_deletePurse.js').main;
 const deleteExpiredPurse = require('./test_deleteExpiredPurse.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 const getRandomName = require('./getRandomName.js').main;
@@ -132,10 +133,11 @@ const main = async () => {
   }
 
   const t = new Date().getTime();
-  const ids = [];
+  let ids = [];
   for (let i = 0; i < PURSES_TO_CREATE; i += 1) {
     ids.push(getRandomName());
   }
+  ids.push('willbedeleted');
 
   await createPurses(
     PRIVATE_KEY,
@@ -161,6 +163,21 @@ const main = async () => {
   await checkPursesInBox(masterRegistryUri, 'box1', 'mytoken', [ids[0]]);
   await checkPursesInContract(masterRegistryUri, 'mytoken', ['0'].concat(ids));
   console.log(`✓ 04 check the presence of ${ids.length} purses with quantity`);
+
+  let purseDeleted = await deletePurse(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    'mytoken',
+    'box1',
+    'willbedeleted'
+  );
+  if (purseDeleted.status !== 'completed') {
+    throw new Error('04.1 Failed to delete purse');
+  }
+  ids = ids.filter((id) => id !== 'willbedeleted');
+  await checkPursesInContract(masterRegistryUri, 'mytoken', ['0'].concat(ids));
+  console.log(`✓ 04.1 check the that purse has been deleted`);
 
   await withdraw(
     PRIVATE_KEY,
