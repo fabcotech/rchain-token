@@ -17,7 +17,6 @@ const VALUES = {
     quantity: 2,
     box: 'aaaaaaaaaaaaa',
     publicKey: 'bbbbbbbbbbb',
-    type: 'GOLD',
   }),
 };
 const VALUE = VALUES[3];

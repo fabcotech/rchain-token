@@ -5,12 +5,11 @@ require('dotenv').config();
 
 const getBalance = require('../tests-ft/getBalance').main;
 const purchase = require('../tests-ft/test_purchase').main;
-const setPrice = require('../tests-ft/test_setPrice').main;
-const getRandomName = require('./getRandomName').main;
+//const setPrice = require('../tests-ft/test_setPrice').main;
+//const getRandomName = require('./getRandomName').main;
 const deployBox = require('../tests-ft/test_deployBox').main;
 const deploy = require('../tests-ft/test_deploy').main;
-const checkDefaultPurses = require('../tests-ft/test_checkDefaultPurses')
-  .main;
+const checkDefaultPurses = require('../tests-ft/test_checkDefaultPurses').main;
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
 
@@ -28,6 +27,19 @@ const balances1 = [];
 const balances2 = [];
 
 const main = async () => {
+  await purchase(PRIVATE_KEY, PUBLIC_KEY, {
+    masterRegistryUri: '1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k',
+    boxId: 'box1',
+    contractId: 'bananas',
+    merge: false,
+    purseId: `2`,
+    quantity: 1,
+    data: 'bbb',
+    newId: null,
+    price: 880000000,
+    publicKey: PUBLIC_KEY,
+  });
+  return;
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
 
@@ -98,15 +110,20 @@ const main = async () => {
     newBoxRegistryUri = newDataBox.registryUri.replace('rho:id:', '');
     balances2.push(await getBalance(PUBLIC_KEY_2));
 
-    await purchase(contractRegistryUri, PRIVATE_KEY_2, PUBLIC_KEY_2, {
-      toBoxRegistryUri: newBoxRegistryUri,
-      purseId: `${ids[0]}`,
-      quantity: 1,
-      data: 'bbb',
-      newId: null,
-      price: 10,
-      publicKey: PUBLIC_KEY_2,
-    });
+    await purchase(
+      '1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k',
+      PRIVATE_KEY,
+      PUBLIC_KEY,
+      {
+        toBoxRegistryUri: 'box1',
+        purseId: `2`,
+        quantity: 1,
+        data: 'bbb',
+        newId: null,
+        price: 10,
+        publicKey: PUBLIC_KEY,
+      }
+    );
     balances2.push(await getBalance(PUBLIC_KEY_2));
 
     const dustCostPurchase =

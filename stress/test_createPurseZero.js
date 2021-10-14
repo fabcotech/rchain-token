@@ -27,7 +27,6 @@ module.exports.main = async (
     id: '0', // will be checked and use as id if available (non-fungible)
     publicKey: publicKey1,
     box: `$BQrho:id:${boxRegistryUri}$BQ`,
-    type: '0',
     quantity: 10000000000000,
     price: 1,
   };
