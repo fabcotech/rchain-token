@@ -16,8 +16,10 @@ in {
         match i {
           5 => {
             for (@results <- resultsCh) {
+              // OP_CREATE_PURSES_COMPLETED_BEGIN
               stdout!("completed, purses created, check results to see errors/successes") |
               basket!({ "status": "completed", "results": results})
+              // OP_CREATE_PURSES_COMPLETED_END
             }
           }
           _ => {

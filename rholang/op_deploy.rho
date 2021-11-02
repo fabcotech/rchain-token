@@ -19,12 +19,14 @@ in {
         }
         (true, superKey) => {
           @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")!(superKey) |
+          // OP_REGISTER_CONTRACT_COMPLETED_BEGIN
           basket!({
             "status": "completed",
             "masterRegistryUri": "MASTER_REGISTRY_URI",
             "contractId": "CONTRACT_ID",
           }) |
           stdout!("completed, contract registered")
+          // OP_REGISTER_CONTRACT_COMPLETED_END
         }
       }
     }

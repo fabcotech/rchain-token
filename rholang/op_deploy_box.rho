@@ -18,8 +18,10 @@ in {
         }
         (true, box) => {
           @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")!(box) |
+          // OP_PUBLIC_REGISTER_BOX_COMPLETED_BEGIN
           basket!({ "status": "completed", "boxId": "BOX_ID" }) |
           stdout!("completed, box registered")
+          // OP_PUBLIC_REGISTER_BOX_COMPLETED_END
         }
       }
     }

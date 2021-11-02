@@ -21,12 +21,14 @@ in {
         }
         (true, superKey) => {
           @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", "${payload.contractId}")!(superKey) |
+          // OP_REGISTER_CONTRACT_COMPLETED_BEGIN
           basket!({
             "status": "completed",
             "masterRegistryUri": "${payload.masterRegistryUri}",
             "contractId": "${payload.contractId}",
           }) |
           stdout!("completed, contract registered")
+          // OP_REGISTER_CONTRACT_COMPLETED_END
         }
       }
     }

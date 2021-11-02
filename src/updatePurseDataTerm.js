@@ -19,8 +19,10 @@ in {
           stdout!(("failed", r))
         }
         _ => {
+          // OP_UPDATE_PURSE_DATA_COMPLETED_BEGIN
           basket!({ "status": "completed" }) |
           stdout!("completed, data updated")
+          // OP_UPDATE_PURSE_DATA_COMPLETED_END
         }
       }
     }

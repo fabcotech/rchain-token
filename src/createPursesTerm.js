@@ -17,13 +17,13 @@ module.exports.createPursesTerm = (payload) => {
   rholang += `for (${ids
     .map((p, i) => '@value' + i + ' <- channel' + i)
     .join('; ')}) {\n`;
-  rholang += `  stdout!("purses created, check results to see successes/failures") |
-  return!({ "status": "completed", "results": {}${ids
+  rholang += `  // OP_CREATE_PURSES_COMPLETED_BEGIN\n   stdout!("purses created, check results to see successes/failures") |
+  basket!({ "status": "completed", "results": {}${ids
     .map((p, i) => `.union({ "${p}": value${i} })`)
-    .join('')}})\n`;
+    .join('')}}) // OP_CREATE_PURSES_COMPLETED_END\n`;
   rholang += `}\n}`;
 
-  return `new return, entryCh, readCh, stdout(\`rho:io:stdout\`), deployerId(\`rho:rchain:deployerId\`), lookup(\`rho:registry:lookup\`) in {
+  return `new basket, entryCh, readCh, stdout(\`rho:io:stdout\`), deployerId(\`rho:rchain:deployerId\`), lookup(\`rho:registry:lookup\`) in {
     for (superKey <<- @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", "${payload.contractId}")) {
       ${rholang}
     }

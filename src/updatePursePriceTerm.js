@@ -19,8 +19,10 @@ in {
           stdout!(("failed", r))
         }
         _ => {
+          // OP_UPDATE_PURSE_PRICE_COMPLETED_BEGIN
           basket!({ "status": "completed" }) |
           stdout!("completed, price updated")
+          // OP_UPDATE_PURSE_PRICE_COMPLETED_END
         }
       }
     }

@@ -148,8 +148,10 @@ in {
                                 }
                               }
                               _ => {
+                                // OP_RENEW_COMPLETED_BEGIN
                                 basket!({ "status": "completed" }) |
                                 stdout!("completed, renew successful")
+                                // OP_RENEW_COMPLETED_END
                               }
                             }
                           }

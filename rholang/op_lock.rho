@@ -17,8 +17,10 @@ in {
           stdout!(("failed", r))
         }
         _ => {
+          // OP_LOCK_COMPLETED_BEGIN
           stdout!("completed, contract locked") |
           basket!({ "status": "completed" })
+          // OP_LOCK_COMPLETED_END
         }
       }
     }

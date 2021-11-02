@@ -18,8 +18,10 @@ in {
           stdout!(("failed", r))
         }
         _ => {
+          // OP_DELETE_PURSE_COMPLETED_BEGIN
           stdout!("completed, purse deleted") |
           basket!({ "status": "completed" })
+          // OP_DELETE_PURSE_COMPLETED_END
         }
       }
     }

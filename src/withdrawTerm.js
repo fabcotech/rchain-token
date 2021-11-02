@@ -19,8 +19,10 @@ in {
           stdout!(("failed", r))
         }
         _ => {
+          // OP_WITHDRAW_COMPLETED_BEGIN
           basket!({ "status": "completed" }) |
           stdout!("completed, withdraw successful")
+          // OP_WITHDRAW_COMPLETED_END
         }
       }
     }

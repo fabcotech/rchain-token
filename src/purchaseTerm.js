@@ -173,8 +173,10 @@ in {
                                 }
                               }
                               _ => {
+                                // OP_PURCHASE_COMPLETED_BEGIN
                                 basket!({ "status": "completed" }) |
                                 stdout!("completed, purchase successful")
+                                // OP_PURCHASE_COMPLETED_END
                               }
                             }
                           }
