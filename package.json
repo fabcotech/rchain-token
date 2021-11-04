@@ -1,6 +1,6 @@
 {
   "name": "rchain-token",
-  "version": "14.0.0",
+  "version": "14.0.1",
   "description": "Fungibles and non-fungibles tokens on the RChain blockchain",
   "main": "src/index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/fabcotech/rchain-token#readme",
   "dependencies": {
-    "rchain-toolkit": "0.3.4",
+    "rchain-toolkit": "0.3.6",
     "uuid": "3.4.0",
     "dotenv": "6.2.0",
     "blakejs": "^1.1.0"
