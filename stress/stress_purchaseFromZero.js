@@ -1,5 +1,4 @@
 const rc = require('rchain-toolkit');
-const fs = require('fs');
 
 require('dotenv').config();
 
@@ -14,7 +13,7 @@ const createPurses = require('../tests-nft/test_createPurses.js').main;
 const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 const deployMaster = require('../tests-ft/test_deployMaster').main;
 
-const PURSES_TO_PURCHASE_EACH_TIME = 40;
+const PURSES_TO_PURCHASE_EACH_TIME = 2;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
@@ -96,21 +95,30 @@ const main = async () => {
   let ids = [];
   const purchaseFromZero = async () => {
     i += 1;
-    const newId = getRandomName();
-    ids.push(newId);
 
-    const purchaseFromZeroSuccess = await purchase(PRIVATE_KEY, PUBLIC_KEY, {
-      masterRegistryUri: masterRegistryUri,
-      purseId: '0',
-      contractId: `mytoken`,
-      boxId: `box`,
-      quantity: 1,
-      data: 'bbb',
-      newId: newId,
-      merge: true,
-      price: 1000,
-      publicKey: PUBLIC_KEY,
-    });
+    const arr = [];
+    for (let i = 0; i < PURSES_TO_PURCHASE_EACH_TIME; i += 1) {
+      const newId = getRandomName();
+      ids.push(newId);
+      arr.push(
+        purchase(PRIVATE_KEY, PUBLIC_KEY, {
+          masterRegistryUri: masterRegistryUri,
+          purseId: '0',
+          contractId: `mytoken`,
+          boxId: `box`,
+          quantity: 1,
+          data: 'bbb',
+          newId: newId,
+          merge: true,
+          price: 1000,
+          publicKey: PUBLIC_KEY,
+        })
+      );
+    }
+    console.log(ids);
+
+    const purchaseFromZeroSuccess = await Promise.all(arr);
+
     await checkPursesInBox(masterRegistryUri, 'box', 'mytoken', ids);
     console.log('purchase from zero successful');
     console.log('checked purses in box: ', ids.join(', '));

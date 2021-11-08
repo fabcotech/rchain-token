@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/fabcotech/rchain-token#readme",
   "dependencies": {
-    "rchain-toolkit": "0.3.6",
+    "rchain-toolkit": "0.3.8",
     "uuid": "3.4.0",
     "dotenv": "6.2.0",
     "blakejs": "^1.1.0"

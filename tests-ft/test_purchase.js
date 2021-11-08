@@ -5,7 +5,7 @@ const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
 
 module.exports.main = async (privateKey, publicKey, payload) => {
-  const timestamp = new Date().getTime();
+  const timestamp = new Date().getTime() - Math.round(Math.random() * 10000);
   const pd = await prepareDeploy(
     process.env.READ_ONLY_HOST,
     publicKey,
