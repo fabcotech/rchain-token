@@ -14,7 +14,7 @@ const createPurses = require('../tests-nft/test_createPurses.js').main;
 const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 const deployMaster = require('../tests-ft/test_deployMaster').main;
 
-const PURSES_TO_PURCHASE_EACH_TIME = 4;
+const PURSES_TO_PURCHASE_EACH_TIME = 1;
 const BOX_ID = 'box';
 const BOX_EXISTS = false;
 const BOX2_ID = 'box2';
@@ -143,7 +143,7 @@ const main = async () => {
     const purchaseFromZeroSuccess = await Promise.all(arr);
 
     const itTook = Math.round(0.1 * (new Date().getTime() - t)) / 100;
-    await checkPursesInBox(masterRegistryUri, BOX_ID, CONTRACT_ID, ids);
+    await checkPursesInBox(masterRegistryUri, BOX2_ID, CONTRACT_ID, ids);
     console.log('purchase from zero successful');
     console.log('checked purses in box: ', ids.join(', '));
 
