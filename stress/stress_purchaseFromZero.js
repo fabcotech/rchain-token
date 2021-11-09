@@ -1,4 +1,5 @@
 const rc = require('rchain-toolkit');
+const fs = require('fs');
 
 require('dotenv').config();
 
@@ -13,7 +14,13 @@ const createPurses = require('../tests-nft/test_createPurses.js').main;
 const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 const deployMaster = require('../tests-ft/test_deployMaster').main;
 
-const PURSES_TO_PURCHASE_EACH_TIME = 2;
+const PURSES_TO_PURCHASE_EACH_TIME = 4;
+const BOX_ID = 'box';
+const BOX_EXISTS = false;
+const CONTRACT_ID = 'mytoken';
+const CONTRACT_EXISTS = false;
+const MASTER_REGISTRY_URI = undefined;
+const PRICE = 1000;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
@@ -27,63 +34,64 @@ const balances1 = [];
 const balances2 = [];
 
 const main = async () => {
+  const time = (new Date().getTime() + '').slice(0, 10);
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
 
-  const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
-  const masterRegistryUri = data.registryUri.replace('rho:id:', '');
-  console.log('masterRegistryUri', masterRegistryUri);
-
-  const dataBox = await deployBox(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    'box'
-  );
-  balances1.push(await getBalance(PUBLIC_KEY));
-
-  const dataBox2 = await deployBox(
-    PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
-    masterRegistryUri,
-    'box2'
-  );
-  balances2.push(await getBalance(PUBLIC_KEY_2));
-
-  const deployData = await deploy(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    'box',
-    false,
-    'mytoken',
-    null,
-    null
-  );
-
-  const c = await createPurses(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    'mytoken',
-    'box',
-    'box',
-    []
-  );
-  if (c.status !== 'completed') {
-    console.log(c);
-    throw new Error('could not update purse price');
+  let masterRegistryUri = MASTER_REGISTRY_URI;
+  if (!masterRegistryUri) {
+    const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
+    masterRegistryUri = data.registryUri.replace('rho:id:', '');
   }
-  console.log('create 0 successful');
+  console.log('  masterRegistryUri', masterRegistryUri);
+
+  if (!BOX_EXISTS) {
+    const dataBox = await deployBox(
+      PRIVATE_KEY,
+      PUBLIC_KEY,
+      masterRegistryUri,
+      BOX_ID
+    );
+    balances1.push(await getBalance(PUBLIC_KEY));
+  }
+  console.log('  box id', BOX_ID);
+
+  if (!CONTRACT_EXISTS) {
+    const deployData = await deploy(
+      PRIVATE_KEY,
+      PUBLIC_KEY,
+      masterRegistryUri,
+      BOX_ID,
+      false,
+      CONTRACT_ID,
+      null,
+      null
+    );
+    const c = await createPurses(
+      PRIVATE_KEY,
+      PUBLIC_KEY,
+      masterRegistryUri,
+      CONTRACT_ID,
+      BOX_ID,
+      BOX_ID,
+      []
+    );
+    if (c.status !== 'completed') {
+      console.log(c);
+      throw new Error('could not create purse 0');
+    }
+    console.log('create 0 successful');
+  }
+  console.log('  contract id', CONTRACT_ID);
 
   const d = await updatePursePrice(
     PRIVATE_KEY,
     PUBLIC_KEY,
     masterRegistryUri,
-    'box',
-    'mytoken',
+    BOX_ID,
+    CONTRACT_ID,
     '0',
-    1000
+    PRICE
   );
   if (d.status !== 'completed') {
     console.log(d);
@@ -96,6 +104,7 @@ const main = async () => {
   const purchaseFromZero = async () => {
     i += 1;
 
+    const t = new Date().getTime();
     const arr = [];
     for (let i = 0; i < PURSES_TO_PURCHASE_EACH_TIME; i += 1) {
       const newId = getRandomName();
@@ -110,22 +119,32 @@ const main = async () => {
           data: 'bbb',
           newId: newId,
           merge: true,
-          price: 1000,
+          price: PRICE,
           publicKey: PUBLIC_KEY,
         })
       );
     }
-    console.log(ids);
 
     const purchaseFromZeroSuccess = await Promise.all(arr);
 
-    await checkPursesInBox(masterRegistryUri, 'box', 'mytoken', ids);
+    const itTook = Math.round(0.1 * (new Date().getTime() - t)) / 100;
+    await checkPursesInBox(masterRegistryUri, BOX_ID, CONTRACT_ID, ids);
     console.log('purchase from zero successful');
     console.log('checked purses in box: ', ids.join(', '));
 
-    if (i < 10) {
-      purchaseFromZero();
+    const filename = `./stresslogs/stress_purchase_from_zero_logs_${time}.txt`;
+    let s = '';
+    try {
+      s = fs.readFileSync(filename, 'utf8');
+    } catch (e) {}
+    if (!s.length) {
+      s += `${filename}\nPURSES_TO_PURCHASE_EACH_TIME:${PURSES_TO_PURCHASE_EACH_TIME}\nBOX_ID:${BOX_ID}\nCONTRACT_ID:${CONTRACT_ID}\n`;
     }
+
+    s += `${new Date().toString()}\n✓ ${i} purchased ${PURSES_TO_PURCHASE_EACH_TIME} purses/NFT from 0 in ${itTook}s\n`;
+
+    fs.writeFileSync(filename, s, 'utf8');
+    purchaseFromZero();
   };
 
   purchaseFromZero();
