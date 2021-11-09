@@ -17,6 +17,8 @@ const deployMaster = require('../tests-ft/test_deployMaster').main;
 const PURSES_TO_PURCHASE_EACH_TIME = 4;
 const BOX_ID = 'box';
 const BOX_EXISTS = false;
+const BOX2_ID = 'box2';
+const BOX2_EXISTS = false;
 const CONTRACT_ID = 'mytoken';
 const CONTRACT_EXISTS = false;
 const MASTER_REGISTRY_URI = undefined;
@@ -54,7 +56,17 @@ const main = async () => {
     );
     balances1.push(await getBalance(PUBLIC_KEY));
   }
-  console.log('  box id', BOX_ID);
+  if (!BOX2_EXISTS) {
+    const dataBox = await deployBox(
+      PRIVATE_KEY_2,
+      PUBLIC_KEY_2,
+      masterRegistryUri,
+      BOX2_ID
+    );
+    balances2.push(await getBalance(PUBLIC_KEY_2));
+  }
+  console.log('  box id ', BOX_ID);
+  console.log('  box id 2', BOX2_ID);
 
   if (!CONTRACT_EXISTS) {
     const deployData = await deploy(
@@ -80,7 +92,7 @@ const main = async () => {
       console.log(c);
       throw new Error('could not create purse 0');
     }
-    console.log('create 0 successful');
+    console.log('  create 0 successful');
   }
   console.log('  contract id', CONTRACT_ID);
 
@@ -97,7 +109,7 @@ const main = async () => {
     console.log(d);
     throw new Error('could not update purse price');
   }
-  console.log('update purse 0 price successful');
+  console.log('  update purse 0 price successful');
 
   let i = 0;
   let ids = [];
@@ -110,20 +122,23 @@ const main = async () => {
       const newId = getRandomName();
       ids.push(newId);
       arr.push(
-        purchase(PRIVATE_KEY, PUBLIC_KEY, {
+        purchase(PRIVATE_KEY_2, PUBLIC_KEY_2, {
           masterRegistryUri: masterRegistryUri,
           purseId: '0',
           contractId: `mytoken`,
-          boxId: `box`,
+          boxId: BOX2_ID,
           quantity: 1,
           data: 'bbb',
           newId: newId,
           merge: true,
           price: PRICE,
-          publicKey: PUBLIC_KEY,
+          publicKey: PUBLIC_KEY_2,
         })
       );
     }
+    console.log(
+      `  will deploy ${PURSES_TO_PURCHASE_EACH_TIME} purchase-from-zero`
+    );
 
     const purchaseFromZeroSuccess = await Promise.all(arr);
 
