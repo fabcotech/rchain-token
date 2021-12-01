@@ -9,5 +9,5 @@ dist
 purses.json
 stresslogs/*
 rnode.data*
-name-*
+name-*.json
 blacklist.json

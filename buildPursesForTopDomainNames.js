@@ -3,8 +3,8 @@ const fs = require('fs');
 const csv = fs.readFileSync('./top-1m.csv', 'utf8');
 const lines = csv.split('\r\n');
 
-const NAMES_TO_PERFORM = 10000;
-const ADDRESS = 'coolcontract2.coucou';
+const NAMES_TO_PERFORM = 40000;
+const ADDRESS = '';
 const ALSO_RESERVE_GENERIC_CODES = true;
 
 const ids = {};
@@ -26,7 +26,16 @@ for (let i = 0; i < lines.length - 1; i += 1) {
   const name = domainName.split('.')[domainName.split('.').length - 2];
   const match = (name || '').match(/[a-z]([A-Za-z0-9]*)*/g);
   if (!match || (match.length !== 1 && match[0].length !== name.length)) {
-    invalids[name] = 'regexp';
+    const match2 = (name || '').match(/[a-z]([A-Za-z0-9-]*)*/g);
+    // it only contains dash, like coca-cola
+    if (match2 && match2.length === 1 && match2[0].length === name.length) {
+      const trueName = name.replace(/\-/g, '')
+      ids[trueName] = true;
+      j += 1;
+    } else {
+      invalids[name] = 'regexp';
+    }
+
   } else if (!name || name.length > 24 || name.length < 1) {
     invalids[name] = 'length';
   } else if (ids[name]) {
