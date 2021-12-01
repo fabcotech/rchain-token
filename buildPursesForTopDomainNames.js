@@ -3,7 +3,7 @@ const fs = require('fs');
 const csv = fs.readFileSync('./top-1m.csv', 'utf8');
 const lines = csv.split('\r\n');
 
-const NAMES_TO_PERFORM = 40000;
+const NAMES_TO_PERFORM = 30000;
 const ADDRESS = '';
 const ALSO_RESERVE_GENERIC_CODES = true;
 
@@ -30,8 +30,16 @@ for (let i = 0; i < lines.length - 1; i += 1) {
     // it only contains dash, like coca-cola
     if (match2 && match2.length === 1 && match2[0].length === name.length) {
       const trueName = name.replace(/\-/g, '')
-      ids[trueName] = true;
-      j += 1;
+      if (ids[trueName]) {
+        if (!duplicates[trueName]) {
+          duplicates[trueName] = [trueName];
+        } else {
+          duplicates[trueName].push(name);
+        }
+      } else {
+        ids[trueName] = true;
+        j += 1;
+      }
     } else {
       invalids[name] = 'regexp';
     }
