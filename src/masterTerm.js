@@ -960,7 +960,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "15.0.1" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "15.0.2" }))
               }
             }
           }
@@ -1187,7 +1187,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
                     // config
                     @(*vault, "contractConfig", contractId)!(
-                      payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", "15.0.1").set("fee", payload.get("fee"))
+                      payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", "15.0.2").set("fee", payload.get("fee"))
                     ) |
 
                     new superKeyCh in {
