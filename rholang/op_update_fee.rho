@@ -1,0 +1,30 @@
+new basket,
+  returnCh,
+  stdout(`rho:io:stdout`),
+  deployerId(`rho:rchain:deployerId`),
+  registryLookup(`rho:registry:lookup`)
+in {
+
+  for (superKey <<- @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", "CONTRACT_ID")) {
+    superKey!((
+      "UPDATE_FEE",
+      { "fee": FEE },
+      *returnCh
+    )) |
+    for (@r <- returnCh) {
+      stdout!(r) |
+      match r {
+        String => {
+          basket!({ "status": "failed", "message": r }) |
+          stdout!(("failed", r))
+        }
+        _ => {
+          // OP_UPDATE_FEE_COMPLETED_BEGIN
+          stdout!("completed, fee updated") |
+          basket!({ "status": "completed" })
+          // OP_UPDATE_FEE_COMPLETED_END
+        }
+      }
+    }
+  }
+}

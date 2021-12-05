@@ -3,6 +3,7 @@ module.exports.masterTerm = (payload) => {
     return `new 
   basket,
 
+  prefixCh,
   entryCh,
   entryUriCh,
 
@@ -577,6 +578,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
       blockData!(*blockDataCh) |
       for (_, @timestamp, _ <- blockDataCh) {
         for (@current <- @(*vault, "LOGS", contractId)) {
+          stdout!(current.length()) |
           match current.length() > 2600 {
             true => {
               @(*vault, "LOGS", contractId)!("\${type},\${ts}," %% { "type": type, "ts": timestamp } ++ str ++ current.slice(0,2200))
@@ -958,7 +960,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "14.0.0" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "15.0.0" }))
               }
             }
           }
@@ -1078,7 +1080,14 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       validateStringCh!((payload.get("boxId"), *ch7)) |
                       for (@valid <- ch7) {
                         if (valid == true) {
-                          ch6!(true)
+                          for (@prefix <<- prefixCh) {
+                            match prefix ++ payload.get("boxId") {
+                              boxId => {
+                                ch6!(boxId) |
+                                TreeHashMap!("get", boxesThm, boxId, *ch1)
+                              }
+                            }
+                          }
                         } else {
                           @return!("error: invalid box id")
                         }
@@ -1092,23 +1101,22 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
               }
             } |
 
-            TreeHashMap!("get", boxesThm, payload.get("boxId"), *ch1) |
-            for (@existingBox <- ch1; _ <- ch6) {
-              if (existingBox == Nil) {
+            for (@existingBox <- ch1; @boxId <- ch6) {
+               if (existingBox == Nil) {
                 new boxCh in {
-                  TreeHashMap!("set", boxesThm, payload.get("boxId"), "exists", *ch2) |
+                  TreeHashMap!("set", boxesThm, boxId, "exists", *ch2) |
                   for (_ <- ch2) {
-                    @(*vault, "boxes", payload.get("boxId"))!({}) |
-                    @(*vault, "boxesSuperKeys", payload.get("boxId"))!(Set()) |
-                    @(*vault, "boxConfig", payload.get("boxId"))!({ "publicKey": payload.get("publicKey") }) |
-                    @return!((true, bundle+{*boxCh})) |
-                    initLocksForBoxCh!(payload.get("boxId")) |
-                    initializeOCAPOnBoxCh!((*boxCh, payload.get("boxId")))
+                    @(*vault, "boxes", boxId)!({}) |
+                    @(*vault, "boxesSuperKeys", boxId)!(Set()) |
+                    @(*vault, "boxConfig", boxId)!({ "publicKey": payload.get("publicKey") }) |
+                    @return!((true, { "boxId": boxId, "boxCh": bundle+{*boxCh} })) |
+                    initLocksForBoxCh!(boxId) |
+                    initializeOCAPOnBoxCh!((*boxCh, boxId))
                   }
                 }
               } else {
                 @return!("error: box already exists")
-              }
+              } 
             }
           }
         }
@@ -1116,7 +1124,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     } |
 
     for (@(boxCh, boxId) <= initializeOCAPOnBoxCh) {
-
       for (@("REGISTER_CONTRACT", payload, return) <= @boxCh) {
         for (_ <- @(*vault, "REGISTER_CONTRACT_LOCK", boxId)) {
           new registerContract, ch1, ch2, ch3, ch4, ch5, ch6, unlock in {
@@ -1129,20 +1136,22 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                 match (payload.get("contractId").length() > 1, payload.get("contractId").length() < 25) {
                   (true, true) => {
                     validateStringCh!((payload.get("contractId"), *ch6)) |
-                    for (@valid <- ch6) {
-                      if (valid == true) {
-                        if (payload.get("expires") == Nil) {
-                          registerContract!(Nil)
-                        } else {
-                          // minimum 2 hours expiration
-                          if (payload.get("expires") >= 1000 * 60 * 60 * 2) {
-                            registerContract!(Nil)
+                    for (@prefix <<- prefixCh) {
+                      for (@valid <- ch6) {
+                        if (valid == true) {
+                          if (payload.get("expires") == Nil) {
+                            registerContract!(prefix ++ payload.get("contractId"))
                           } else {
-                            unlock!("error: .expires must be at least 2 hours")
+                            // minimum 2 hours expiration
+                            if (payload.get("expires") >= 1000 * 60 * 60 * 2) {
+                              registerContract!(prefix ++ payload.get("contractId"))
+                            } else {
+                              unlock!("error: .expires must be at least 2 hours")
+                            }
                           }
+                        } else {
+                          unlock!("error: invalid contract id")
                         }
-                      } else {
-                        unlock!("error: invalid contract id")
                       }
                     }
                   }
@@ -1155,49 +1164,82 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                 unlock!("error: invalid payload")
               }
             } |
-            for (_ <- registerContract) {
-              TreeHashMap!("get", contractsThm, payload.get("contractId"), *ch1) |
+            for (@contractId <- registerContract) {
+              TreeHashMap!("get", contractsThm, contractId, *ch1) |
               for (@exists <- ch1) {
                 if (exists == Nil) {
                   TreeHashMap!("init", ${payload.contractDepth || 2}, true, *ch2) |
                   TreeHashMap!("init", ${payload.contractDepth || 2}, true, *ch4) |
-                  TreeHashMap!("set", contractsThm, payload.get("contractId"), "exists", *ch3) |
+                  TreeHashMap!("set", contractsThm, contractId, "exists", *ch3) |
                   for (@pursesThm <- ch2; @pursesDataThm <- ch4; _ <- ch3) {
 
                     for (@superKeys <- @(*vault, "boxesSuperKeys", boxId)) {
                       @(*vault, "boxesSuperKeys", boxId)!(
-                        superKeys.union(Set(payload.get("contractId")))
+                        superKeys.union(Set(contractId))
                       )
                     } |
 
                     // purses tree hash map
-                    @(*vault, "purses", payload.get("contractId"))!(pursesThm) |
+                    @(*vault, "purses", contractId)!(pursesThm) |
 
                     // purses data tree hash map
-                    @(*vault, "pursesData", payload.get("contractId"))!(pursesDataThm) |
+                    @(*vault, "pursesData", contractId)!(pursesDataThm) |
 
                     // config
-                    @(*vault, "contractConfig", payload.get("contractId"))!(
-                      payload.set("locked", false).set("counter", 1).set("version", "14.0.0").set("fee", payload.get("fee"))
+                    @(*vault, "contractConfig", contractId)!(
+                      payload.set("locked", false).set("counter", 1).set("version", "15.0.0").set("fee", payload.get("fee"))
                     ) |
 
                     new superKeyCh in {
                       // return the bundle+ super key
-                      unlock!((true, bundle+{*superKeyCh})) |
-                      @(*vault, "LOGS", payload.get("contractId"))!("") |
-                      initLocksForContractCh!(payload.get("contractId")) |
+                      unlock!((true, { "superKey": bundle+{*superKeyCh}, "contractId": contractId })) |
+                      @(*vault, "LOGS", contractId)!("") |
+                      initLocksForContractCh!(contractId) |
 
                       for (@("LOCK", return2) <= superKeyCh) {
-                        for (_ <- @(*vault, "CONTRACT_LOCK", payload.get("contractId"))) {
-                          for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {
+                        for (_ <- @(*vault, "CONTRACT_LOCK", contractId)) {
+                          for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
                             if (contractConfig.get("locked") == true) {
                               @return2!("error: contract is already locked") |
-                              @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                              @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                             } else {
-                              for (_ <- @(*vault, "contractConfig", payload.get("contractId"))) {
-                                @(*vault, "contractConfig", payload.get("contractId"))!(contractConfig.set("locked", true)) |
+                              for (_ <- @(*vault, "contractConfig", contractId)) {
+                                @(*vault, "contractConfig", contractId)!(contractConfig.set("locked", true)) |
                                 @return2!((true, Nil)) |
-                                @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
+                              }
+                            }
+                          }
+                        }
+                      } |
+
+                      for (@("UPDATE_FEE", payload2, return2) <= superKeyCh) {
+                        stdout!("UPDATE_FEE") |
+                        stdout!(payload2) |
+                        for (_ <- @(*vault, "CONTRACT_LOCK", contractId)) {
+                          stdout!("aquired lock") |
+                          for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
+                            if (contractConfig.get("locked") == true) {
+                              @return2!("error: contract is locked") |
+                              @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
+                            } else {
+                              match payload2 {
+                                { "fee": Nil \\/ (String, Int) } => {
+                                  stdout!("UPDATE_FEE match") |
+                                  @(*vault, "CONTRACT_LOCK", contractId)!(Nil) |
+                                  for (@contractConfig <- @(*vault, "contractConfig", contractId)) {
+                                    stdout!(contractConfig) |
+                                    @(*vault, "contractConfig", contractId)!(
+                                      contractConfig.set("fee", payload2.get("fee"))
+                                    ) |
+                                    @return2!((true, Nil))
+                                  }
+                                }
+                                _ => {
+                                  stdout!("UPDATE_FEE nomatch") |
+                                  @return2!("error: payload.fee should be a Nil or (String, Int)") |
+                                  @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
+                                }
                               }
                             }
                           }
@@ -1205,26 +1247,26 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       } |
 
                       for (@("DELETE_PURSE", payload2, return2) <= superKeyCh) {
-                        for (_ <- @(*vault, "CONTRACT_LOCK", payload.get("contractId"))) {
-                          for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {
+                        for (_ <- @(*vault, "CONTRACT_LOCK", contractId)) {
+                          for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
                             if (contractConfig.get("locked") == true) {
                               @return2!("error: contract is locked") |
-                              @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                              @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                             } else {
                               match payload2 {
                                 { "purseId": String } => {
                                   new ch1, ch2, ch3, ch4 in {
-                                    for (@pursesThm <<- @(*vault, "purses", payload.get("contractId"))) {
+                                    for (@pursesThm <<- @(*vault, "purses", contractId)) {
                                       TreeHashMap!("get", pursesThm, payload2.get("purseId"), *ch2) |
                                       for (@purseToDelete <- ch2) {
                                         if (purseToDelete == Nil) {
                                           @return2!("error: purse does not exist") |
-                                          @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                          @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                                         } else {
-                                          removePurseInBoxCh!((purseToDelete.get("boxId"), payload.get("contractId"), payload2.get("purseId"), *ch4)) |
+                                          removePurseInBoxCh!((purseToDelete.get("boxId"), contractId, payload2.get("purseId"), *ch4)) |
                                           TreeHashMap!("set", pursesThm, payload2.get("purseId"), Nil, *ch3) |
                                           for (@a <- ch3; @b <- ch4) {
-                                            @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil) |
+                                            @(*vault, "CONTRACT_LOCK", contractId)!(Nil) |
                                             match (a, b) {
                                               (Nil, (true, Nil)) => {
                                                 @return2!((true, Nil))
@@ -1243,7 +1285,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                 }
                                 _ => {
                                   @return2!("error: payload.purseId should be a string") |
-                                  @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                  @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                                 }
                               }
                             }
@@ -1251,17 +1293,17 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                         }
                       } |
 
-                      for (@("CREATE_PURSE", createPursePayload, return2) <= superKeyCh) {
-                        for (_ <- @(*vault, "CONTRACT_LOCK", payload.get("contractId"))) {
-                          for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {
+                      for (@("CREATE_PURSE", payload2, return2) <= superKeyCh) {
+                        for (_ <- @(*vault, "CONTRACT_LOCK", contractId)) {
+                          for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
                             if (contractConfig.get("locked") == true) {
                               @return2!("error: contract is locked") |
-                              @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                              @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                             } else {
                               new blockDataCh, ch1, ch2, ch3 in {
                                 blockData!(*blockDataCh) |
                                 for (_, @timestamp, _ <- blockDataCh) {
-                                  match (createPursePayload, createPursePayload.get("price") == 0) {
+                                  match (payload2, payload2.get("price") == 0) {
                                     ({
                                       "data": _,
                                       "quantity": Int,
@@ -1269,23 +1311,23 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                       "price": Nil \\/ Int,
                                       "boxId": String
                                     }, false) => {
-                                      getBoxCh!((createPursePayload.get("boxId"), *ch1)) |
-                                      validateStringCh!((createPursePayload.get("id"), *ch3)) |
+                                      getBoxCh!((payload2.get("boxId"), *ch1)) |
+                                      validateStringCh!((payload2.get("id"), *ch3)) |
                                       for (@box <- ch1; @valid <- ch3) {
                                         if (valid == true) {
                                           if (box == Nil) {
-                                            @return2!("error: box not found " ++ createPursePayload.get("boxId")) |
-                                            @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                            @return2!("error: box not found " ++ payload2.get("boxId")) |
+                                            @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                                           } else {
                                             makePurseCh!((
-                                              payload.get("contractId"),
-                                              createPursePayload.delete("data").set("timestamp", timestamp),
-                                              createPursePayload.get("data"),
+                                              contractId,
+                                              payload2.delete("data").set("timestamp", timestamp),
+                                              payload2.get("data"),
                                               true,
                                               *ch2
                                             )) |
                                             for (@r <- ch2) {
-                                              @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil) |
+                                              @(*vault, "CONTRACT_LOCK", contractId)!(Nil) |
                                               match r {
                                                 String => {
                                                   @return2!(r)
@@ -1298,13 +1340,13 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                           }
                                         } else {
                                           @return2!("error: invalid id property") |
-                                          @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                          @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                                         }
                                       }
                                     }
                                     _ => {
                                       @return2!("error: invalid purse payload") |
-                                      @(*vault, "CONTRACT_LOCK", payload.get("contractId"))!(Nil)
+                                      @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                                     }
                                   }
                                 }
@@ -1978,6 +2020,11 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
         "status": "completed",
         "registryUri": *entryUri
       }) |
+      /* turn URI into a string so we can slice
+      and get prefix for boxes and contracts */
+      match "\${uri}" %% { "uri": *entryUri } {
+        uri => { prefixCh!(uri.slice(7, 10)) }
+      } |
       stdout!(("rchain-token master registered at", *entryUri))
     }
   }

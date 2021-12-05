@@ -9,7 +9,6 @@ const { createPurse } = require('./cli/createPurse');
 const { lock } = require('./cli/lock');
 const { deletePurse } = require('./cli/deletePurse');
 const { updateBagData } = require('./cli/updateBagData');
-const { updateTokenData } = require('./cli/updateTokenData');
 const { viewData } = require('./cli/viewData');
 const { updatePursePrice } = require('./cli/updatePursePrice');
 const { renew } = require('./cli/renew');
@@ -118,15 +117,6 @@ const main = async () => {
     console.log('not implemented');
     process.exit();
     updateBagData();
-    return;
-  }
-
-  const updateTokenDataArg =
-    process.argv.findIndex((arg) => arg === 'update-token-data') !== -1;
-  if (updateTokenDataArg) {
-    console.log('not implemented');
-    process.exit();
-    updateTokenData();
     return;
   }
 

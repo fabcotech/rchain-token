@@ -13,7 +13,6 @@ module.exports.viewBox = async () => {
   const boxId = process.env.BOX_ID;
 
   const term = readBoxTerm({ boxId, masterRegistryUri });
-  console.log(term);
 
   const result0 = await rchainToolkit.http.exploreDeploy(
     process.env.READ_ONLY_HOST,
@@ -22,7 +21,6 @@ module.exports.viewBox = async () => {
     }
   );
   const data = rchainToolkit.utils.rhoValToJs(JSON.parse(result0).expr[0]);
-  console.log(JSON.stringify(JSON.parse(result0).expr[0], null, 1));
   console.log(`Box id     : ${boxId}`);
   if (Object.keys(data.superKeys).length > 0) {
     console.log(`\nSuper keys :`);

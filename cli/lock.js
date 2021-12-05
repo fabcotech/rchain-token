@@ -6,7 +6,6 @@ const {
   log,
   getMasterRegistryUri,
   getContractId,
-  validAfterBlockNumber,
 } = require('./utils');
 
 module.exports.lock = async () => {
@@ -17,43 +16,29 @@ module.exports.lock = async () => {
   );
   log('Make sure the contract is not locked');
 
-  const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
-    process.env.PRIVATE_KEY
-  );
-
   let payload = {
     masterRegistryUri: masterRegistryUri,
     contractId: contractId,
   };
 
   const term = lockTerm(payload);
-
-  const timestamp = new Date().getTime();
-  const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
-  const deployOptions = await rchainToolkit.utils.getDeployOptions(
-    'secp256k1',
-    timestamp,
-    term,
-    process.env.PRIVATE_KEY,
-    publicKey,
-    1,
-    100000000,
-    vab
-  );
-
+  let deployResponse;
   try {
-    const deployResponse = await rchainToolkit.http.deploy(
+    deployResponse = await rchainToolkit.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      deployOptions
+      term,
+      process.env.PRIVATE_KEY,
+      1,
+      10000000
     );
-    if (!deployResponse.startsWith('"Success!')) {
-      log('Unable to deploy');
-      console.log(deployResponse);
-      process.exit();
-    }
   } catch (err) {
-    log('Unable to deploy');
     console.log(err);
+    throw new Error(err);
+  }
+
+  if (!deployResponse.startsWith('"Success!')) {
+    log('Unable to deploy');
+    console.log(deployResponse);
     process.exit();
   }
   log('✓ deployed');

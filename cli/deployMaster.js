@@ -2,11 +2,8 @@ const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
 
 const { masterTerm } = require('../src/');
-const waitForUnforgeable = require('./waitForUnforgeable').main;
 const {
   log,
-  validAfterBlockNumber,
-  prepareDeploy,
   getDepth,
   getContractDepth,
 } = require('./utils');
@@ -20,65 +17,26 @@ module.exports.deployMaster = async () => {
   const depth = getDepth() || 3;
   const contractDepth = getContractDepth() || 2;
 
-  const publicKey = rchainToolkit.utils.publicKeyFromPrivateKey(
-    process.env.PRIVATE_KEY
-  );
-
-  const timestamp = new Date().getTime();
-  const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
-  const pd = await prepareDeploy(
-    process.env.READ_ONLY_HOST,
-    publicKey,
-    timestamp
-  );
-
   const term = masterTerm({
     depth: depth,
     contractDepth: contractDepth,
   });
-
-  //  .replace('/*DEFAULT_BAGS_IDS*/', defaultBagsIdsRholang)
-  //   .replace('/*DEFAULT_BAGS*/', defaultBagsRholang)
-  //   .replace('/*DEFAULT_BAGS_DATA*/', defaultBagsDataRholang);
-
-  log('✓ prepare deploy');
-
-  const deployOptions = await rchainToolkit.utils.getDeployOptions(
-    'secp256k1',
-    timestamp,
-    term,
-    process.env.PRIVATE_KEY,
-    publicKey,
-    1,
-    10000000,
-    vab || -1
-  );
-
+  let dataAtNameResponse;
   try {
-    const deployResponse = await rchainToolkit.http.deploy(
+    dataAtNameResponse = await rchainToolkit.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      deployOptions
+      term,
+      process.env.PRIVATE_KEY,
+      1,
+      10000000,
+      60 * 1000
     );
-    if (!deployResponse.startsWith('"Success!')) {
-      log('Unable to deploy');
-      console.log(deployResponse);
-      process.exit();
-    }
   } catch (err) {
-    log('Unable to deploy');
     console.log(err);
-    process.exit();
+    throw new Error(err);
   }
   log('✓ deploy');
 
-  let dataAtNameResponse;
-  try {
-    dataAtNameResponse = await waitForUnforgeable(JSON.parse(pd).names[0]);
-  } catch (err) {
-    log('Failed to parse dataAtName response', 'error');
-    console.log(err);
-    process.exit();
-  }
   const data = rchainToolkit.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );

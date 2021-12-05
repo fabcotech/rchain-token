@@ -19,13 +19,13 @@ in {
           basket!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
-        (true, superKey) => {
-          @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", "${payload.contractId}")!(superKey) |
+        (true, p) => {
+          @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", p.get("contractId"))!(p.get("superKey")) |
           // OP_REGISTER_CONTRACT_COMPLETED_BEGIN
           basket!({
             "status": "completed",
             "masterRegistryUri": "${payload.masterRegistryUri}",
-            "contractId": "${payload.contractId}",
+            "contractId": p.get("contractId"),
           }) |
           stdout!("completed, contract registered")
           // OP_REGISTER_CONTRACT_COMPLETED_END

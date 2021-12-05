@@ -13,8 +13,7 @@ module.exports.main = (name) => {
               },
               depth: 3,
             })
-            .then((dataAtNameResponse) => {
-              resp = dataAtNameResponse;
+            .then((resp) => {
               if (
                 resp &&
                 JSON.parse(resp) &&

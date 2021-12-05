@@ -30,7 +30,7 @@ module.exports.main = async (privateKey, publicKey, payload) => {
       process.env.VALIDATOR_HOST,
       deployOptions
     );
-    console.log(deployResponse);
+
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
       throw new Error('07_updateBagData 01');
@@ -50,7 +50,6 @@ module.exports.main = async (privateKey, publicKey, payload) => {
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
-  console.log(data);
 
   return data;
 };

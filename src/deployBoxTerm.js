@@ -20,10 +20,10 @@ in {
           basket!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
-        (true, box) => {
-          @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")!(box) |
+        (true, p) => {
+          @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", p.get("boxId"))!(p.get("boxCh")) |
           // OP_PUBLIC_REGISTER_BOX_COMPLETED_BEGIN
-          basket!({ "status": "completed", "boxId": "${payload.boxId}" }) |
+          basket!({ "status": "completed", "boxId": p.get("boxId") }) |
           stdout!("completed, box registered")
           // OP_PUBLIC_REGISTER_BOX_COMPLETED_END
         }

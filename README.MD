@@ -98,7 +98,7 @@ ro PUBLIC_READ_BOX: (boxId: String) => String | Map(box purses and config)
 ro PUBLIC_READ_PURSE: ({ contractId: String, purseId: String }) => Map(purses)
 ro PUBLIC_READ_PURSE_DATA: ({ contractId: String, purseId: String }) => Map(purses data)
 ro PUBLIC_READ_CONFIG: (contractId: String) => String | Map(contract config)
-PUBLIC_REGISTER_BOX: ({ boxId: String, publicKey: String }) => String | (true, box ocap object)
+PUBLIC_REGISTER_BOX: ({ boxId: String, publicKey: String }) => String | (true, { "boxId": String, "boxCh": box ocap object})
 PUBLIC_DELETE_EXPIRED_PURSE: (contractId: String, purseId: String) => String | (true, Nil)
 ```
 
@@ -112,7 +112,7 @@ All the methods on a box are private (owner of the box only).
 
 ```
 ro READ: () => Properties of the purse (quantity, price, box, publicKey)
-REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, super key ocap object)
+REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, { "contractId": String, "superKey": super key ocap object })
 UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: Nil | Int }) => String | (true, super key ocap object)
 UPDATE_PURSE_DATA:  ({ contractId: String, purseId: String, data: any }) => String | (true, super key ocap object)
 WITHDRAW:  ({ contractId: String, purseId: String, quantity: Int, toBoxId: String, merge: Bool }) => String | (true, Nil)
@@ -127,8 +127,9 @@ The ownership of a contract is expressed by the ownership of a super key that is
 All the methods on a super key are private (deployer of the contract only).
 
 ```
-LOCK: () => String | (true, Nil) // cannot CREATE_PURSE/DELETE_PURSE anymore after a contract is locked
+LOCK: () => String | (true, Nil) // cannot CREATE_PURSE/DELETE_PURSE/UPDATE_FEE anymore after a contract is locked
 CREATE_PURSE: see `cli/createPurse.js` or `src/createPursesTerm`.
+UPDATE_FEE: see `cli/updateFee.js` or `src/updateFeeTerm`.
 DELETE_PURSE: see `cli/deletePurse.js` or `src/deletePursesTerm`.
 ```
 

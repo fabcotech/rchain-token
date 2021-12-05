@@ -9,7 +9,6 @@ const {
   getBoxId,
   getMerge,
   log,
-  validAfterBlockNumber,
   getMasterRegistryUri,
   getContractId,
 } = require('./utils');
@@ -21,7 +20,6 @@ module.exports.withdraw = async () => {
   const toBoxId = getToBoxId();
   const purseId = getPurseId();
 
-  const timestamp = new Date().getTime();
   if (!purseId) {
     throw new Error('please provide --purse option');
   }
@@ -37,30 +35,22 @@ module.exports.withdraw = async () => {
   };
   const term = withdrawTerm(payload);
 
-  const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
-  const deployOptions = await rchainToolkit.utils.getDeployOptions(
-    'secp256k1',
-    timestamp,
-    term,
-    process.env.PRIVATE_KEY,
-    rchainToolkit.utils.publicKeyFromPrivateKey(process.env.PRIVATE_KEY),
-    1,
-    1000000,
-    vab
-  );
+  let deployResponse;
   try {
-    const deployResponse = await rchainToolkit.http.deploy(
+    deployResponse = await rchainToolkit.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      deployOptions
+      term,
+      process.env.PRIVATE_KEY,
+      1,
+      10000000
     );
-    if (!deployResponse.startsWith('"Success!')) {
-      log('Unable to deploy');
-      console.log(deployResponse);
-      process.exit();
-    }
   } catch (err) {
-    log('Unable to deploy');
     console.log(err);
+    throw new Error(err);
+  }
+  if (!deployResponse.startsWith('"Success!')) {
+    log('Unable to deploy');
+    console.log(deployResponse);
     process.exit();
   }
   log('✓ deployed');

@@ -20,8 +20,8 @@ const replaceEverything = (a) => {
       .replace(/SPLIT_PURSE_QUANTITY/g, '${payload.quantityInNewPurse}')
       .replace(/WITHDRAW_PURSE_QUANTITY/g, '${payload.quantityToWithdraw}')
       .replace(
-        /FEE/g,
-        '${payload.fee ? "(" + payload.fee.join(\',\') + ")" : "Nil"}'
+        /\: FEE/g,
+        ': ${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
       )
       .replace('SIGNATURE', '${signature}')
       .replace(
@@ -108,6 +108,18 @@ module.exports.lockTerm = (
   payload
 ) => {
   return \`${replaceEverything(lockFile)}\`;
+};
+`
+);
+
+const updateFeeFile = fs.readFileSync('./rholang/op_update_fee.rho').toString('utf8');
+fs.writeFileSync(
+  './src/updateFeeTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.updateFeeTerm = (
+  payload
+) => {
+  return \`${replaceEverything(updateFeeFile)}\`;
 };
 `
 );
@@ -259,8 +271,8 @@ module.exports.deployTerm = (payload) => {
       .replace(/\\\//g, '\\\\/')
       .replace(/\$\{/g, '\\${')
       .replace(
-        /FEE/g,
-        '${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
+        /\: FEE/g,
+        ': ${payload.fee ? `("${payload.fee[0]}", ${payload.fee[1]})` : "Nil"}'
       )
       .replace(/EXPIRES/g, '${payload.expires ? payload.expires : "Nil"}')
       .replace(/CONTRACT_ID/g, '${payload.contractId}')

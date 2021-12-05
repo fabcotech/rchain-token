@@ -4,6 +4,7 @@ const { masterTerm } = require('./masterTerm');
 const { deployTerm } = require('./deployTerm');
 const { createPursesTerm } = require('./createPursesTerm');
 const { lockTerm } = require('./lockTerm');
+const { updateFeeTerm } = require('./updateFeeTerm');
 const { deleteExpiredPurseTerm } = require('./deleteExpiredPurseTerm');
 const { deletePurseTerm } = require('./deletePurseTerm');
 const { readPursesTerm } = require('./readPursesTerm');
@@ -32,6 +33,7 @@ module.exports = {
   deployTerm,
   createPursesTerm,
   lockTerm,
+  updateFeeTerm,
   deletePurseTerm,
   deleteExpiredPurseTerm,
   updatePurseDataTerm,

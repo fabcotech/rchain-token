@@ -10,6 +10,7 @@ module.exports.main = async (
   masterRegistryUri,
   fromBoxId,
   toBoxId,
+  contractId,
   quantity,
   purseId
 ) => {
@@ -26,7 +27,7 @@ module.exports.main = async (
     purseId: purseId,
     toBoxId: toBoxId,
     boxId: fromBoxId,
-    contractId: "mytoken",
+    contractId: contractId,
     merge: true
   }
   const term = withdrawTerm(payload);
