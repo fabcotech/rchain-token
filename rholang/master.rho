@@ -733,7 +733,7 @@ in {
 
                     // config
                     @(*vault, "contractConfig", contractId)!(
-                      payload.set("locked", false).set("counter", 1).set("version", VERSION).set("fee", payload.get("fee"))
+                      payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", VERSION).set("fee", payload.get("fee"))
                     ) |
 
                     new superKeyCh in {
