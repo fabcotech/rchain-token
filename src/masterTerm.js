@@ -1214,10 +1214,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       } |
 
                       for (@("UPDATE_FEE", payload2, return2) <= superKeyCh) {
-                        stdout!("UPDATE_FEE") |
-                        stdout!(payload2) |
                         for (_ <- @(*vault, "CONTRACT_LOCK", contractId)) {
-                          stdout!("aquired lock") |
                           for (@contractConfig <<- @(*vault, "contractConfig", contractId)) {
                             if (contractConfig.get("locked") == true) {
                               @return2!("error: contract is locked") |
@@ -1225,10 +1222,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                             } else {
                               match payload2 {
                                 { "fee": Nil \\/ (String, Int) } => {
-                                  stdout!("UPDATE_FEE match") |
                                   @(*vault, "CONTRACT_LOCK", contractId)!(Nil) |
                                   for (@contractConfig <- @(*vault, "contractConfig", contractId)) {
-                                    stdout!(contractConfig) |
                                     @(*vault, "contractConfig", contractId)!(
                                       contractConfig.set("fee", payload2.get("fee"))
                                     ) |
@@ -1236,7 +1231,6 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                                   }
                                 }
                                 _ => {
-                                  stdout!("UPDATE_FEE nomatch") |
                                   @return2!("error: payload.fee should be a Nil or (String, Int)") |
                                   @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                                 }

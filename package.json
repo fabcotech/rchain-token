@@ -25,7 +25,7 @@
   "dependencies": {
     "blakejs": "^1.1.0",
     "dotenv": "6.2.0",
-    "rchain-toolkit": "0.4.1",
+    "rchain-toolkit": "0.4.2",
     "uuid": "3.4.0"
   },
   "devDependencies": {

@@ -37,7 +37,7 @@ module.exports.main = async (
       privateKey1,
       1,
       1000000000,
-      300000
+      400000
     );
   } catch (err) {
     console.log(err);

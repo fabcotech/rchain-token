@@ -48,7 +48,9 @@ const main = async () => {
   let boxId1 = "box1";
   let boxId2 = "box2";
   let contractId = "mytoken";
+  console.log('deployMaster')
   const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
+  console.log('ok')
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
 
   balances1.push(await getBalance(PUBLIC_KEY));
@@ -130,7 +132,6 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  console.log('checkFee');
   await checkFee(masterRegistryUri, contractId, [PUBLIC_KEY_3, 2000]);
   const updateFee1 = await updateFee(
     PRIVATE_KEY,

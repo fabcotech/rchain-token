@@ -16,7 +16,7 @@ const deploy = require('../tests-ft/test_deploy').main;
 
 const createPurses = require('./test_createPurses.js').main;
 
-const PURSES_TO_CREATE_INITIAL = 100;
+const PURSES_TO_CREATE_INITIAL = 340;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
@@ -24,24 +24,28 @@ const PUBLIC_KEY = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
 
 const balances1 = [];
 
+let boxId = 'box';
+let contractId = 'mytoken';
 const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
 
   const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
+  console.log('✓ 00 deploy master');
 
   const dataBox = await deployBox(
     PRIVATE_KEY,
     PUBLIC_KEY,
     masterRegistryUri,
-    'box'
+    boxId
   );
-  let boxId = 'box';
+  boxId = dataBox.boxId;
+  console.log('  Box ID : ' + boxId);
   balances1.push(await getBalance(PUBLIC_KEY));
 
-  console.log('✓ 00 deploy box');
+  console.log('✓ 01 deploy box');
   console.log(
-    '  00 dust cost: ' +
+    '  01 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
@@ -51,14 +55,16 @@ const main = async () => {
     masterRegistryUri,
     boxId,
     false,
-    'mytoken',
+    contractId,
     null
   );
+  contractId = deployData.contractId;
+  console.log('  Contract ID : ' + contractId);
 
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 01 deploy contract');
+  console.log('✓ 02 deploy contract');
   console.log(
-    '  01 dust cost: ' +
+    '  02 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
@@ -71,8 +77,8 @@ const main = async () => {
     PRIVATE_KEY,
     PUBLIC_KEY,
     masterRegistryUri,
-    'mytoken',
-    'box',
+    contractId,
+    boxId,
     boxId,
     ids
   );
@@ -86,7 +92,7 @@ const main = async () => {
   const t1 = new Date().getTime();
   const term1 = readAllPursesTerm({
     masterRegistryUri: masterRegistryUri,
-    contractId: 'mytoken',
+    contractId: contractId,
     depth: 2,
   });
   const result1 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
@@ -115,7 +121,7 @@ const main = async () => {
   const t3 = new Date().getTime();
   const term2 = readPursesDataTerm({
     masterRegistryUri: masterRegistryUri,
-    contractId: 'mytoken',
+    contractId: contractId,
     pursesIds: Object.keys(purses),
   });
   const result2 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {
@@ -131,7 +137,7 @@ const main = async () => {
   const t4 = new Date().getTime();
   const term3 = readPursesTerm({
     masterRegistryUri: masterRegistryUri,
-    contractId: 'mytoken',
+    contractId: contractId,
     pursesIds: Object.keys(purses),
   });
   const result3 = await rc.http.exploreDeploy(process.env.READ_ONLY_HOST, {

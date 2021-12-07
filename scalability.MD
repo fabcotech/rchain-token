@@ -178,3 +178,11 @@ PUBLIC_READ_ALL_PURSES 340 values = 43s, 14s, 13s
 
 Local deploy, 5000 values depth = 2
 read all purses (src.readAllPursesTerm) 5000 values = 49.7s, 49.8s
+
+**2021-12-06 15.0.2 - rnode 0.12.4**
+
+Local deploy, 100 values depth = 2
+read all purses (src.readAllPursesTerm) 100 values = 7s
+
+Local deploy, 340 values depth = 2
+read all purses (src.readAllPursesTerm) 340 values = 25s

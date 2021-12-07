@@ -12,8 +12,8 @@ const deploy = require('../tests-ft/test_deploy').main;
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE = 100;
-const PURSES_TO_CREATE_INITIAL = 100;
+const PURSES_TO_CREATE = 20;
+const PURSES_TO_CREATE_INITIAL = 20;
 const NEW_BOX_EACH_TIME = true;
 
 const PRIVATE_KEY =
@@ -22,24 +22,31 @@ const PUBLIC_KEY = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
 
 const balances1 = [];
 
+let boxId = 'box';
+let boxRecipientId = '';
+let contractId = 'mytoken';
 const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
 
   const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
+  console.log('✓ 00 deploy master');
 
   const dataBox = await deployBox(
     PRIVATE_KEY,
     PUBLIC_KEY,
     masterRegistryUri,
-    'box'
+    boxId
   );
-  let boxId = 'box';
+  boxId = dataBox.boxId;
+  boxRecipientId = dataBox.boxId;
+  console.log('  Box ID : ' + boxId);
+
   balances1.push(await getBalance(PUBLIC_KEY));
 
-  console.log('✓ 00 deploy box');
+  console.log('✓ 01 deploy box');
   console.log(
-    '  00 dust cost: ' +
+    '  01 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
@@ -49,14 +56,15 @@ const main = async () => {
     masterRegistryUri,
     boxId,
     false,
-    'mytoken',
+    contractId,
     null
   );
+  contractId = deployData.contractId;
 
   balances1.push(await getBalance(PUBLIC_KEY));
-  console.log('✓ 01 deploy contract');
+  console.log('✓ 02 deploy contract');
   console.log(
-    '  01 dust cost: ' +
+    '  02 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
@@ -74,8 +82,8 @@ const main = async () => {
     }
 
     if (NEW_BOX_EACH_TIME && j !== 0) {
-      boxId = 'box' + j;
-      await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, boxId);
+      const dataBox = await deployBox(PRIVATE_KEY, PUBLIC_KEY, masterRegistryUri, 'recipient' + j);
+      boxRecipientId = dataBox.boxId;
       balances1.push(await getBalance(PUBLIC_KEY));
     }
 
@@ -83,16 +91,20 @@ const main = async () => {
       PRIVATE_KEY,
       PUBLIC_KEY,
       masterRegistryUri,
-      'mytoken',
-      'box',
+      contractId,
       boxId,
+      boxRecipientId,
       ids
     );
-
     balances1.push(await getBalance(PUBLIC_KEY));
+    console.log('✓ 03 create purses');
+    console.log(
+      '  03 dust cost: ' +
+        (balances1[balances1.length - 2] - balances1[balances1.length - 1])
+    );
 
     if (NEW_BOX_EACH_TIME) {
-      await checkPursesInBox(masterRegistryUri, boxId, 'mytoken', ids);
+      await checkPursesInBox(masterRegistryUri, boxRecipientId, contractId, ids);
     }
     const dustCost =
       balances1[balances1.length - 2] - balances1[balances1.length - 1];
