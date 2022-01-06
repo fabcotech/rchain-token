@@ -48,9 +48,7 @@ const main = async () => {
   let boxId1 = "box1";
   let boxId2 = "box2";
   let contractId = "mytoken";
-  console.log('deployMaster')
   const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
-  console.log('ok')
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
 
   balances1.push(await getBalance(PUBLIC_KEY));
@@ -113,9 +111,6 @@ const main = async () => {
     boxId1,
     true,
     contractId,
-    // 2% fee
-    // 2.000 is 2% of 100.000
-    [PUBLIC_KEY_3, 2000],
     // expiration always null for FT
     null
   );
@@ -132,25 +127,18 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  await checkFee(masterRegistryUri, contractId, [PUBLIC_KEY_3, 2000]);
+  await checkFee(masterRegistryUri, contractId, null);
   const updateFee1 = await updateFee(
     PRIVATE_KEY,
     PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
-    null,
+    // 2% fee
+    // 2.000 is 2% of 100.000
+    [rc.utils.revAddressFromPublicKey(PUBLIC_KEY_3), 2000],
   );
-  await checkFee(masterRegistryUri, contractId, null);
-  const updateFee2 = await updateFee(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    boxId1,
-    contractId,
-    [PUBLIC_KEY_3, 2000],
-  );
-  await checkFee(masterRegistryUri, contractId, [PUBLIC_KEY_3, 2000]);
+  await checkFee(masterRegistryUri, contractId, [rc.utils.revAddressFromPublicKey(PUBLIC_KEY_3), 2000]);
 
   console.log(`✓ 04 updated and checked fees multiple times`);
 

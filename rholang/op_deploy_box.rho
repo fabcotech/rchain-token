@@ -8,8 +8,8 @@ in {
 
   registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *masterEntryCh) |
 
-  for (masterEntry <- masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "BOX_ID", "publicKey": "PUBLIC_KEY" }, *registerBoxReturnCh)) |
+  for (masterEntry <= masterEntryCh) {
+    masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "BOX_ID", "publicKey": "PUBLIC_KEY", "revAddress": "REV_ADDRESS" }, *registerBoxReturnCh)) |
     for (@r <- registerBoxReturnCh) {
       match r {
         String => {

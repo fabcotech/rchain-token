@@ -49,6 +49,7 @@ const replaceEverything = (a) => {
       .replace('PRICEE', '${payload.price || "Nil"}')
       .replace('QUANTITY', '${payload.quantity}')
       .replace('PUBLIC_KEY', '${payload.publicKey}')
+      .replace('REV_ADDRESS', '${payload.revAddress}')
       .replace('BAG_ID', '${payload.bagId}')
       .replace('BAGS_IDS', '${payload.bagsIds}')
       .replace('TOKEN_ID', '${payload.tokenId}')

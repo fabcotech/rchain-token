@@ -35,7 +35,6 @@ module.exports.deploy = async () => {
     boxId: boxId,
     fungible: fungible,
     contractId: contractId,
-    fee: null,
     expires: expires,
   });
 
@@ -48,7 +47,7 @@ module.exports.deploy = async () => {
       process.env.PRIVATE_KEY,
       1,
       10000000,
-      60 * 1000
+      3 * 60 * 1000
     );
   } catch (err) {
     console.log(err);

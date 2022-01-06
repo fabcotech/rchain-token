@@ -32,12 +32,10 @@ module.exports.main = async (
     console.log(err);
     throw new Error('03_createTokens 02');
   }
-  console.log(dataAtNameResponse);
 
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
-  console.log(data);
 
   return data;
 };

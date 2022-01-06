@@ -960,7 +960,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           } else {
             for (@superKeys <<- @(*vault, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*vault, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "15.0.2" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "16.0.0" }))
               }
             }
           }
@@ -1066,35 +1066,39 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     } |
 
     for (@("PUBLIC_REGISTER_BOX", payload, return) <= entryCh) {
-      match (payload.get("boxId"), payload.get("publicKey"), payload.get("boxId").length() > 1, payload.get("boxId").length() < 25) {
-        (String, String, true, true) => {
+      match (payload.get("boxId"), payload.get("revAddress"), payload.get("publicKey"), payload.get("boxId").length() > 1, payload.get("boxId").length() < 25) {
+        (String, String, String, true, true) => {
           new ch1, ch2, ch3, ch4, ch5, ch6, ch7 in {
             registryLookup!(\`rho:rchain:revVault\`, *ch3) |
             for (@(_, RevVault) <- ch3) {
-              revAddress!("fromPublicKey", payload.get("publicKey").hexToBytes(), *ch4) |
-              for (@a <- ch4) {
-                @RevVault!("findOrCreate", a, *ch5) |
-                for (@b <- ch5) {
-                  match b {
-                    (true, vaultFromPublicKey) => {
-                      validateStringCh!((payload.get("boxId"), *ch7)) |
-                      for (@valid <- ch7) {
-                        if (valid == true) {
-                          for (@prefix <<- prefixCh) {
-                            match prefix ++ payload.get("boxId") {
-                              boxId => {
-                                ch6!(boxId) |
-                                TreeHashMap!("get", boxesThm, boxId, *ch1)
+              @RevVault!("findOrCreate", payload.get("revAddress"), *ch4) |
+              for (@(true, revVault) <- ch4) {
+                @revVault!("balance", *ch5) |
+                for (@balance <- ch5) {
+                  match balance {
+                    Int => {
+                      if (balance == 0) {
+                        @return!("error: REV address must have at least 1 dust")
+                      } else {
+                        validateStringCh!((payload.get("boxId"), *ch7)) |
+                        for (@valid <- ch7) {
+                          if (valid == true) {
+                            for (@prefix <<- prefixCh) {
+                              match prefix ++ payload.get("boxId") {
+                                boxId => {
+                                  ch6!(boxId) |
+                                  TreeHashMap!("get", boxesThm, boxId, *ch1)
+                                }
                               }
                             }
+                          } else {
+                            @return!("error: invalid box id")
                           }
-                        } else {
-                          @return!("error: invalid box id")
                         }
                       }
                     }
                     _ => {
-                      @return!("error: invalid public key, could not get vault")
+                      @return!("error: REV address must have at least 1 dust")
                     }
                   }
                 }
@@ -1108,7 +1112,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   for (_ <- ch2) {
                     @(*vault, "boxes", boxId)!({}) |
                     @(*vault, "boxesSuperKeys", boxId)!(Set()) |
-                    @(*vault, "boxConfig", boxId)!({ "publicKey": payload.get("publicKey") }) |
+                    @(*vault, "boxConfig", boxId)!({ "publicKey": payload.get("publicKey"), "revAddress": payload.get("revAddress") }) |
                     @return!((true, { "boxId": boxId, "boxCh": bundle+{*boxCh} })) |
                     initLocksForBoxCh!(boxId) |
                     initializeOCAPOnBoxCh!((*boxCh, boxId))
@@ -1132,7 +1136,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
               @return!(result)
             } |
             match payload {
-              { "contractId": String, "fungible": Bool, "fee": Nil \\/ (String, Int), "expires": Nil \\/ Int } => {
+              { "contractId": String, "fungible": Bool, "expires": Nil \\/ Int } => {
                 match (payload.get("contractId").length() > 1, payload.get("contractId").length() < 25) {
                   (true, true) => {
                     validateStringCh!((payload.get("contractId"), *ch6)) |
@@ -1187,7 +1191,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
                     // config
                     @(*vault, "contractConfig", contractId)!(
-                      payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", "15.0.2").set("fee", payload.get("fee"))
+                      payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", "16.0.0").set("fee", Nil)
                     ) |
 
                     new superKeyCh in {
@@ -1221,13 +1225,47 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                               @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
                             } else {
                               match payload2 {
-                                { "fee": Nil \\/ (String, Int) } => {
+                                { "fee": Nil } => {
                                   @(*vault, "CONTRACT_LOCK", contractId)!(Nil) |
                                   for (@contractConfig <- @(*vault, "contractConfig", contractId)) {
                                     @(*vault, "contractConfig", contractId)!(
                                       contractConfig.set("fee", payload2.get("fee"))
                                     ) |
                                     @return2!((true, Nil))
+                                  }
+                                }
+                                // make sure REV address is valid
+                                { "fee": (String, Int) } => {
+                                  new ch1, ch2, ch3, ch4, ch5, ch6, ch7 in {
+                                    registryLookup!(\`rho:rchain:revVault\`, *ch1) |
+                                    for (@(_, RevVault) <- ch1) {
+                                      @RevVault!("findOrCreate", payload2.get("fee").nth(0), *ch2) |
+                                      for (@(true, revVault) <- ch2) {
+                                        @revVault!("balance", *ch3) |
+                                        for (@balance <- ch3) {
+                                          match balance {
+                                            Int => {
+                                              if (balance == 0) {
+                                                @return2!("error: REV address must have at least 1 dust") |
+                                                @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
+                                              } else {
+                                                @(*vault, "CONTRACT_LOCK", contractId)!(Nil) |
+                                                for (@contractConfig <- @(*vault, "contractConfig", contractId)) {
+                                                  @(*vault, "contractConfig", contractId)!(
+                                                    contractConfig.set("fee", payload2.get("fee"))
+                                                  ) |
+                                                  @return2!((true, Nil))
+                                                }
+                                              }
+                                            }
+                                            _ => {
+                                              @return2!("error: REV address must have at least 1 dust") |
+                                              @(*vault, "CONTRACT_LOCK", contractId)!(Nil)
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
                                   }
                                 }
                                 _ => {
@@ -1507,10 +1545,10 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
             for (@(pursesThm, purseZero, purse, expires) <- renewStep3) {
               for (@boxConfig <<- @(*vault, "boxConfig", purseZero.get("boxId"))) {
+                ch32!(boxConfig.get("revAddress")) |
                 registryLookup!(\`rho:rchain:revVault\`, *ch33) |
                 for (@(_, RevVault) <- ch33) {
-                  @RevVault!("findOrCreate", payload.get("purseRevAddr"), *ch34) |
-                  revAddress!("fromPublicKey", boxConfig.get("publicKey").hexToBytes(), *ch32)
+                  @RevVault!("findOrCreate", payload.get("purseRevAddr"), *ch34)
                 }
               } |
 
@@ -1526,7 +1564,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                     }
                   }
                   _ => {
-                    unlock!("error: could not find vaule from rev address")
+                    unlock!("error: could not find vault from rev address")
                   }
                 }
               } |
@@ -1693,10 +1731,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           match amount * contractConfig.get("fee").nth(1) / 100000 {
             feeAmount => {
               new ch1 in {
-                revAddress!("fromPublicKey", contractConfig.get("fee").nth(0).hexToBytes(), *ch1) |
-                for (@revAddr <- ch1) {
-                  @return2!((amount - feeAmount, feeAmount, revAddr))
-                }
+                @return2!((amount - feeAmount, feeAmount, contractConfig.get("fee").nth(0)))
               }
             }
           }
@@ -1802,7 +1837,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                     registryLookup!(\`rho:rchain:revVault\`, *ch20) |
 
                     for (@boxConfig <<- @(*vault, "boxConfig", purse.get("boxId"))) {
-                      revAddress!("fromPublicKey", boxConfig.get("publicKey").hexToBytes(), *ch21)
+                      ch21!(boxConfig.get("revAddress"))
                     } |
 
                     for (@contractConfig <<- @(*vault, "contractConfig", payload.get("contractId"))) {

@@ -9,6 +9,7 @@ module.exports.main = async (
 ) => {
   const term = deployBoxTerm({
     publicKey: publicKey,
+    revAddress: rc.utils.revAddressFromPublicKey(publicKey),
     boxId: boxId,
     masterRegistryUri: masterRegistryUri,
   });

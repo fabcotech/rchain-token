@@ -21,7 +21,7 @@ module.exports.deployBox = async () => {
     process.env.PRIVATE_KEY
   );
 
-  const term = deployBoxTerm({ masterRegistryUri: masterRegistryUri, boxId: boxId, publicKey: publicKey });
+  const term = deployBoxTerm({ masterRegistryUri: masterRegistryUri, boxId: boxId, publicKey: publicKey, revAddress: rchainToolkit.utils.revAddressFromPublicKey(publicKey) });
   let dataAtNameResponse;
   try {
     dataAtNameResponse = await rchainToolkit.http.easyDeploy(
@@ -30,7 +30,7 @@ module.exports.deployBox = async () => {
       process.env.PRIVATE_KEY,
       1,
       10000000,
-      60 * 1000
+      3 * 60 * 1000
     );
   } catch (err) {
     console.log(err);

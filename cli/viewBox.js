@@ -21,11 +21,13 @@ module.exports.viewBox = async () => {
     }
   );
   const data = rchainToolkit.utils.rhoValToJs(JSON.parse(result0).expr[0]);
-  console.log(`Box id     : ${boxId}`);
+  console.log(`Box id      : ${boxId}`);
+  console.log(`Public key  : ${data.publicKey}`);
+  console.log(`REV address : ${data.revAddress}`);
   if (Object.keys(data.superKeys).length > 0) {
-    console.log(`\nSuper keys :`);
+    console.log(`\nSuper keys  :`);
     data.superKeys.forEach((sk) => {
-      console.log(`  Contract : ${sk}`);
+      console.log(`  Contract  : ${sk}`);
     });
   }
   const keys = Object.keys(data.purses);

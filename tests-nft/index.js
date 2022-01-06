@@ -16,6 +16,8 @@ const renew = require('./test_renew.js').main;
 const checkLogsInContract = require('../tests-ft/checkLogsInContract').main;
 const checkPursePriceInContract =
   require('../tests-ft/checkPursePriceInContract.js').main;
+const checkFee = require('../tests-ft/checkFee').main;
+const updateFee = require('../tests-ft/test_updateFee').main;
 const checkPurseDataInContract =
   require('../tests-ft/checkPurseDataInContract.js').main;
 const getBalance = require('../tests-ft/getBalance').main;
@@ -107,17 +109,27 @@ const main = async () => {
     boxId1,
     false,
     contractId,
-    // 2% fee
-    // 2.000 is 2% of 100.000
-    [PUBLIC_KEY_3, 2000],
     EXPIRES
   );
+  contractId = `${masterRegistryUri.slice(0,3)}${contractId}`
+  console.log('  Contract ID with prefix : ' + contractId)
+
+  await checkFee(masterRegistryUri, contractId, null);
   // If you purchase a token at 100 REV
   // seller gets 98 REV
   // owner of the contract gets 2 REV
-
-  contractId = `${masterRegistryUri.slice(0,3)}${contractId}`
-  console.log('  Contact ID with prefix : ' + contractId)
+  const updateFee1 = await updateFee(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    boxId1,
+    contractId,
+    // 2% fee
+    // 2.000 is 2% of 100.000
+    [rc.utils.revAddressFromPublicKey(PUBLIC_KEY_3), 2000],
+  );
+  console.log(updateFee1);
+  await checkFee(masterRegistryUri, contractId, [rc.utils.revAddressFromPublicKey(PUBLIC_KEY_3), 2000]);
 
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 03 deployed fungible/FT contract');

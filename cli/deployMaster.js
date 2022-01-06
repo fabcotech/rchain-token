@@ -29,7 +29,7 @@ module.exports.deployMaster = async () => {
       process.env.PRIVATE_KEY,
       1,
       10000000,
-      60 * 1000
+      10 * 60 * 1000
     );
   } catch (err) {
     console.log(err);
