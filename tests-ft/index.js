@@ -40,10 +40,14 @@ const balances2 = [];
 const balances3 = [];
 
 const main = async () => {
-  fillBalances(PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY_2, PUBLIC_KEY_3);
+  await fillBalances(PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY_2, PUBLIC_KEY_3);
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
+  console.log(balances1)
+  console.log(balances2)
+  console.log(balances3)
+  return;
 
   let boxId1 = "box1";
   let boxId2 = "box2";
@@ -72,6 +76,7 @@ const main = async () => {
   if (boxFailed == false) {
     throw new Error('Box deploy with invalid character should have failed');
   }
+  console.log('✓ 02 failed to deploy invalid box');
 
   const dataBox = await deployBox(
     PRIVATE_KEY,

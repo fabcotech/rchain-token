@@ -15,7 +15,7 @@ module.exports.main = async (privateKey, publicKey, pk2, pk3) => {
       privateKey,
       1,
       100000000,
-      30000
+      240000
     );
   }
   const b3 = await getBalance(pk3);
@@ -30,7 +30,7 @@ module.exports.main = async (privateKey, publicKey, pk2, pk3) => {
       privateKey,
       1,
       100000000,
-      30000
+      240000
     );
   }
 };

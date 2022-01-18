@@ -51,7 +51,7 @@ const balances2 = [];
 const balances3 = [];
 
 const main = async () => {
-  fillBalances(PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY_2, PUBLIC_KEY_3);
+  await fillBalances(PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY_2, PUBLIC_KEY_3);
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
