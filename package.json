@@ -22,13 +22,12 @@
     "url": "https://github.com/fabcotech/rchain-token/issues"
   },
   "homepage": "https://github.com/fabcotech/rchain-token#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "blakejs": "^1.1.0",
     "dotenv": "6.2.0",
     "rchain-toolkit": "0.4.5",
-    "uuid": "3.4.0"
-  },
-  "devDependencies": {
+    "uuid": "3.4.0",
     "rollup": "1.26.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",

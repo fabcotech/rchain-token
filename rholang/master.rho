@@ -102,14 +102,24 @@ in {
 
   // validate string, used for purse ID, box ID, contract ID
   for (@(str, ret) <= validateStringCh) {
-    match (str, Set("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")) {
-      (String, valids) => {
+    match (
+      str,
+      Set("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y", "z"),
+      Set("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+    ) {
+      (String, az, az09) => {
         new tmpCh, itCh in {
           for (@i <= itCh) {
             if (i == str.length()) { @ret!(true) }
             else {
-              if (valids.contains(str.slice(i, i + 1)) == true) { itCh!(i + 1) }
-              else { @ret!(false) }
+              // first character must not be 0-9
+              if (i == 0) {
+                if (az.contains(str.slice(i, i + 1)) == true) { itCh!(i + 1) }
+                else { @ret!(false) }
+              } else {
+                if (az09.contains(str.slice(i, i + 1)) == true) { itCh!(i + 1) }
+                else { @ret!(false) }
+              }
             }
           } |
           itCh!(0)
