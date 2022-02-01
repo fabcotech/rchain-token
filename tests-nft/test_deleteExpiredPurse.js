@@ -9,6 +9,7 @@ module.exports.main = async (
   publicKey1,
   masterRegistryUri,
   contractId,
+  boxId,
   purseId
 ) => {
   const timestamp = new Date().getTime();
@@ -22,10 +23,10 @@ module.exports.main = async (
     masterRegistryUri: masterRegistryUri,
     contractId: contractId,
     purseId: purseId,
+    boxId: boxId,
   };
 
   const term = deleteExpiredPurseTerm(payload);
-  console.log('  15 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const vab = await validAfterBlockNumber(process.env.READ_ONLY_HOST);
   const deployOptions = await rc.utils.getDeployOptions(
     'secp256k1',

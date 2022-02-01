@@ -3,6 +3,7 @@ const { deployMaster } = require('./cli/deployMaster');
 const { deployBox } = require('./cli/deployBox');
 const { purchaseTokens } = require('./cli/purchaseTokens');
 const { view } = require('./cli/view');
+const { swap } = require('./cli/swap');
 const { viewBox } = require('./cli/viewBox');
 const { withdraw } = require('./cli/withdraw');
 const { createPurse } = require('./cli/createPurse');
@@ -74,6 +75,13 @@ const main = async () => {
     deployBox();
     return;
   }
+
+  const SwapArg =
+  process.argv.findIndex((arg) => arg === 'swap') !== -1;
+if (SwapArg) {
+  swap();
+  return;
+}
 
   const lockArg = process.argv.findIndex((arg) => arg === 'lock') !== -1;
   if (lockArg) {

@@ -31,6 +31,7 @@ const replaceEverything = (a) => {
       .replace('NEW_NONCE', '${payload.newNonce}')
       .replace('UPDATE_PURSE_DATAA', `\${payload.data}`)
       .replace('PURCHASE_PURSE_DATA', `\${payload.data}`)
+      .replace('SWAP_DATA', `\${payload.data}`)
       .replace(
         'ACTION_AFTER_PURCHASE',
         `\${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}`
@@ -46,7 +47,7 @@ const replaceEverything = (a) => {
       .replace('BAG_NONCE', '${payload.bagNonce}')
       .replace('BAG_NONCE_2', '${payload.bagNonce2}')
       // avoid changing "CHANGING_PRICE" string
-      .replace('PRICEE', '${payload.price || "Nil"}')
+      .replace('PRICEE', '${payload.price ? "(" + payload.price + ")": "Nil"}')
       .replace('QUANTITY', '${payload.quantity}')
       .replace('PUBLIC_KEY', '${payload.publicKey}')
       .replace('REV_ADDRESS', '${payload.revAddress}')
@@ -71,6 +72,20 @@ module.exports.purchaseTerm = (
   payload
 ) => {
   return \`${replaceEverything(purchaseFile)}\`;
+};
+`
+);
+
+const swapFile = fs
+  .readFileSync('./rholang/op_swap.rho')
+  .toString('utf8');
+fs.writeFileSync(
+  './src/swapTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.swapTerm = (
+  payload
+) => {
+  return \`${replaceEverything(swapFile)}\`;
 };
 `
 );

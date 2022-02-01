@@ -23,7 +23,7 @@ const formatDuration = (t) => {
 };
 
 module.exports.view = async () => {
-  const purseId = getProcessArgv('--purse');
+  const purseId = getProcessArgv('--purse-id');
   const masterRegistryUri = getMasterRegistryUri();
   const contractId = getContractId();
   const boxId = process.env.BOX_ID;
@@ -97,22 +97,31 @@ module.exports.view = async () => {
     console.log('\npurse id ' + purseId + '\n');
     console.log(`box        : ${purses[purseId].boxId}`);
     console.log(`quantity   : ${purses[purseId].quantity}`);
-    console.log(`price      : ${purses[purseId].price || 'not for sale'}`);
-    return;
+    console.log(purses[purseId].price[1])
+
+    if (purses[purseId].price) {
+      if (typeof purses[purseId].price[1] === "number") {
+        console.log(`sell order : ${purses[purseId].price[1]} ${purses[purseId].price[0]} per token`);
+      } else {
+        console.log(`sell order : swap with nft "${purses[purseId].price[0]}".${purses[purseId].price[1]}`);
+      }
+    } else {
+      console.log(`sell order : none`);
+    }
   }
   let expiration = '       ';
   if (data.fungible === false) {
-    expiration = 'expiration';
+    expiration = '          expiration';
   }
   console.log(
     `\nPurses [0-${ids.length < 99 ? ids.length - 1 : '99'}] / ${
       ids.length
-    }\npurse id          box        quantity     price (dust)       ${expiration} \n`
+    }\npurse id          box        quantity     sell order                 ${expiration} \n`
   );
   const now = new Date().getTime();
   ids.slice(0, 100).forEach((id) => {
     let expires = '-';
-    if (data.fungible === false) {
+    if (data.fungible === true) {
       expires = '';
     }
     if (data.fungible === false && data.expires && id !== '0') {
@@ -131,9 +140,19 @@ module.exports.view = async () => {
     s = s.padEnd(29, ' ');
     s += purses[id].quantity;
     s = s.padEnd(42, ' ');
-    s +=
-      typeof purses[id].price === 'number' ? purses[id].price : 'not for sale';
-    s = s.padEnd(55, ' ');
+    //console.log(purses[id].price)
+    if (purses[id].price) {
+      if (typeof purses[id].price[1] === "number") {
+        s += `${purses[id].price[1]} ${purses[id].price[0]} per token`;
+      } else if (typeof purses[id].price[1] === "string") {
+        s += `<-> nft ${purses[id].price[0]}.${purses[id].price[1]}`;
+      } else {
+        throw new Error('invalid price ' + purses[id].price)
+      }
+    } else {
+      s += `no sell order`;
+    }
+    s = s.padEnd(78, ' ');
     s += expires;
     if (purses[id].boxId === boxId) {
       console.log('\x1b[32m' + s);

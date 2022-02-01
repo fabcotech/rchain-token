@@ -22,9 +22,36 @@ module.exports.updatePursePrice = async () => {
     throw new Error('Missing arguments --purse-id');
   }
 
-  const price = getProcessArgv('--price')
-    ? parseInt(getProcessArgv('--price'), 10)
-    : undefined;
+  let price = getProcessArgv('--price')
+  if (price === "null" || price === "0") {
+    price = null;
+  } else {
+    try {
+      price = JSON.parse(`{ "a": ${price} }`).a
+      // NFT sell order
+      if (
+        typeof price[0] === "string" &&
+        typeof price[1] === "string" && 
+        price[0].length > 1 &&
+        price[1].length > 1
+      ) {
+        price = ['"' + price[0] + '"', price[1]]
+      // FT sell order
+      } else if (
+        typeof price[0] === "string" &&
+        typeof price[1] === "number" && 
+        price[0].length > 1 &&
+        !isNaN(price[1]) &&
+        price[1] !== 0
+      ) {
+        price = ['"' + price[0] + '"', price[1]]
+      } else {
+        throw new Error()
+      }
+    } catch (err) {
+      throw new Error('Could not parse --price, must be format [\\"x01mynft\\", "purse0"] for NFT sell order and [\\"x01mytoken\\", 1] for FT sell order')
+    }
+  }
 
   const term = updatePursePriceTerm({ masterRegistryUri, boxId, contractId, price, purseId });
   let deployResponse;

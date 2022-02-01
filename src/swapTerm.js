@@ -1,5 +1,5 @@
 /* GENERATED CODE, only edit rholang/*.rho files*/
-module.exports.updatePursePriceTerm = (
+module.exports.swapTerm = (
   payload
 ) => {
   return `new basket,
@@ -11,18 +11,19 @@ module.exports.updatePursePriceTerm = (
 in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")) {
-    boxCh!(("UPDATE_PURSE_PRICE", { "contractId": "${payload.contractId}", "price": ${payload.price ? "(" + payload.price + ")": "Nil"}, "purseId": "${payload.purseId}" }, *returnCh)) |
+    stdout!("boxCh") |
+    boxCh!(("SWAP", { "contractId": "${payload.contractId}", "purseId": "${payload.purseId}", "merge": ${payload.merge}, "quantity": ${payload.quantity}, "data": "${payload.data}", "newId": "${payload.newId ? payload.newId : ""}" }, *returnCh)) |
     for (@r <- returnCh) {
       match r {
         String => {
           basket!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
-        _ => {
-          // OP_UPDATE_PURSE_PRICE_COMPLETED_BEGIN
+        (true, Nil) => {
+          // OP_SWAP_BEGIN
           basket!({ "status": "completed" }) |
-          stdout!("completed, price updated")
-          // OP_UPDATE_PURSE_PRICE_COMPLETED_END
+          stdout!("completed, swap successful")
+          // OP_SWAP_END
         }
       }
     }

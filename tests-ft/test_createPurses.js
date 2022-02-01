@@ -8,7 +8,8 @@ module.exports.main = async (
   masterRegistryUri,
   contractId,
   boxId,
-  pursesToCreate
+  pursesToCreate,
+  quantity = 3
 ) => {
   const payload = {
     purses: {},
@@ -19,15 +20,15 @@ module.exports.main = async (
   };
   for (let i = 0; i < pursesToCreate; i += 1) {
     payload.purses[i] = {
-      id: '', // will be ignored, contract is fugible contract
+      id: 'auto', // will be ignored, contract is fugible contract
       boxId: boxId,
-      quantity: 3,
+      quantity: quantity,
       price: null,
     };
   }
 
   const term = createPursesTerm(payload);
-  console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
+  console.log('  create-purses deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
 
   let dataAtNameResponse;
   try {

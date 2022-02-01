@@ -9,6 +9,8 @@ module.exports.main = async (masterRegistryUri, boxId) => {
     allData.purses === null ||
     Object.keys(allData.purses).length !== 0
   ) {
+    console.log(boxId);
+    console.log(allData);
     throw new Error('01_checkDefaultPurses invalid purses');
   }
 

@@ -49,7 +49,7 @@ Fungibles tokens purses can have a quantity superior to one. For examples 100 go
 # deploy contract and save super key to box
 node cli deploy --fungible true --contract-id "mytoken"
 
-# Create/mint a purse with 12 tokens "fGOLD" using the admin/owner capability
+# Create/mint a purse with 12 tokens "[prefix]mytoken" using the admin/owner capability
 node cli create-purse --quantity 12
 
 # after the deployed is processed you can check that your purse is created
@@ -72,7 +72,7 @@ node cli view
 
 ```
 # Check a specific purse in a contract
-node cli view --purse 0
+node cli view --purse-id 0
 ```
 
 **Purses/tokens operations**

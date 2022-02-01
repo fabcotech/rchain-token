@@ -1,23 +1,14 @@
-
-new
-  basket,
-  boxCh,
+new basket,
   returnCh,
-
+  boxCh,
+  stdout(`rho:io:stdout`),
   deployerId(`rho:rchain:deployerId`),
-  stdout(`rho:io:stdout`)
+  registryLookup(`rho:registry:lookup`)
 in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")) {
     stdout!("boxCh") |
-    boxCh!((
-      "RENEW",
-      {
-        "contractId": "CONTRACT_ID",
-        "purseId": "PURSE_ID"
-      },
-      *returnCh
-    )) |
+    boxCh!(("SWAP", { "contractId": "CONTRACT_ID", "purseId": "PURSE_ID", "merge": MERGE, "quantity": QUANTITY, "data": "SWAP_DATA", "newId": "NEW_ID" }, *returnCh)) |
     for (@r <- returnCh) {
       match r {
         String => {
@@ -25,10 +16,10 @@ in {
           stdout!(("failed", r))
         }
         (true, Nil) => {
-          // OP_RENEW_COMPLETED_BEGIN
+          // OP_SWAP_BEGIN
           basket!({ "status": "completed" }) |
-          stdout!("completed, renew successful")
-          // OP_RENEW_COMPLETED_END
+          stdout!("completed, swap successful")
+          // OP_SWAP_END
         }
       }
     }

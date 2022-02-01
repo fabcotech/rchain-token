@@ -40,10 +40,5 @@ module.exports.main = async (
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
 
-  if (data.status !== "completed") {
-    console.log(data);
-    throw new Error('test_updatePursePrice 02')
-  }
-
   return data;
 };

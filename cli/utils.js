@@ -37,13 +37,13 @@ module.exports.logData = (data) => {
   }
   if (data.fee) {
     console.log(
-      `Fee                   : ${data.fee[1]} / 10000 (${data.fee[1] / 100}%)`
+      `Fee                   : ${data.fee[1]} / 100000 (${data.fee[1] / 100}%)`
     );
   }
   if (data.expires) {
     console.log(
-      `Expires               : ${data.expires / (1000 * 60 * 60)}h / ${
-        data.expires / (1000 * 60 * 60 * 24)
+      `Expires               : ${Math.round(100 * data.expires / (1000 * 60 * 60)) / 100}h / ${
+        Math.round(100 * data.expires / (1000 * 60 * 60 * 24)) / 100
       }d`
     );
   }
@@ -126,7 +126,7 @@ module.exports.getPursesFile = () => {
 };
 
 module.exports.getPurseId = () => {
-  return getProcessArgv('--purse');
+  return getProcessArgv('--purse-id');
 };
 
 module.exports.getType = () => {
