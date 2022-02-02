@@ -1,21 +1,19 @@
 const rc = require('rchain-toolkit');
 require('dotenv').config();
 
+const checkPursesInContract = require('./checkPursesInContract.js').main;
+const createPurses = require('./test_createPurses.js').main;
+const deletePurse = require('./test_deletePurse.js').main;
+const deleteExpiredPurse = require('./test_deleteExpiredPurse.js').main;
+const checkPursesInBox = require('./checkPursesInBox.js').main;
+const getRandomName = require('./getRandomName.js').main;
+const renew = require('./test_renew.js').main;
+
+const credit = require('../tests-ft/test_credit').main;
 const fillBalances = require('../tests-ft/fillBalances').main;
 const getAllData = require('../tests-ft/getAllData').main;
 const getAllBoxData = require('../tests-ft/getAllBoxData').main;
-const checkPursesInContract = require('./checkPursesInContract.js').main;
-const checkPursesSameTimestampInContract =
-  require('./checkPursesSameTimestampInContract.js').main;
-  const createPurses = require('./test_createPurses.js').main;
-  const deletePurse = require('./test_deletePurse.js').main;
-  const deleteExpiredPurse = require('./test_deleteExpiredPurse.js').main;
-  const checkPursesInBox = require('./checkPursesInBox.js').main;
-  const getRandomName = require('./getRandomName.js').main;
-  const renew = require('./test_renew.js').main;
-  
 const checkPursesInContractFT = require('../tests-ft/checkPursesInContract.js').main;
-const createPursesFT = require('../tests-ft/test_createPurses.js').main;
 const swap = require('../tests-ft/test_swap').main;
 const checkLogsInContract = require('../tests-ft/checkLogsInContract').main;
 const checkPursePriceInContract =
@@ -57,7 +55,7 @@ const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
-  console.log("balances (dust) :", balances1[0], balances2[0], balances3[0])
+  console.log(`  balances (dust) : (1) ${balances1[0]}, (2) ${balances2[0]}, (3) ${balances3[0]}`)
 
   let boxId1 = "box1";
   let boxId2 = "box2";
@@ -117,28 +115,21 @@ const main = async () => {
   await checkDefaultPurses(masterRegistryUri, boxId2);
   console.log('✓ 02 check initial purses in boxes');
 
-  // BEGIN create REV contract
-  await deploy(
+  const creditResult = await credit(
     PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    boxId1,
-    true,
-    "rev",
-    // expiration always null for FT
-    null
+    {
+      revAddress: rc.utils.revAddressFromPublicKey(PUBLIC_KEY),
+      quantity: WRAPPED_REV_QUANTITY,
+      masterRegistryUri: masterRegistryUri,
+      boxId: boxId1
+    }
   );
-  const createRevPurses = await createPursesFT(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    `${prefix}rev`,
-    boxId1,
-    1,
-    WRAPPED_REV_QUANTITY
-  );
-  // END create wrapped REV
-  
+  if (creditResult.status !== "completed") {
+    console.log(creditResult);
+    throw new Error('credit should have worked')
+  }
+  console.log('✓ 02.1 credit box1 in [prefix]rev');
+
   const deployData = await deploy(
     PRIVATE_KEY,
     PUBLIC_KEY,

@@ -23,6 +23,7 @@ const createPurses = require('./test_createPurses.js').main;
 const updatePurseData = require('./test_updatePurseData.js').main;
 const updatePursePrice = require('./test_updatePursePrice.js').main;
 const swap = require('./test_swap').main;
+const credit = require('./test_credit').main;
 
 const WRAPPED_REV_QUANTITY = 100 * 100000000;
 const PURSES_TO_CREATE = 10;
@@ -47,7 +48,7 @@ const main = async () => {
   balances1.push(await getBalance(PUBLIC_KEY));
   balances2.push(await getBalance(PUBLIC_KEY_2));
   balances3.push(await getBalance(PUBLIC_KEY_3));
-  console.log("balances (dust) :", balances1[0], balances2[0], balances3[0])
+  console.log(`  balances (dust) : (1) ${balances1[0]}, (2) ${balances2[0]}, (3) ${balances3[0]}`)
 
   let prefix = "";
   let boxId1 = "box1";
@@ -121,27 +122,20 @@ const main = async () => {
   await checkDefaultPurses(masterRegistryUri, boxId2);
   console.log('✓ 02 check initial purses in boxes');
 
-  // BEGIN create REV contract
-  await deploy(
+  const creditResult = await credit(
     PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    boxId1,
-    true,
-    "rev",
-    // expiration always null for FT
-    null
+    {
+      revAddress: rc.utils.revAddressFromPublicKey(PUBLIC_KEY),
+      quantity: WRAPPED_REV_QUANTITY,
+      masterRegistryUri: masterRegistryUri,
+      boxId: boxId1
+    }
   );
-  const createRevPurses = await createPurses(
-    PRIVATE_KEY,
-    PUBLIC_KEY,
-    masterRegistryUri,
-    `${prefix}rev`,
-    boxId1,
-    1,
-    WRAPPED_REV_QUANTITY
-  );
-  // END create wrapped REV
+  if (creditResult.status !== "completed") {
+    console.log(creditResult);
+    throw new Error('credit should have worked')
+  }
+  console.log('✓ 02.1 credit box1 in [prefix]rev');
 
   const deployData = await deploy(
     PRIVATE_KEY,

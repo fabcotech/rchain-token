@@ -62,19 +62,20 @@ const replaceEverything = (a) => {
   );
 };
 
-const purchaseFile = fs
-  .readFileSync('./rholang/op_purchase.rho')
+const creditFile = fs
+  .readFileSync('./rholang/op_credit.rho')
   .toString('utf8');
 fs.writeFileSync(
-  './src/purchaseTerm.js',
+  './src/creditTerm.js',
   `/* GENERATED CODE, only edit rholang/*.rho files*/
-module.exports.purchaseTerm = (
+module.exports.creditTerm = (
   payload
 ) => {
-  return \`${replaceEverything(purchaseFile)}\`;
+  return \`${replaceEverything(creditFile)}\`;
 };
 `
 );
+
 
 const swapFile = fs
   .readFileSync('./rholang/op_swap.rho')
