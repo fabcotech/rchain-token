@@ -1875,10 +1875,17 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   if (purse.get("id") == "0") {
                     unlock!("error: withdraw from special nft 0 is forbidden")
                   } else {
-                    if (payload.get("toBoxId") == "_rev" and payload.get("contractId") != prefix ++ "rev") {
-                      unlock!("error: withdraw to _rev only allowed for wrapped rev")
-                    } else {
-                      ch15!((purse, box))
+                    for (@config <<- @(*self, "contractConfig", payload.get("contractId"))) {
+                      if (payload.get("toBoxId") == "_rev" and payload.get("contractId") != prefix ++ "rev") {
+                        unlock!("error: withdraw to _rev only allowed for wrapped rev")
+                      } else if (payload.get("toBoxId") == "_burn") {
+                        match config.get("expires") {
+                          Int => { unlock!("error: cannot burn NFT that can expire") }
+                          Nil => { ch15!((purse, box)) }
+                        }
+                      } else {
+                        ch15!((purse, box))
+                      }
                     }
                   }
                 }
