@@ -132,7 +132,7 @@ in {
   TreeHashMap!("init", DEPTH, false, *contractsReadyCh) |
 
   registryLookup!(`rho:rchain:revVault`, *revVaultCh) |
-  for (@boxesThm <- boxesReadyCh; @contractsThm <- contractsReadyCh; @(_, RevVault) <- revVaultCh) {
+  for (@boxesThm <- boxesReadyCh; @contractsThm <- contractsReadyCh; @(_, RevVault) <- revVaultCh; @prefix <- prefixCh) {
 
     // ====================================
     // =================== UTILS / INTERNAL
@@ -736,13 +736,11 @@ in {
                       validateStringCh!((payload.get("boxId"), *ch7)) |
                       for (@valid <- ch7) {
                         if (valid == true) {
-                          for (@prefix <<- prefixCh) {
-                            match prefix ++ payload.get("boxId") {
-                              boxId => {
-                                for (_ <- @(*self, "REGISTER_BOX_LOCK")) {
-                                  ch6!(boxId) |
-                                  getBoxCh!((boxId, *ch1))
-                                }
+                          match prefix ++ payload.get("boxId") {
+                            boxId => {
+                              for (_ <- @(*self, "REGISTER_BOX_LOCK")) {
+                                ch6!(boxId) |
+                                getBoxCh!((boxId, *ch1))
                               }
                             }
                           }
@@ -792,22 +790,20 @@ in {
             { "contractId": String, "fungible": Bool, "expires": Nil \/ Int } => {
               for (_ <- @(*self, "REGISTER_CONTRACT_LOCK")) {
                 validateStringCh!((payload.get("contractId"), *ch6)) |
-                for (@prefix <<- prefixCh) {
-                  for (@valid <- ch6) {
-                    if (valid == true) {
-                      if (payload.get("expires") == Nil) {
+                for (@valid <- ch6) {
+                  if (valid == true) {
+                    if (payload.get("expires") == Nil) {
+                      registerContract!(prefix ++ payload.get("contractId"))
+                    } else {
+                      // minimum 2 hours expiration
+                      if (payload.get("expires") >= 1000 * 60 * 60 * 2) {
                         registerContract!(prefix ++ payload.get("contractId"))
                       } else {
-                        // minimum 2 hours expiration
-                        if (payload.get("expires") >= 1000 * 60 * 60 * 2) {
-                          registerContract!(prefix ++ payload.get("contractId"))
-                        } else {
-                          registerUnlock!("error: .expires must be at least 2 hours")
-                        }
+                        registerUnlock!("error: .expires must be at least 2 hours")
                       }
-                    } else {
-                      registerUnlock!("error: invalid contract id")
                     }
+                  } else {
+                    registerUnlock!("error: invalid contract id")
                   }
                 }
               }
@@ -962,7 +958,6 @@ in {
                     for (@("CREATE_PURSE", payload2, return2) <= superKeyCh) {
                       new blockDataCh, ch1, ch2, ch3, ch4, proceedCreateCh, unlock in {
                         for (@result <- unlock) {
-                          stdout!("UNLOCK CREATE_PURSE") |
                           @(*self, "CONTRACT_LOCK", contractId)!(Nil) |
                           @(*self, "BOX_LOCK", payload2.get("boxId"))!(Nil) |
                           @return2!(result)
@@ -1030,22 +1025,17 @@ in {
       for (@("CREDIT", payload, return) <= @boxCh) {
         new ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, proceedCreditCh, unlock in {
           for (@result <- unlock) {
-            stdout!("unlock") |
-            for (@prefix <<- prefixCh) {
-              @(*self, "BOX_LOCK", boxId)!(Nil) |
-              @(*self, "CONTRACT_LOCK", prefix ++ "rev")!(Nil) |
-              @return!(result)
-            }
+            @(*self, "BOX_LOCK", boxId)!(Nil) |
+            @(*self, "CONTRACT_LOCK", prefix ++ "rev")!(Nil) |
+            @return!(result)
           } |
           match payload {
             { "purseRevAddr": String, "purseAuthKey": _ } => {
-              for (@prefix <<- prefixCh) {
-                for (
-                  _ <- @(*self, "BOX_LOCK", boxId);
-                  _ <- @(*self, "CONTRACT_LOCK", prefix ++ "rev")
-                ) {
-                  proceedCreditCh!(Nil)
-                }
+              for (
+                _ <- @(*self, "BOX_LOCK", boxId);
+                _ <- @(*self, "CONTRACT_LOCK", prefix ++ "rev")
+              ) {
+                proceedCreditCh!(Nil)
               }
             }
             _ => {
@@ -1070,23 +1060,21 @@ in {
                         for (@escrowTransferResult <- ch7) {
                           match escrowTransferResult {
                             (true, Nil) => {
-                              for (@prefix <<- prefixCh) {
-                                blockData!(*ch9) |
-                                for (_, @timestamp, _ <- ch9) {
-                                  makePurseCh!((
-                                    prefix ++ "rev",
-                                    {
-                                      "quantity": balance,
-                                      "boxId": boxId,
-                                      "price": Nil,
-                                      "timestamp": timestamp,
-                                      "id": "auto"
-                                    },
-                                    Nil,
-                                    true,
-                                    *ch8
-                                  ))
-                                }
+                              blockData!(*ch9) |
+                              for (_, @timestamp, _ <- ch9) {
+                                makePurseCh!((
+                                  prefix ++ "rev",
+                                  {
+                                    "quantity": balance,
+                                    "boxId": boxId,
+                                    "price": Nil,
+                                    "timestamp": timestamp,
+                                    "id": "auto"
+                                  },
+                                  Nil,
+                                  true,
+                                  *ch8
+                                ))
                               } |
                               for (@r <- ch8) {
                                 match r {
@@ -1466,12 +1454,10 @@ in {
                   if (purse.get("id") == "0") {
                     unlock!("error: withdraw from special nft 0 is forbidden")
                   } else {
-                    for (@prefix <<- prefixCh) {
-                      if (payload.get("toBoxId") == "_rev" and payload.get("contractId") != prefix ++ "rev") {
-                        unlock!("error: withdraw to _rev only allowed for wrapped rev")
-                      } else {
-                        ch15!((purse, box))
-                      }
+                    if (payload.get("toBoxId") == "_rev" and payload.get("contractId") != prefix ++ "rev") {
+                      unlock!("error: withdraw to _rev only allowed for wrapped rev")
+                    } else {
+                      ch15!((purse, box))
                     }
                   }
                 }
@@ -1893,21 +1879,6 @@ in {
       }
     } |
 
-    insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
-
-    for (entryUri <- entryUriCh) {
-      basket!({
-        "status": "completed",
-        "registryUri": *entryUri
-      }) |
-      /* turn URI into a string so we can slice
-      and get prefix for boxes and contracts */
-      match "${uri}" %% { "uri": *entryUri } {
-        uri => { prefixCh!(uri.slice(7, 10)) }
-      } |
-      stdout!(("rchain-token master registered at", *entryUri))
-    } |
-
     // Register special box _rev
     new ch1 in {
       TreeHashMap!("set", boxesThm, "_rev", "exists", *ch1) |
@@ -1933,7 +1904,7 @@ in {
             for (@escrowTransferResult <- ch1) {
               match escrowTransferResult {
                 (true, Nil) => {
-                  stdout!(quantity ++ "wrapped rev burned and credited back to " ++ boxRevAddress)
+                  stdout!(quantity ++ "wrapped rev burned and credited back to " ++ boxRevAddress) |
                   @return!((true, Nil))
                 }
                 _ => { @return!("error CRITICAL: credit back went wrong") }
@@ -1958,29 +1929,42 @@ in {
 
     // Register special [prefix]rev fungible token
     new ch1, ch2, ch3, ch4 in {
-      for (@prefix <<- prefixCh) {
-        TreeHashMap!("init", DEPTH_CONTRACT, true, *ch2) |
-        TreeHashMap!("init", DEPTH_CONTRACT, true, *ch4) |
-        TreeHashMap!("set", contractsThm, prefix ++ "rev", "exists", *ch3) |
-        for (@pursesThm <- ch2; @pursesDataThm <- ch4; _ <- ch3) {
+      TreeHashMap!("init", DEPTH_CONTRACT, true, *ch2) |
+      TreeHashMap!("init", DEPTH_CONTRACT, true, *ch4) |
+      TreeHashMap!("set", contractsThm, prefix ++ "rev", "exists", *ch3) |
+      for (@pursesThm <- ch2; @pursesDataThm <- ch4; _ <- ch3) {
 
-          @(*self, "purses", prefix ++ "rev")!(pursesThm) |
-          @(*self, "pursesData", prefix ++ "rev")!(pursesDataThm) |
-          @(*self, "contractConfig", prefix ++ "rev")!(
-            {
-              "locked": true,
-              "counter": 1,
-              "version": VERSION,
-              "fee": Nil,
-              "expires": Nil,
-              "contractId": prefix ++ "rev",
-              "fungible": true
-            }
-          ) |
-          @(*self, "CONTRACT_LOCK", prefix ++ "rev")!(Nil) |
-          stdout!("special FT contract (wrapped rev) " ++ prefix ++ "rev registered")
-        }
+        @(*self, "purses", prefix ++ "rev")!(pursesThm) |
+        @(*self, "pursesData", prefix ++ "rev")!(pursesDataThm) |
+        @(*self, "contractConfig", prefix ++ "rev")!(
+          {
+            "locked": true,
+            "counter": 1,
+            "version": VERSION,
+            "fee": Nil,
+            "expires": Nil,
+            "contractId": prefix ++ "rev",
+            "fungible": true
+          }
+        ) |
+        @(*self, "CONTRACT_LOCK", prefix ++ "rev")!(Nil) |
+        stdout!("special FT contract (wrapped rev) " ++ prefix ++ "rev registered")
       }
     }
+  } |
+
+  insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
+
+  for (entryUri <- entryUriCh) {
+    basket!({
+      "status": "completed",
+      "registryUri": *entryUri
+    }) |
+    /* turn URI into a string so we can slice
+    and get prefix for boxes and contracts */
+    match "${uri}" %% { "uri": *entryUri } {
+      uri => { prefixCh!(uri.slice(7, 10)) }
+    } |
+    stdout!("rchain-token master registered at ${uri}" %% { "uri": *entryUri })
   }
 }

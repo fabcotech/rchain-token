@@ -113,10 +113,11 @@ All the methods on a box are private (owner of the box only).
 ```
 ro READ: () => Properties of the purse (quantity, price, box, publicKey)
 REGISTER_CONTRACT: ({ contractId: string, fungible: Bool, fee: Nil | (String, int) }) => String | (true, { "contractId": String, "superKey": super key ocap object })
-UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: Nil | Int }) => String | (true, super key ocap object)
+UPDATE_PURSE_PRICE: ({ contractId: String, purseId: String, price: (String, Int) | (String, String) | Nil }) => String | (true, super key ocap object)
 UPDATE_PURSE_DATA:  ({ contractId: String, purseId: String, data: any }) => String | (true, super key ocap object)
 WITHDRAW:  ({ contractId: String, purseId: String, quantity: Int, toBoxId: String, merge: Bool }) => String | (true, Nil)
-PURCHASE:  ({ contractId: String, purseId: String, quantity: Int, merge: Bool, newId: String | Nil, data: any, purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)
+CREDIT:  ({ purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)
+SWAP:  ({ contractId: String, purseId: String, quantity: Int, merge: Bool, newId: String | Nil, data: any }) => String | (true, Nil)
 RENEW:  ({ contractId: String, purseId: String, purseRevAddr: String, purseRevAddr: VaultAuthKey }) => String | (true, Nil)
 ```
 
@@ -178,6 +179,7 @@ VALIDATOR_HOST=http://127.0.0.1:40403
 
 `npm run test:ft`
 `npm run test:nft`
+`npm run test:credit`
 
 ##### Stressing
 
