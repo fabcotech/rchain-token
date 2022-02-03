@@ -8,6 +8,22 @@ This repo includes a CLI so you can very quickly start playing with rchain-token
 
 Object capabilities is a safe, no-encryption and flexible way to express ownership, permissions or authorizations. See or read about object capabilities [here](https://www.youtube.com/watch?v=EGX2I31OhBE), [here](https://www.youtube.com/watch?v=ZnBbi6ifzdo) or [here](http://erights.org/elib/capability/ode/ode-capabilities.html).
 
+### What is a master contract ?
+
+A master contract hosts boxes, contracts (NFT or FT) and purses inside those contracts. A deployment of rchain-token is the deployment of the master contract. Swap capabilities can be inter-contract, boxes can send NFTs or FTs to each other. Inter-master communications or exchange would need some trusted bridges.
+
+### Burning with _burn
+
+`_burn` is a special box, if you withdraw NFT or FT to box `_burn` it will be ... burned.
+
+### Wrapped REV
+
+From release 16 every swap must be token-to-token , which means that you cannot put a sell order on a NFT, and sell it against REV. An automatic fungile wrapped REV contract exists for the purpose of having a guaranteed one-to-one fungible token that represents REV inside a master.
+
+The id of the contract is `[prefix]rev`, `prefix` being a the first 3 letters of the registry URI of the master. Use the `CREDIT` capability to credit REV, and have wrapped rev in return. Withdraw to special box `_rev` to recover true REV from wrapped REV.
+
+**Note**: wrapped REV contract use the same decimals as REV: 1 wrapped REV = 1 dust = 10^-8 true REV
+
 ### Use CLI
 
 Rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.

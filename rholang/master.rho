@@ -108,7 +108,6 @@ in {
       blockData!(*blockDataCh) |
       for (_, @timestamp, _ <- blockDataCh) {
         for (@current <- @(*self, "LOGS", contractId)) {
-          stdout!(current.length()) |
           match current.length() > 2600 {
             true => {
               @(*self, "LOGS", contractId)!("${type},${ts}," %% { "type": type, "ts": timestamp } ++ str ++ current.slice(0,2200))
@@ -509,8 +508,6 @@ in {
             .delete("newId")
           {
             purse => {
-              stdout!("makePurse") |
-              stdout!(purse) |
               match purse {
                 {
                   "quantity": Int,
@@ -1904,7 +1901,7 @@ in {
             for (@escrowTransferResult <- ch1) {
               match escrowTransferResult {
                 (true, Nil) => {
-                  stdout!(quantity ++ "wrapped rev burned and credited back to " ++ boxRevAddress) |
+                  stdout!("${quantity} wrapped rev burned and credited back to ${boxRevAddress}" %% { "quantity": quantity, "boxRevAddress": boxRevAddress }) |
                   @return!((true, Nil))
                 }
                 _ => { @return!("error CRITICAL: credit back went wrong") }
