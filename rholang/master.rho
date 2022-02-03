@@ -662,25 +662,18 @@ in {
         // RACE SAFE / RESOURCES LOCKED
         // after lock of 1 contract and 1 box
         for (_ <- proceeedDeleteCh) {
-          stdout!("proceeedDeleteCh") |
           getContractPursesThmCh!((contractId, *ch3)) |
           getContractPursesDataThmCh!((contractId, *ch4)) |
           for (@pursesThm <- ch3; @pursesDataThm <- ch4) {
-            stdout!(("pursesThm", pursesThm)) |
-            stdout!(("pursesDataThm", pursesDataThm)) |
             TreeHashMap!("get", pursesThm, purseId, *ch5) |
             for (@purse <- ch5) {
-              stdout!(("purse", purse)) |
               if (purse != Nil) {
                 if (purse.get("boxId") == boxId) {
                   for (@config <<- @(*self, "contractConfig", contractId)) {
-                    stdout!(("config", config)) |
                     match (config.get("fungible"), purseId == "0", config.get("expires")) {
                       (false, false, Int) => {
                         blockData!(*ch6) |
                         for (_, @timestamp, _ <- ch6) {
-                          stdout!(("1", timestamp - purse.get("timestamp"))) |
-                          stdout!(("expires", config.get("expires"))) |
                           if (timestamp - purse.get("timestamp") > config.get("expires")) {
                             TreeHashMap!("set", pursesThm, purse.get("id"), Nil, *ch7) |
                             TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil, *ch8) |
@@ -1048,8 +1041,6 @@ in {
                   revAddress!("fromUnforgeable", *self, *ch4) |
                   @emitterPurseVault!("balance", *ch6) |
                   for (@balance <- ch6; @escrowPurseAuthKey <- ch3; @escrowPurseRevAddr <- ch4) {
-                    stdout!(("escrowPurseAuthKey", escrowPurseAuthKey)) |
-                    stdout!(("emitterPurseVault", emitterPurseVault)) |
                     if (balance > 0) {
                       @RevVault!("findOrCreate", escrowPurseRevAddr, *ch5) |
                       for (@(true, escrowPurseVault) <- ch5) {
@@ -1149,9 +1140,6 @@ in {
             for (@box <- ch7) {
               getPurseCh!((box, payload.get("contractId"), payload.get("purseId"), *ch5)) |
               for (@purse <- ch5) {
-                stdout!("purse") |
-                stdout!(purse) |
-                stdout!(payload.get("price")) |
                 if (purse != Nil) {
                   match (purse.get("id"), payload.get("price")) {
                     ("0", (String, String)) => {
@@ -1236,7 +1224,6 @@ in {
       } |
 
       for (@("RENEW", payload, return) <= @boxCh) {
-        stdout!("RENEW") |
         new ch1, ch2, ch3, ch4, renewStep2, ch20, renewStep3, ch33, ch34, ch35, ch36, ch37, ch38, proceeedRenewCh, unlock in {
           for (@result <- unlock) {
             @(*self, "BOX_LOCK", boxId)!(Nil) |
@@ -1245,7 +1232,6 @@ in {
           } |
           match payload {
             { "contractId": String, "purseId": String } => {
-              stdout!("MATCH") |
               getContractPursesThmCh!((payload.get("contractId"), *ch1)) |
               for (@pursesThm <- ch1) {
                 if (pursesThm != Nil) {
@@ -1268,7 +1254,6 @@ in {
           // RACE SAFE / RESOURCES LOCKED
           // after lock of 1 contract and 1 box
           for (_ <- proceeedRenewCh) {
-            stdout!("proceeedRenewCh") |
             getBoxCh!((boxId, *ch1)) |
             for (@box <- ch1) {
               getContractPursesThmCh!((payload.get("contractId"), *ch2)) |
@@ -1276,10 +1261,6 @@ in {
               for (@pursesThm <- ch2) {
                 TreeHashMap!("get", pursesThm, "0", *ch4) |
                 for (@purse <- ch3; @purseZero <- ch4) {
-                  stdout!("purse") |
-                  stdout!(purse) |
-                  stdout!("purseZero") |
-                  stdout!(purseZero) |
                   for (@contractConfig <<- @(*self, "contractConfig", payload.get("contractId"))) {
                     match (contractConfig.get("expires"), contractConfig.get("fungible") == false, purse != Nil, purseZero != Nil, purse.get("boxId") == boxId) {
                       (Int, true, true, true, true) => {
@@ -1296,18 +1277,12 @@ in {
           } |
 
           for (@(box, pursesThm, purseZero, purse, expires) <- renewStep2) {
-            stdout!("renewStep2") |
-            stdout!("purseZero") |
-            stdout!(purseZero) |
-            stdout!(expires) |
             blockData!(*ch20) |
             for (_, @timestamp, _ <- ch20) {
               match expires / 10 {
                 grace => {
-                  stdout!(("grace", grace)) |
                   match purse.get("timestamp") + expires - grace {
                     startOfGracePeriod => {
-                      stdout!(("timestamp > startOfGracePeriod", timestamp > startOfGracePeriod)) |
                       if (timestamp > startOfGracePeriod) {
                         renewStep3!((box, pursesThm, purseZero, purse, expires))
                       } else {
@@ -1327,9 +1302,6 @@ in {
           } |
 
           for (@(box, pursesThm, purseZero, purse, expires) <- renewStep3) {
-            stdout!("renewStep3") |
-            stdout!( purseZero.get("price").nth(0)) |
-            stdout!( purseZero.get("price").nth(1)) |
             match purseZero.get("price") {
               (String, String) => { unlock!("error: purse zero not for sale with ft, cannot renew") }
               // renew is free
@@ -1340,11 +1312,9 @@ in {
               (String, Int) => {
                 getPurseWithAtLeastQuantityCh!((box, purseZero.get("price").nth(0), purseZero.get("price").nth(1), *ch33)) |
                 for (@purseForRenew <- ch33) {
-                  stdout!(("purseForRenew", purseForRenew)) |
                   if (purseForRenew != Nil) {
                     getContractPursesThmCh!((purseZero.get("price").nth(0), *ch36)) |
                     for (@feePursesThm <- ch36) {
-                      stdout!(("feePursesThm", feePursesThm)) |
                       if (purseForRenew.get("quantity") == purseZero.get("price").nth(1)) {
                         TreeHashMap!("set", feePursesThm, purseForRenew.get("id"), Nil, *ch34) |
                         removePurseInBoxCh!((purseForRenew.get("boxId"), purseZero.get("price").nth(0), purseForRenew.get("id"), *ch35))
@@ -1778,7 +1748,6 @@ in {
                   for (@makeBuyerPurseResult <- ch36; _ <- ch40) {
                     match makeBuyerPurseResult {
                       String => {
-                        stdout!(makeBuyerPurseResult) |
                         unlock!((purseForSale, "error: CRITICAL could not make purse " ++ makeBuyerPurseResult))
                       }
                       (true, newPurse) => {
@@ -1861,7 +1830,7 @@ in {
                       }
                       (true, newPurse) => {
                         unlock!((purseForSale, (true, Nil))) |
-                        appendLogsForContract!((payload.get("contractId"), "p", "${toBox},${fromBox},${q},${p},${id},${newId};" %% { "fromBox": boxId, "toBox": purseForSale.get("boxId"), "q": payload.get("quantity"), "p": "nft_" ++ purseForSale.get("price").nth(0) ++ "_" ++ purseForSale.get("price").nth(0), "newId": newPurse.get("id"), "id": payload.get("purseId") }))
+                        appendLogsForContract!((payload.get("contractId"), "p", "${toBox},${fromBox},${q},${p},${id},${newId};" %% { "fromBox": boxId, "toBox": purseForSale.get("boxId"), "q": payload.get("quantity"), "p": "nft_" ++ purseForSale.get("price").nth(0) ++ "_" ++ purseForSale.get("price").nth(1), "newId": newPurse.get("id"), "id": payload.get("purseId") }))
                       }
                     }
                   }

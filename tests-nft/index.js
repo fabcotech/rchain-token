@@ -372,6 +372,13 @@ const main = async () => {
   console.log(`✓ 12 balance of nft owner checked and has +980 [prefix]rev`);
   console.log(`✓ 12 2% fee of [prefix]rev was earned by owner of box 3`);
 
+  await checkLogsInContract(
+    masterRegistryUri,
+    contractId,
+    `p,${boxId2},${boxId1},1,ft_${prefix}rev_1000,${ids[0]},${ids[0]};`
+  );
+  console.log(`✓ 12.1 logs valid`);
+
   console.log(
     '  12 dust cost: ' +
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
@@ -495,6 +502,14 @@ const main = async () => {
   console.log(`✓ 15 swap mint (purse "0") successful`);
   console.log(`✓ 15 2% fee of [prefix]rev was again earned by owner of box 3`);
 
+  const logsStep15 = `p,${boxId1},${boxId2},1,ft_${prefix}rev_1000,0,mynewnft;p,${boxId2},${boxId1},1,ft_${prefix}rev_1000,${ids[0]},${ids[0]};`;
+  await checkLogsInContract(
+    masterRegistryUri,
+    contractId,
+    `${logsStep15}`
+  );
+  console.log(`✓ 15.1 logs ok`);
+
   const priceUpdateFailed1 = await updatePursePrice(
     PRIVATE_KEY,
     PUBLIC_KEY,
@@ -575,6 +590,13 @@ const main = async () => {
     [ids[1]] 
   );
   console.log(`✓ 19 swap nft<->nft successful`);
+
+  await checkLogsInContract(
+    masterRegistryUri,
+    contractId,
+    `p,${boxId1},${boxId2},1,nft_${contractId}_mynewnft,${ids[1]},${ids[1]};${logsStep15}`
+  );
+  console.log(`✓ 19.1 logs valid`);
 
   await updatePursePrice(
     PRIVATE_KEY_3,
