@@ -8,6 +8,12 @@ const deployMaster = require('../tests-ft/test_deployMaster').main;
 const withdraw = require('../tests-ft/test_withdraw').main;
 const checkDefaultPurses = require('../tests-ft/test_checkDefaultPurses').main;
 const credit = require('../tests-ft/test_credit').main;
+const creditAndSwap = require('../tests-ft/test_creditAndSwap').main;
+const deploy = require('../tests-ft/test_deploy').main;
+const updatePursePrice = require('../tests-ft/test_updatePursePrice.js').main;
+
+const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
+const createPurses = require('../tests-nft/test_createPurses.js').main;
 
 const PRIVATE_KEY = '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
 const PUBLIC_KEY = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
@@ -32,7 +38,6 @@ const main = async () => {
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
   prefix = masterRegistryUri.slice(0, 3);
 
-  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy master');
   console.log(
@@ -182,6 +187,73 @@ const main = async () => {
   }
 
   console.log('✓ 07 box2 credited back 2 REV successful, earned ' +  Math.round((balanceAfterCreditBack2 - balanceBeforeCreditBack2) / 100000000) + " true REV");
+
+  const deployData = await deploy(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    boxId1,
+    false,
+    contractId,
+    null
+  );
+  contractId = `${prefix}${contractId}`;
+
+  await createPurses(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    contractId,
+    boxId1,
+    boxId1,
+    ['willbeswapped']
+  );
+  await updatePursePrice(
+    PRIVATE_KEY,
+    PUBLIC_KEY,
+    masterRegistryUri,
+    boxId1,
+    contractId,
+    'willbeswapped',
+    [`"${prefix}rev"` , 100000000]
+  );
+
+  const a = await creditAndSwap(
+    PRIVATE_KEY_2,
+    {
+      revAddress: rc.utils.revAddressFromPublicKey(PUBLIC_KEY_2),
+      quantity: 100000000,
+      masterRegistryUri: masterRegistryUri,
+      boxId: boxId2
+    },
+    {
+      masterRegistryUri: masterRegistryUri,
+      purseId: "willbeswapped",
+      contractId: contractId,
+      boxId: boxId2,
+      quantity: 1,
+      data: 'bbb',
+      newId: 'none',
+      merge: true,
+    }
+  );
+
+  await checkPursesInContractFT(
+    masterRegistryUri,
+    `${prefix}rev`,
+    1,
+    `1`,
+    1000000000 - 200000000 - 200000000 + 100000000
+  );
+  await checkPursesInBox(
+    masterRegistryUri,
+    boxId2,
+    contractId,
+    ["willbeswapped"] 
+  );
+
+  console.log('✓ 08 credit and swap in one operation (creditAndSwap) successful');
+
 };
 
 main();

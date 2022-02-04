@@ -2,6 +2,7 @@
 const { deployBoxTerm } = require('./deployBoxTerm');
 const { masterTerm } = require('./masterTerm');
 const { swapTerm } = require('./swapTerm');
+const { creditAndSwapTerm } = require('./creditAndSwapTerm');
 const { deployTerm } = require('./deployTerm');
 const { createPursesTerm } = require('./createPursesTerm');
 const { lockTerm } = require('./lockTerm');
@@ -33,6 +34,7 @@ module.exports = {
   swapTerm,
   deployBoxTerm,
   deployTerm,
+  creditAndSwapTerm,
   createPursesTerm,
   lockTerm,
   updateFeeTerm,
