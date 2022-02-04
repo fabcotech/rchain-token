@@ -1,21 +1,21 @@
-const { deploy } = require('./cli/deploy');
-const { deployMaster } = require('./cli/deployMaster');
-const { deployBox } = require('./cli/deployBox');
-const { purchaseTokens } = require('./cli/purchaseTokens');
-const { view } = require('./cli/view');
-const { swap } = require('./cli/swap');
-const { viewBox } = require('./cli/viewBox');
-const { withdraw } = require('./cli/withdraw');
-const { createPurse } = require('./cli/createPurse');
-const { lock } = require('./cli/lock');
-const { deletePurse } = require('./cli/deletePurse');
-const { updateBagData } = require('./cli/updateBagData');
-const { viewData } = require('./cli/viewData');
-const { updatePursePrice } = require('./cli/updatePursePrice');
-const { renew } = require('./cli/renew');
-const { viewLogs } = require('./cli/viewLogs');
+const { execDeploy } = require('./deploy');
+const { execDeployMaster } = require('./deployMaster');
+const { execDeployBox } = require('./deployBox');
+const { purchaseTokens } = require('./purchaseTokens');
+const { view } = require('./view');
+const { swap } = require('./swap');
+const { viewBox } = require('./viewBox');
+const { withdraw } = require('./withdraw');
+const { createPurse } = require('./createPurse');
+const { lock } = require('./lock');
+const { deletePurse } = require('./deletePurse');
+const { updateBagData } = require('./updateBagData');
+const { viewData } = require('./viewData');
+const { updatePursePrice } = require('./updatePursePrice');
+const { renew } = require('./renew');
+const { viewLogs } = require('./viewLogs');
 
-const { log } = require('./cli/utils');
+const { log } = require('./utils');
 
 require('dotenv').config();
 
@@ -26,52 +26,6 @@ VALIDATOR_HOST=
 PRIVATE_KEY=
 `);
 };
-
-const execDeployMaster = async () => {
-  if (typeof process.env.MASTER_REGISTRY_URI === 'string') {
-    console.log('Please remove MASTER_REGISTRY_URI=* line in .env file');
-    process.exit();
-  }
-
-  const masterRegistryURI = await deployMaster({
-    validatorHost: process.env.VALIDATOR_HOST,
-    privateKey: process.env.PRIVATE_KEY,      
-  });
-
-  log('✓ deployed master and retrieved data from the blockchain');
-  let envText = fs.readFileSync('./.env', 'utf8');
-  envText += `\nMASTER_REGISTRY_URI=${masterRegistryURI}`;
-  fs.writeFileSync('./.env', envText, 'utf8');
-  log(`✓ updated .env file with MASTER_REGISTRY_URI=${masterRegistryURI}`);
-}
-
-const execDeployBox = async () => {
-  if (typeof process.env.BOX_ID === 'string') {
-    console.log('Please remove BOX_ID=* line in .env file');
-    process.exit();
-  }
-
-  const masterRegistryUri = getMasterRegistryUri();
-  const boxId = getProcessArgv('--box-id');
-  if (!boxId || boxId.length === 0) {
-    throw new Error('Missing arguments --box-id');
-  }
-
-  console.log(masterRegistryUri);
-  const rBoxId = await deployBox({
-    validatorHost: process.env.VALIDATOR_HOST,
-    masterRegistryUri,
-    boxId,
-    privateKey: process.env.PRIVATE_KEY,
-  });
-
-  let envText = fs.readFileSync('./.env', 'utf8');
-  envText += `\nBOX_ID=${rBoxId}`;
-  fs.writeFileSync('./.env', envText, 'utf8');
-  log('✓ deployed and retrieved data from the blockchain');
-  log(`✓ updated .env file with BOX_ID=${rBoxId}`);
-  log(`box id    : ${rBoxId}`);
-}
 
 const main = async () => {
   if (
@@ -104,7 +58,7 @@ const main = async () => {
 
   const deployArg = process.argv.findIndex((arg) => arg === 'deploy') !== -1;
   if (deployArg) {
-    deploy();
+    await execDeploy();
     return;
   }
 

@@ -1,8 +1,7 @@
-const rchainToolkit = require('rchain-toolkit');
 const fs = require('fs');
+const { deploy } = require('./api');
 
 const { VERSION } = require('../constants');
-const { deployTerm } = require('../src/');
 const {
   log,
   getMasterRegistryUri,
@@ -13,7 +12,7 @@ const {
   getBoxId,
 } = require('./utils');
 
-module.exports.deploy = async () => {
+const execDeploy = async () => {
   if (typeof process.env.CONTRACT_ID === 'string') {
     console.log('Please remove CONTRACT_ID=* line in .env file');
     process.exit();
@@ -30,50 +29,30 @@ module.exports.deploy = async () => {
     '\x1b[0mtokens contract'
   );
 
-  const term = deployTerm({
-    masterRegistryUri: masterRegistryUri,
-    boxId: boxId,
-    fungible: fungible,
-    contractId: contractId,
-    expires: expires,
+  const rContractId = await deploy({
+    validatorHost: process.env.VALIDATOR_HOST,
+    privateKey: process.env.PRIVATE_KEY,
+    masterRegistryUri,
+    boxId,
+    contractId,
+    fungible,
+    expires,
   });
 
-
-  let dataAtNameResponse;
-  try {
-    dataAtNameResponse = await rchainToolkit.http.easyDeploy(
-      process.env.VALIDATOR_HOST,
-      term,
-      process.env.PRIVATE_KEY,
-      1,
-      10000000,
-      3 * 60 * 1000
-    );
-  } catch (err) {
-    console.log(err);
-    throw new Error(err);
-  }
-  log('✓ deploy');
-
-  const data = rchainToolkit.utils.rhoValToJs(
-    JSON.parse(dataAtNameResponse).exprs[0].expr
-  );
-  if (data.status !== 'completed') {
-    console.log(data);
-    process.exit();
-  }
-  contractId = data.contractId;
-
   let envText = fs.readFileSync('./.env', 'utf8');
-  envText += `\nCONTRACT_ID=${contractId}`;
+  envText += `\nCONTRACT_ID=${rContractId}`;
   fs.writeFileSync('./.env', envText, 'utf8');
   log('✓ deployed and retrieved data from the blockchain');
-  log(`✓ updated .env file with CONTRACT_ID=${contractId}`);
+  log(`✓ updated .env file with CONTRACT_ID=${rContractId}`);
   logData({
     masterRegistryUri,
-    contractId,
+    rContractId,
     fungible,
     locked: false,
     version: VERSION,
   });
+};
+
+module.exports = {
+  execDeploy,
 };
