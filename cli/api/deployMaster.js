@@ -1,10 +1,10 @@
 const rchainToolkit = require('rchain-toolkit');
 
-const { masterTerm } = require('../src/');
+const { masterTerm } = require('../../src/');
 const {
   getDepth,
   getContractDepth,
-} = require('./utils');
+} = require('../utils');
 
 module.exports.deployMaster = async ({
   validatorHost,

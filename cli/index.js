@@ -45,6 +45,34 @@ const execDeployMaster = async () => {
   log(`✓ updated .env file with MASTER_REGISTRY_URI=${masterRegistryURI}`);
 }
 
+const execDeployBox = async () => {
+  if (typeof process.env.BOX_ID === 'string') {
+    console.log('Please remove BOX_ID=* line in .env file');
+    process.exit();
+  }
+
+  const masterRegistryUri = getMasterRegistryUri();
+  const boxId = getProcessArgv('--box-id');
+  if (!boxId || boxId.length === 0) {
+    throw new Error('Missing arguments --box-id');
+  }
+
+  console.log(masterRegistryUri);
+  const rBoxId = await deployBox({
+    validatorHost: process.env.VALIDATOR_HOST,
+    masterRegistryUri,
+    boxId,
+    privateKey: process.env.PRIVATE_KEY,
+  });
+
+  let envText = fs.readFileSync('./.env', 'utf8');
+  envText += `\nBOX_ID=${rBoxId}`;
+  fs.writeFileSync('./.env', envText, 'utf8');
+  log('✓ deployed and retrieved data from the blockchain');
+  log(`✓ updated .env file with BOX_ID=${rBoxId}`);
+  log(`box id    : ${rBoxId}`);
+}
+
 const main = async () => {
   if (
     typeof process.env.READ_ONLY_HOST !== 'string' ||
@@ -90,7 +118,7 @@ const main = async () => {
   const deployBoxArg =
     process.argv.findIndex((arg) => arg === 'deploy-box') !== -1;
   if (deployBoxArg) {
-    deployBox();
+    await execDeployBox();
     return;
   }
 
