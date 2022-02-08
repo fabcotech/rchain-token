@@ -41,7 +41,7 @@ module.exports.createPurse = async () => {
     contractId: contractId,
     purses: {
       [`newbag1`]: {
-        id: newId || '', // will be ignored if fungible = true
+        id: newId || 'auto',
         price: null,
         boxId: boxId,
         quantity: quantity,

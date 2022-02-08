@@ -3,7 +3,7 @@ const rchainToolkit = require('rchain-toolkit');
 const { swapTerm } = require('../src/');
 
 const {
-  getContractId,
+  getNewId,
   getQuantity,
   getMasterRegistryUri,
   getBoxId,
@@ -34,7 +34,7 @@ module.exports.swap = async () => {
     quantity: quantity,
     merge: true,
     data: '',
-    newId: 'auto',
+    newId: getNewId() || 'auto',
   });
 
   let deployResponse;

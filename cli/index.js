@@ -6,6 +6,7 @@ const { view } = require('./view');
 const { swap } = require('./swap');
 const { viewBox } = require('./viewBox');
 const { withdraw } = require('./withdraw');
+const { credit } = require('./credit');
 const { createPurse } = require('./createPurse');
 const { lock } = require('./lock');
 const { deletePurse } = require('./deletePurse');
@@ -93,6 +94,13 @@ if (SwapArg) {
     process.argv.findIndex((arg) => arg === 'delete-purse') !== -1;
   if (deletePurseArg) {
     deletePurse();
+    return;
+  }
+
+  const creditArg =
+    process.argv.findIndex((arg) => arg === 'credit') !== -1;
+  if (creditArg) {
+    credit();
     return;
   }
 

@@ -26,6 +26,11 @@ The id of the contract is `[prefix]rev`, `prefix` being a the first 3 letters of
 
 **Note**: wrapped REV contract use the same decimals as REV: 1 wrapped REV = 1 dust = 10^-8 true REV
 
+```
+# Credit 20 wrapped REV (2.000.000.000 dust)
+# Trun 20 true REV into wrapped REV
+node cli credit --quantity 2000000000
+```
 ### Use CLI
 
 Rename the `.env.example` file to `.env` and eventually update the values to connect to another RChain network than RChain testnet. You must also add your private key in `.env` file so it will not appear on the screen and command line history.
@@ -68,6 +73,7 @@ Fungibles tokens purses can have a quantity superior to one. For examples 100 go
 node cli deploy --fungible true --contract-id "mytoken"
 
 # Create/mint a purse with 12 tokens "[prefix]mytoken" using the admin/owner capability
+# new id allocation is automatic (unlike NFT)
 node cli create-purse --quantity 12
 
 # after the deployed is processed you can check that your purse is created
