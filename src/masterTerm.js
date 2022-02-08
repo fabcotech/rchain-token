@@ -968,7 +968,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   "timestamp": Int,
                   "boxId": String,
                   "id": String,
-                  "price": Nil \\/ Int
+                  "price": (String, Int) \\/ (String, String) \\/ Nil
                 } => {
                   for (@pursesDataThm <<- @(*self, "pursesData", contractId)) {
                     for (@pursesThm <<- @(*self, "purses", contractId)) {
