@@ -10,6 +10,7 @@ const {
   getMasterRegistryUri,
   getNewId,
   getPrice,
+  getProcessArgv,
   log,
   getPursesFile,
 } = require('./utils');
@@ -28,21 +29,20 @@ module.exports.createPurse = async () => {
     : '';
 
   let quantity;
-  let price;
   if (pursesFile === '') {
     quantity = getQuantity();
-    price = getPrice();
     if (!quantity) {
       throw new Error('Please provide a quantity with --quantity option');
     }
   }
+
   let payload = {
     masterRegistryUri: masterRegistryUri,
     contractId: contractId,
     purses: {
       [`newbag1`]: {
         id: newId || '', // will be ignored if fungible = true
-        price: price,
+        price: null,
         boxId: boxId,
         quantity: quantity,
       },
@@ -85,7 +85,8 @@ module.exports.createPurse = async () => {
       term,
       process.env.PRIVATE_KEY,
       1,
-      10000000
+      10000000,
+      10 * 60 * 1000
     );
   } catch (err) {
     console.log(err);

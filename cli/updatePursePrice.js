@@ -53,6 +53,11 @@ module.exports.updatePursePrice = async () => {
     }
   }
 
+  // auto add prefix
+  if (price[0] === '"rev"') {
+    price[0] = `"${masterRegistryUri.slice(0,3)}rev"`
+  }
+
   const term = updatePursePriceTerm({ masterRegistryUri, boxId, contractId, price, purseId });
   let deployResponse;
   try {
