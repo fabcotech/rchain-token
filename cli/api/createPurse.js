@@ -26,8 +26,6 @@ module.exports.createPurse = async ({
     // 10 * 60 * 1000
   );
 
-  console.log(data);
-
   if (!data.startsWith('"Success!')) {
     throw new Error(`Deploy status: ${data.status}, message: ${data.message}`);
   }
