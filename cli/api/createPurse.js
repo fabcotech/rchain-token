@@ -17,16 +17,20 @@ module.exports.createPurse = async ({
   }
   const term = createPursesTerm(payload);
 
-  const data = await rchainToolkit.http.easyDeploy(
+  const response = await rchainToolkit.http.easyDeploy(
     validatorHost,
     term,
     privateKey,
     1,
-    10000000
-    // 10 * 60 * 1000
+    10000000,
+    10 * 60 * 1000
   );
 
-  if (!data.startsWith('"Success!')) {
+  const data = rchainToolkit.utils.rhoValToJs(
+    JSON.parse(response).exprs[0].expr
+  );
+
+  if (data.status !== 'completed') {
     throw new Error(`Deploy status: ${data.status}, message: ${data.message}`);
   }
 

@@ -45,15 +45,15 @@ const getPursesAndData = () => {
 
   return [
     {
-      [`newbag1`]: {
-        id: getNewId() || 'auto', // will be ignored if fungible = true
-        price: getPrice(),
+      [`purse1`]: {
+        id: getNewId() || '', // will be ignored if fungible = true
+        price: null, 
         boxId,
         quantity
       },
     },
     {
-      [`newbag1`]: null,
+      [`purse1`]: null,
     },
   ];
 };

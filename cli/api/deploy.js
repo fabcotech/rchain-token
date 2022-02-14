@@ -19,8 +19,7 @@ module.exports.deploy = async ({
     expires
   });
 
-  let dataAtNameResponse;
-  dataAtNameResponse = await rchainToolkit.http.easyDeploy(
+  const dataAtNameResponse = await rchainToolkit.http.easyDeploy(
     validatorHost,
     term,
     privateKey,
