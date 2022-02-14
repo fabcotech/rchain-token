@@ -1,13 +1,12 @@
 const { execDeploy } = require('./deploy');
 const { execDeployMaster } = require('./deployMaster');
 const { execDeployBox } = require('./deployBox');
+const { execCreatePurse } = require('./createPurse');
 const { purchaseTokens } = require('./purchaseTokens');
 const { view } = require('./view');
 const { swap } = require('./swap');
 const { viewBox } = require('./viewBox');
 const { withdraw } = require('./withdraw');
-const { credit } = require('./credit');
-const { createPurse } = require('./createPurse');
 const { lock } = require('./lock');
 const { deletePurse } = require('./deletePurse');
 const { updateBagData } = require('./updateBagData');
@@ -107,7 +106,7 @@ if (SwapArg) {
   const createPurseArg =
     process.argv.findIndex((arg) => arg === 'create-purse') !== -1;
   if (createPurseArg) {
-    createPurse();
+    await execCreatePurse();
     return;
   }
 
