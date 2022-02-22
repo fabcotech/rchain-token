@@ -2,6 +2,7 @@ const { execDeploy } = require('./deploy');
 const { execDeployMaster } = require('./deployMaster');
 const { execDeployBox } = require('./deployBox');
 const { execCreatePurse } = require('./createPurse');
+const { execUpdatePursePrice } = require('./updatePursePrice');
 const { purchaseTokens } = require('./purchaseTokens');
 const { view } = require('./view');
 const { swap } = require('./swap');
@@ -11,7 +12,6 @@ const { lock } = require('./lock');
 const { deletePurse } = require('./deletePurse');
 const { updateBagData } = require('./updateBagData');
 const { viewData } = require('./viewData');
-const { updatePursePrice } = require('./updatePursePrice');
 const { renew } = require('./renew');
 const { viewLogs } = require('./viewLogs');
 
@@ -138,7 +138,7 @@ if (SwapArg) {
   const updatePursePriceArg =
     process.argv.findIndex((arg) => arg === 'update-purse-price') !== -1;
   if (updatePursePriceArg) {
-    updatePursePrice();
+    execUpdatePursePrice();
     return;
   }
 

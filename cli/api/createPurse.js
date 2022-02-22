@@ -1,14 +1,15 @@
 const rchainToolkit = require('rchain-toolkit');
 const { createPursesTerm } = require('../../src');
 
-module.exports.createPurse = async ({
-  masterRegistryUri,
-  validatorHost,
-  privateKey,
-  contractId,
-  purses,
-  pursesData,
-}) => {
+module.exports.createPurse = async (args) => {
+  const {
+    masterRegistryUri,
+    validatorHost,
+    privateKey,
+    contractId,
+    purses,
+    pursesData,
+  } = args;
   const payload = {
     masterRegistryUri,
     contractId,

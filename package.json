@@ -10,7 +10,7 @@
     "test:ft": "node tests-ft/index",
     "test:nft": "node tests-nft/index",
     "test:credit": "node tests-credit/index",
-    "dappy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --quantity 100000000 && node cli update-purse-price --price [\"rev\",50000000] --purse-id 0",
+    "dappy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --quantity 100000000 && node cli update-purse-price --price rev,50000000 --purse-id 0",
     "dappy:namesystemanddefaults": "npm run dappy:namesystem && node cli create-purse --purses-file name-purses.json"
   },
   "repository": {
