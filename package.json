@@ -1,5 +1,5 @@
 {
-  "name": "rchain-token",
+  "name": "@fabcotech/rchain-token",
   "version": "16.0.0",
   "description": "Fungibles and non-fungibles tokens on the RChain blockchain",
   "main": "src/index.js",
