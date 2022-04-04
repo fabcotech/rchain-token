@@ -24,7 +24,7 @@ module.exports.main = async (
       term,
       privateKey,
       1,
-      1000000000,
+      100000000,
       400000
     );
   } catch (err) {
@@ -37,7 +37,6 @@ module.exports.main = async (
   );
 
   if (data.status !== 'completed') {
-    console.log(data);
     throw new Error('deployBox 02');
   }
 

@@ -11,6 +11,7 @@ in {
   for (masterEntry <= masterEntryCh) {
     masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "BOX_ID", "publicKey": "PUBLIC_KEY", "revAddress": "REV_ADDRESS" }, *registerBoxReturnCh)) |
     for (@r <- registerBoxReturnCh) {
+      stdout!(r) |
       match r {
         String => {
           basket!({ "status": "failed", "message": r }) |

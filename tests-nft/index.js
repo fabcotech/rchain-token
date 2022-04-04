@@ -15,7 +15,6 @@ const getAllData = require('../tests-ft/getAllData').main;
 const getAllBoxData = require('../tests-ft/getAllBoxData').main;
 const checkPursesInContractFT = require('../tests-ft/checkPursesInContract.js').main;
 const swap = require('../tests-ft/test_swap').main;
-const checkLogsInContract = require('../tests-ft/checkLogsInContract').main;
 const checkPursePriceInContract =
   require('../tests-ft/checkPursePriceInContract.js').main;
 const checkFee = require('../tests-ft/checkFee').main;
@@ -67,7 +66,6 @@ const main = async () => {
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
   prefix = masterRegistryUri.slice(0, 3);
 
-  const contractRegistryUri = data.registryUri.replace('rho:id:', '');
   balances1.push(await getBalance(PUBLIC_KEY));
   console.log('✓ 01 deploy master');
   console.log(
@@ -175,7 +173,6 @@ const main = async () => {
 
   await createPurses(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     contractId,
     boxId1,
@@ -215,7 +212,6 @@ const main = async () => {
 
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     boxId2,
@@ -295,13 +291,22 @@ const main = async () => {
       (balances2[balances2.length - 2] - balances2[balances2.length - 1])
   );
 
+  await updatePurseData(
+    PRIVATE_KEY_2,
+    PUBLIC_KEY_2,
+    masterRegistryUri,
+    boxId2,
+    contractId,
+    ids[0],
+    'ddd'
+  );
+
   const swapSuccess1 = await swap(PRIVATE_KEY, {
     masterRegistryUri: masterRegistryUri,
     purseId: ids[0],
     contractId: contractId,
     boxId: boxId1,
     quantity: 1,
-    data: 'bbb',
     newId: 'none',
     merge: true,
   });
@@ -366,17 +371,13 @@ const main = async () => {
     `1`,
     WRAPPED_REV_QUANTITY - 1000
   );
-  await checkPurseDataInContract(masterRegistryUri, contractId, ids[0], 'bbb');
+  await checkPurseDataInContract(masterRegistryUri, contractId, ids[0], 'ddd');
 
   console.log(`✓ 12 swap nft<->ft successful`);
+  console.log(`✓ 12 nft changed hands but the data was untouched`);
   console.log(`✓ 12 balance of nft owner checked and has +980 [prefix]rev`);
   console.log(`✓ 12 2% fee of [prefix]rev was earned by owner of box 3`);
 
-  await checkLogsInContract(
-    masterRegistryUri,
-    contractId,
-    `p,${boxId2},${boxId1},1,ft_${prefix}rev_1000,${ids[0]},${ids[0]};`
-  );
   console.log(`✓ 12.1 logs valid`);
 
   console.log(
@@ -450,7 +451,6 @@ const main = async () => {
 
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     boxId2,
@@ -503,12 +503,7 @@ const main = async () => {
   console.log(`✓ 15 2% fee of [prefix]rev was again earned by owner of box 3`);
 
   const logsStep15 = `p,${boxId1},${boxId2},1,ft_${prefix}rev_1000,0,mynewnft;p,${boxId2},${boxId1},1,ft_${prefix}rev_1000,${ids[0]},${ids[0]};`;
-  await checkLogsInContract(
-    masterRegistryUri,
-    contractId,
-    `${logsStep15}`
-  );
-  console.log(`✓ 15.1 logs ok`);
+
 
   const priceUpdateFailed1 = await updatePursePrice(
     PRIVATE_KEY,
@@ -591,13 +586,6 @@ const main = async () => {
   );
   console.log(`✓ 19 swap nft<->nft successful`);
 
-  await checkLogsInContract(
-    masterRegistryUri,
-    contractId,
-    `p,${boxId1},${boxId2},1,nft_${contractId}_mynewnft,${ids[1]},${ids[1]};${logsStep15}`
-  );
-  console.log(`✓ 19.1 logs valid`);
-
   await updatePursePrice(
     PRIVATE_KEY_3,
     PUBLIC_KEY_3,
@@ -651,7 +639,6 @@ const main = async () => {
 
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     "_burn",
@@ -709,7 +696,6 @@ const main = async () => {
   // box 2 will try to renew purse ids[5]
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     boxId2,
@@ -723,7 +709,6 @@ const main = async () => {
   // box2 must have enough [prefix]rev to renew (1000)
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     boxId2,
@@ -750,7 +735,7 @@ const main = async () => {
   await new Promise((resolve) => {
     const s = setInterval(() => {
      
-      renew(PRIVATE_KEY_2, PUBLIC_KEY_2, {
+      renew(PRIVATE_KEY_2, {
         masterRegistryUri: masterRegistryUri,
         purseId: ids[5],
         contractId: contractId,

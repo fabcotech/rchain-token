@@ -186,3 +186,8 @@ read all purses (src.readAllPursesTerm) 100 values = 7s
 
 Local deploy, 340 values depth = 2
 read all purses (src.readAllPursesTerm) 340 values = 25s
+
+**2022-02-23 16.0.0 - rnode 0.12.5**
+
+Local deploy, 5000 values depth = 2
+read all purses (src.readAllPursesTerm) 5000 values = 52.7s, 52.3s, 54s

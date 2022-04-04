@@ -12,7 +12,7 @@ in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")) {
     stdout!("boxCh") |
-    boxCh!(("SWAP", { "contractId": "${payload.contractId}", "purseId": "${payload.purseId}", "merge": ${payload.merge}, "quantity": ${payload.quantity}, "data": "${payload.data}", "newId": "${payload.newId ? payload.newId : ""}" }, *returnCh)) |
+    boxCh!(("SWAP", { "contractId": "${payload.contractId}", "purseId": "${payload.purseId}", "merge": ${payload.merge}, "quantity": ${payload.quantity}, "newId": "${payload.newId ? payload.newId : ""}" }, *returnCh)) |
     for (@r <- returnCh) {
       match r {
         String => {

@@ -8,7 +8,7 @@ in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")) {
     stdout!("boxCh") |
-    boxCh!(("SWAP", { "contractId": "CONTRACT_ID", "purseId": "PURSE_ID", "merge": MERGE, "quantity": QUANTITY, "data": "SWAP_DATA", "newId": "NEW_ID" }, *returnCh)) |
+    boxCh!(("SWAP", { "contractId": "CONTRACT_ID", "purseId": "PURSE_ID", "merge": MERGE, "quantity": QUANTITY, "newId": "NEW_ID" }, *returnCh)) |
     for (@r <- returnCh) {
       match r {
         String => {

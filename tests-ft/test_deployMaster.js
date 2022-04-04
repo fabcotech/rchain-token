@@ -16,7 +16,7 @@ module.exports.main = async (privateKey1, publicKey1) => {
       term,
       privateKey1,
       1,
-      1000000000,
+      100000000,
       400000
     );
   } catch (err) {
