@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const { createPursesTerm } = require('../../src');
 
 module.exports.createPurse = async (args) => {

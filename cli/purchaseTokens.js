@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const uuidv4 = require('uuid/v4');
 
 const { purchaseTokensTerm } = require('../src/');

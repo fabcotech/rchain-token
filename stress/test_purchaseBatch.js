@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');

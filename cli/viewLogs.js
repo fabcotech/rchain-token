@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 
 const { readLogsTerm, logs } = require('../src');
 const { getContractId, getMasterRegistryUri } = require('./utils');

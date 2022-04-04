@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 const { readLogsTerm } = require('../src/');
 
 module.exports.main = async (masterRegistryUri, contractId, expectedLogs) => {

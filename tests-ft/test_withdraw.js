@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 const { withdrawTerm } = require('../src');
 const { validAfterBlockNumber, prepareDeploy, getQuantity } = require('../cli/utils');

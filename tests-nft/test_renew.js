@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 const { renewTerm } = require('../src');
 const waitForUnforgeable = require('../cli/waitForUnforgeable').main;

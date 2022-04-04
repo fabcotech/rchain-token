@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 const { deleteExpiredPurseTerm } = require('../src/deleteExpiredPurseTerm');
 const { validAfterBlockNumber, prepareDeploy } = require('../cli/utils');
