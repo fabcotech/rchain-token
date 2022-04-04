@@ -13,7 +13,7 @@ module.exports.main = async (privateKey, payloadCredit, payloadSwap) => {
       term,
       privateKey,
       1,
-      1000000000,
+      100000000,
       400000
     );
   } catch (err) {

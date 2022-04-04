@@ -38,7 +38,7 @@ module.exports.viewBox = async () => {
     console.log(`\nPurses (${keys.length} contracts) :`);
     keys.forEach((k) => {
       if (data.purses[k].length > 99) {
-        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `      : ${k}`);
+        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `     : ${k}`);
         console.log(
           '\x1b[34m',
           `  Purses IDs 0-99/${data.purses[k].length}`,
@@ -46,7 +46,7 @@ module.exports.viewBox = async () => {
           `: ${data.purses[k].slice(0, 100).join(', ')}`
         );
       } else {
-        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `      : ${k}`);
+        console.log('\x1b[34m', `  contract id`, '\x1b[0m', `     : ${k}`);
         console.log(
           '\x1b[34m',
           `    Purses IDs 0-${data.purses[k].length - 1}`,

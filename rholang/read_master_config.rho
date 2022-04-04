@@ -1,0 +1,6 @@
+new return, entryCh, lookup(`rho:registry:lookup`), stdout(`rho:io:stdout`) in {
+  lookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
+  for (entry <- entryCh) {
+    entry!(("PUBLIC_READ_MASTER_CONFIG", *return))
+  }
+}

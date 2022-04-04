@@ -5,8 +5,8 @@ require('dotenv').config();
 const { readAllPursesTerm, decodePurses } = require('../src');
 
 const MASTER_REGISTRY_URI =
-  'irprk97ucyjez6xedunk7qrnfo7opj83mdtg3dqhn14psx3wxcdcj8';
-const CONTRACT_ID = 'mytoken';
+  '39ygm3eb67r87askc9kxfpimaj73184moph3nmh355wjtztzxtu84d';
+const CONTRACT_ID = '39ymytoken';
 
 const main = async () => {
   const t = new Date().getTime();

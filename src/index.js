@@ -18,6 +18,7 @@ const { readPursesDataTerm } = require('./readPursesDataTerm');
 const { updatePursePriceTerm } = require('./updatePursePriceTerm');
 const { renewTerm } = require('./renewTerm');
 const { creditTerm } = require('./creditTerm');
+const { readMasterConfigTerm } = require('./readMasterConfigTerm');
 const { withdrawTerm } = require('./withdrawTerm');
 const { readLogsTerm } = require('./readLogsTerm');
 
@@ -46,6 +47,7 @@ module.exports = {
   creditTerm,
   withdrawTerm,
 
+  readMasterConfigTerm,
   readPursesTerm,
   readAllPursesTerm,
   readBoxTerm,

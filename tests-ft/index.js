@@ -11,8 +11,6 @@ const checkPursePriceInContract =
   require('./checkPursePriceInContract.js').main;
 const checkPurseDataInContract = require('./checkPurseDataInContract.js').main;
 const checkPursesInBox = require('./checkPursesInBox.js').main;
-const checkLogsInContract = require('./checkLogsInContract').main;
-
 const deployBox = require('./test_deployBox').main;
 const deploy = require('./test_deploy').main;
 const updateFee = require('./test_updateFee').main;
@@ -229,7 +227,6 @@ const main = async () => {
 
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     boxId2,
@@ -270,7 +267,6 @@ const main = async () => {
 
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     boxId2,
@@ -355,7 +351,6 @@ const main = async () => {
     contractId: contractId,
     boxId: boxId1,
     quantity: 'Nil', // invalid payload
-    data: 'bbb',
     newId: 'none',
     merge: true,
   });
@@ -378,7 +373,6 @@ const main = async () => {
     contractId: contractId,
     boxId: boxId1,
     quantity: PURSES_TO_CREATE * 3 + 1, // not available
-    data: 'bbb',
     newId: 'none',
     merge: true,
   });
@@ -399,7 +393,6 @@ const main = async () => {
     contractId: contractId,
     boxId: boxId1,
     quantity: 1,
-    data: 'bbb',
     newId: 'none',
     merge: true,
   });
@@ -415,7 +408,7 @@ const main = async () => {
     masterRegistryUri,
     contractId,
     `${PURSES_TO_CREATE + 3}`,
-    'bbb'
+    'aaa'
   );
   await checkPursesInBox(
     masterRegistryUri,
@@ -487,18 +480,9 @@ const main = async () => {
       (balances1[balances1.length - 2] - balances1[balances1.length - 1])
   );
 
-  await checkLogsInContract(
-    masterRegistryUri,
-    contractId,
-    `p,${boxId2},${boxId1},1,ft_${prefix}rev_1000,11,13;`
-  );
-
-  console.log(`✓ 12 checked logs of successful swap`);
-
   // 1 (= total) out of box 1
   await withdraw(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     "_burn",

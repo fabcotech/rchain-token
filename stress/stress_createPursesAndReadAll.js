@@ -16,7 +16,7 @@ const deploy = require('../tests-ft/test_deploy').main;
 
 const createPurses = require('./test_createPurses.js').main;
 
-const PURSES_TO_CREATE_INITIAL = 10;
+const PURSES_TO_CREATE_INITIAL = 100;
 
 const PRIVATE_KEY =
   '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';

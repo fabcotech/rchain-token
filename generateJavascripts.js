@@ -31,7 +31,6 @@ const replaceEverything = (a) => {
       .replace('NEW_NONCE', '${payload.newNonce}')
       .replace('UPDATE_PURSE_DATAA', `\${payload.data}`)
       .replace('PURCHASE_PURSE_DATA', `\${payload.data}`)
-      .replace('SWAP_DATA', `\${payload.data}`)
       .replace(
         'ACTION_AFTER_PURCHASE',
         `\${payload.actionAfterPurchase || "PUBLIC_RECEIVE_PURSE"}`
@@ -198,7 +197,6 @@ module.exports.deleteExpiredPurseTerm = (
 );
 
 const readBoxFile = fs.readFileSync('./rholang/read_box.rho').toString('utf8');
-
 fs.writeFileSync(
   './src/readBoxTerm.js',
   `/* GENERATED CODE, only edit rholang/*.rho files*/
@@ -206,6 +204,18 @@ module.exports.readBoxTerm = (
   payload
 ) => {
   return \`${replaceEverything(readBoxFile)}\`;
+};
+`
+);
+
+const readMasterConfigFile = fs.readFileSync('./rholang/read_master_config.rho').toString('utf8');
+fs.writeFileSync(
+  './src/readMasterConfigTerm.js',
+  `/* GENERATED CODE, only edit rholang/*.rho files*/
+module.exports.readMasterConfigTerm = (
+  payload
+) => {
+  return \`${replaceEverything(readMasterConfigFile)}\`;
 };
 `
 );

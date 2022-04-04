@@ -12,8 +12,8 @@ const deploy = require('../tests-ft/test_deploy').main;
 const createPurses = require('./test_createPurses.js').main;
 const checkPursesInBox = require('../tests-nft/checkPursesInBox.js').main;
 
-const PURSES_TO_CREATE = 10;
-const PURSES_TO_CREATE_INITIAL = 10;
+const PURSES_TO_CREATE = 100;
+const PURSES_TO_CREATE_INITIAL = 100;
 const NEW_BOX_EACH_TIME = true;
 
 const PRIVATE_KEY =
