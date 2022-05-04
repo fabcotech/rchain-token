@@ -8,6 +8,7 @@ const {
 
 module.exports.deployMaster = async ({
   validatorHost,
+  shardId,
   privateKey,
 }) => {
   const term = masterTerm({
@@ -17,11 +18,14 @@ module.exports.deployMaster = async ({
 
   const dataAtNameResponse = await rchainToolkit.http.easyDeploy(
     validatorHost,
-    term,
-    privateKey,
-    1,
-    10000000,
-    10 * 60 * 1000
+    {
+      term,
+      shardId: shardId,
+      privateKey: privateKey,
+      phloPrice: 'auto',
+      phloLimit: 10000000,
+      timeout: 10 * 60 * 1000
+    }
   );
 
   const data = rchainToolkit.utils.rhoValToJs(

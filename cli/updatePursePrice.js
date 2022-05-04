@@ -1,4 +1,4 @@
-const { updatePursePrice } = require('./api/updatePursePrice');
+const { updatePursePrice } = require('./api')
 
 const {
   log,

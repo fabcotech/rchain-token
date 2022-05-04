@@ -51,7 +51,6 @@ const main = async () => {
 
   const deployData = await deploy(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId,
     false,

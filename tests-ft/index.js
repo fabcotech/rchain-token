@@ -53,7 +53,7 @@ const main = async () => {
   let boxId2 = "box2";
   let boxId3 = "box3";
   let contractId = "mytoken";
-  const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
+  const data = await deployMaster(PRIVATE_KEY);
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
   prefix = masterRegistryUri.slice(0, 3);
 
@@ -137,7 +137,6 @@ const main = async () => {
 
   const deployData = await deploy(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     true,
@@ -161,7 +160,6 @@ const main = async () => {
   await checkFee(masterRegistryUri, contractId, null);
   const updateFee1 = await updateFee(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -175,7 +173,6 @@ const main = async () => {
 
   const createdPursesFailed = await createPurses(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     contractId,
     'boxdoesnotexist',
@@ -193,7 +190,6 @@ const main = async () => {
   const t = new Date().getTime();
   await createPurses(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     contractId,
     boxId1,

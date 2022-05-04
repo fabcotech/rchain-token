@@ -11,6 +11,7 @@ const execDeployMaster = async () => {
 
   const masterRegistryURI = await deployMaster({
     validatorHost: process.env.VALIDATOR_HOST,
+    shardId: process.env.SHARD_ID,
     privateKey: process.env.PRIVATE_KEY,
   });
 

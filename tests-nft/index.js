@@ -62,7 +62,7 @@ const main = async () => {
   let contractId = "mytoken";
   let prefix = '';
 
-  const data = await deployMaster(PRIVATE_KEY, PUBLIC_KEY);
+  const data = await deployMaster(PRIVATE_KEY);
   const masterRegistryUri = data.registryUri.replace('rho:id:', '');
   prefix = masterRegistryUri.slice(0, 3);
 
@@ -130,7 +130,6 @@ const main = async () => {
 
   const deployData = await deploy(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     false,
@@ -146,7 +145,6 @@ const main = async () => {
   // owner of the contract gets 2 REV
   const updateFee1 = await updateFee(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -154,7 +152,7 @@ const main = async () => {
     // 2.000 is 2% of 100.000
     [boxId3, 2000],
   );
-  console.log(updateFee1);
+
   await checkFee(masterRegistryUri, contractId, [boxId3, 2000]);
 
   balances1.push(await getBalance(PUBLIC_KEY));
@@ -197,7 +195,6 @@ const main = async () => {
 
   let purseDeleted = await deletePurse(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     contractId,
     boxId1,
@@ -239,7 +236,6 @@ const main = async () => {
 
   await updatePurseData(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -257,7 +253,6 @@ const main = async () => {
 
   await updatePursePrice(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -275,7 +270,6 @@ const main = async () => {
 
   await updatePursePrice(
     PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
     masterRegistryUri,
     boxId2,
     contractId,
@@ -293,7 +287,6 @@ const main = async () => {
 
   await updatePurseData(
     PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
     masterRegistryUri,
     boxId2,
     contractId,
@@ -507,7 +500,6 @@ const main = async () => {
 
   const priceUpdateFailed1 = await updatePursePrice(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -526,7 +518,6 @@ const main = async () => {
 
   const priceUpdateFailed2 = await updatePursePrice(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -545,7 +536,6 @@ const main = async () => {
 
   await updatePursePrice(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId1,
     contractId,
@@ -588,7 +578,6 @@ const main = async () => {
 
   await updatePursePrice(
     PRIVATE_KEY_3,
-    PUBLIC_KEY_3,
     masterRegistryUri,
     boxId3,
     `${prefix}rev`,
@@ -636,8 +625,7 @@ const main = async () => {
   );
   console.log(`✓ 21 swap ft<->nft successful`);
 
-
-  await withdraw(
+  const tryToBurnPurseThatExpires = await withdraw(
     PRIVATE_KEY,
     masterRegistryUri,
     boxId1,
@@ -646,20 +634,18 @@ const main = async () => {
     1,
     ids[2]
   );
+  console.log(tryToBurnPurseThatExpires)
+  if (tryToBurnPurseThatExpires.status !== "failed") {
+    throw new Error('Should have failed to burn a NFT that expires')
+  }
+
+  console.log(`✓ 21.1 failed to burn purse/NFT that expires`);
+
   await checkPursesInContract(
     masterRegistryUri,
     contractId,
     ['0', 'mynewnft'].concat(ids)
   );
-  const allData3 = await getAllData(masterRegistryUri, contractId);
-  if (!allData3.purses[ids[2]] || allData3.purses[ids[2]].boxId !== "_burn") {
-    throw new Error('Token should have been burned')
-  }
-  const boxData = await getAllBoxData(masterRegistryUri, boxId1);
-  if (boxData.purses[contractId] && boxData.purses[ids[2]]) {
-    throw new Error('Token should have been burned and not in box')
-  }
-  console.log(`✓ 22 box1 burned NFT`);
 
   // box 3 will delete one of 
   // box 1's NFT
@@ -667,12 +653,13 @@ const main = async () => {
     const s = setInterval(async () => {
       const deletedPurse = await deleteExpiredPurse(
         PRIVATE_KEY_3,
-        PUBLIC_KEY_3,
         masterRegistryUri,
         contractId,
         boxId1,
         ids[0]
       );
+      console.log('deletedPurse')
+      console.log(deletedPurse)
       if (deletedPurse.status === 'completed') {
         resolve();
         clearInterval(s);
@@ -691,7 +678,7 @@ const main = async () => {
     contractId,
     ['0'].concat(ids.slice(4))
   );
-  console.log(`✓ 23 deleted expired purse`);
+  console.log(`✓ 23 private key  deleted expired purse of box1`);
 
   // box 2 will try to renew purse ids[5]
   await withdraw(

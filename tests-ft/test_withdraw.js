@@ -24,20 +24,19 @@ module.exports.main = async (
 
   let dataAtNameResponse = await rc.http.easyDeploy(
     process.env.VALIDATOR_HOST,
-    term,
-    privateKey,
-    1,
-    100000000,
-    400000
+    {
+      term,
+      shardId: process.env.SHARD_ID,
+      privateKey: privateKey,
+      phloPrice: 'auto',
+      phloLimit: 100000000,
+      timeout: 400000
+    }
   );
 
   const data = rc.utils.rhoValToJs(
     JSON.parse(dataAtNameResponse).exprs[0].expr
   );
-  if (data.status !== "completed") {
-    console.log(data);
-    throw new Error("test_withdraw")
-  }
 
-  return;
+  return data;
 };

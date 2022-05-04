@@ -24,6 +24,7 @@ const errorInEnv = () => {
 READ_ONLY_HOST=
 VALIDATOR_HOST=
 PRIVATE_KEY=
+SHARD_ID=
 `);
 };
 

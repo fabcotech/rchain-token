@@ -4,6 +4,7 @@ const { deployBoxTerm } = require('../../src');
 
 module.exports.deployBox = async ({
   validatorHost,
+  shardId,
   masterRegistryUri,
   privateKey,
   boxId,
@@ -17,13 +18,16 @@ module.exports.deployBox = async ({
     revAddress: rchainToolkit.utils.revAddressFromPublicKey(publicKey),
   });
 
-  const dataAtNameResponse = await rchainToolkit.http.easyDeploy(
+  dataAtNameResponse = await rchainToolkit.http.easyDeploy(
     validatorHost,
-    term,
-    privateKey,
-    1,
-    10000000,
-    10 * 60 * 1000
+    {
+      term,
+      shardId: shardId,
+      privateKey: privateKey,
+      phloPrice: 'auto',
+      phloLimit: 10000000,
+      timeout: 10 * 60 * 1000
+    }
   );
 
   const data = rchainToolkit.utils.rhoValToJs(

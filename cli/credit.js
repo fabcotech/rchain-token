@@ -28,11 +28,14 @@ module.exports.credit = async () => {
   try {
     dataAtNameResponse = await rchainToolkit.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      term,
-      process.env.PRIVATE_KEY,
-      1,
-      10000000,
-      10 * 60 * 1000
+      {
+        term,
+        shardId: process.env.SHARD_ID,
+        privateKey: process.env.PRIVATE_KEY,
+        phloPrice: 'auto',
+        phloLimit: 10000000,
+        timeout: 10 * 60 * 1000
+      }
     );
   } catch (err) {
     console.log(err);
