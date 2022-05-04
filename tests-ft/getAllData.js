@@ -3,7 +3,7 @@ const {
   readPursesDataTerm,
   decodePurses,
 } = require('../src');
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 module.exports.main = async (masterRegistryUri, contractId) => {
   const term0 = readAllPursesTerm({ masterRegistryUri, contractId, depth: 2 });

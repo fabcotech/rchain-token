@@ -1,5 +1,5 @@
 const { deployBoxTerm } = require('../src');
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 module.exports.main = async (
   privateKey,
@@ -21,11 +21,14 @@ module.exports.main = async (
   try {
     dataAtNameResponse = await rc.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      term,
-      privateKey,
-      1,
-      100000000,
-      400000
+      {
+        term,
+        shardId: process.env.SHARD_ID,
+        privateKey: privateKey,
+        phloPrice: 'auto',
+        phloLimit: 100000000,
+        timeout: 400000
+      }
     );
   } catch (err) {
     console.log(err);

@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const fs = require('fs');
 
 const { createPursesTerm } = require('../src');
@@ -40,7 +40,7 @@ module.exports.createPurse = async () => {
     masterRegistryUri: masterRegistryUri,
     contractId: contractId,
     purses: {
-      [`newbag1`]: {
+      [newId || 'auto']: {
         id: newId || 'auto',
         price: null,
         boxId: boxId,
@@ -48,7 +48,7 @@ module.exports.createPurse = async () => {
       },
     },
     data: {
-      [`newbag1`]: null,
+      [newId || 'auto']: null,
     },
   };
 
@@ -78,15 +78,18 @@ module.exports.createPurse = async () => {
 
   const term = createPursesTerm(payload);
 
-  let deployResponse;
+  let dataAtNameResponse;
   try {
-    deployResponse = await rchainToolkit.http.easyDeploy(
+    dataAtNameResponse = await rchainToolkit.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      term,
-      process.env.PRIVATE_KEY,
-      1,
-      10000000,
-      10 * 60 * 1000
+      {
+        term,
+        shardId: process.env.SHARD_ID,
+        privateKey: process.env.PRIVATE_KEY,
+        phloPrice: 'auto',
+        phloLimit: 10000000,
+        timeout: 10 * 60 * 1000
+      }
     );
   } catch (err) {
     console.log(err);
@@ -94,11 +97,13 @@ module.exports.createPurse = async () => {
   }
   log('✓ deploy');
 
+  const data = rchainToolkit.utils.rhoValToJs(
+    JSON.parse(dataAtNameResponse).exprs[0].expr
+  );
 
-  if (!deployResponse.startsWith('"Success!')) {
-    log('Unable to deploy');
-    console.log(deployResponse);
-    process.exit();
+  if (data.status !== 'completed') {
+    throw new Error(`Error, status: ${data.status}, message: ${data.message}`);
   }
-  log('✓ deployed');
+
+  console.log(JSON.stringify(data.results, null, 2));
 };

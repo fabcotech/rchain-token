@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 require('dotenv').config();
 

@@ -3,17 +3,17 @@ module.exports.deployBoxTerm = (
   payload
 ) => {
   return `new basket,
-  masterEntryCh,
+  entryCh,
   registerBoxReturnCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
   registryLookup(\`rho:registry:lookup\`)
 in {
 
-  registryLookup!(\`rho:id:${payload.masterRegistryUri}\`, *masterEntryCh) |
+  registryLookup!(\`rho:id:${payload.masterRegistryUri}\`, *entryCh) |
 
-  for (masterEntry <= masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "${payload.boxId}", "publicKey": "${payload.publicKey}", "revAddress": "${payload.revAddress}" }, *registerBoxReturnCh)) |
+  for (entry <- entryCh) {
+    entry!(("PUBLIC_REGISTER_BOX", { "boxId": "${payload.boxId}", "publicKey": "${payload.publicKey}", "revAddress": "${payload.revAddress}" }, *registerBoxReturnCh)) |
     for (@r <- registerBoxReturnCh) {
       stdout!(r) |
       match r {

@@ -32,6 +32,7 @@ const execDeploy = async () => {
   const rContractId = await deploy({
     validatorHost: process.env.VALIDATOR_HOST,
     privateKey: process.env.PRIVATE_KEY,
+    shardId: process.env.SHARD_ID,
     masterRegistryUri,
     boxId,
     contractId,

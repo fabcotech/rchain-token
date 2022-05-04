@@ -16,6 +16,7 @@ const execDeployBox = async () => {
   }
 
   const rBoxId = await deployBox({
+    shardId: process.env.SHARD_ID,
     validatorHost: process.env.VALIDATOR_HOST,
     masterRegistryUri,
     boxId,

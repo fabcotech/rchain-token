@@ -1,4 +1,4 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 const fs = require('fs');
 
 require('dotenv').config();
@@ -52,7 +52,6 @@ const main = async () => {
 
   const deployData = await deploy(
     PRIVATE_KEY,
-    PUBLIC_KEY,
     masterRegistryUri,
     boxId,
     false,
@@ -89,7 +88,6 @@ const main = async () => {
 
     await createPurses(
       PRIVATE_KEY,
-      PUBLIC_KEY,
       masterRegistryUri,
       contractId,
       boxId,

@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 
 const { withdrawTerm } = require('../src');
 
@@ -39,10 +39,13 @@ module.exports.withdraw = async () => {
   try {
     deployResponse = await rchainToolkit.http.easyDeploy(
       process.env.VALIDATOR_HOST,
-      term,
-      process.env.PRIVATE_KEY,
-      1,
-      10000000
+      {
+        term,
+        shardId: process.env.SHARD_ID,
+        privateKey: process.env.PRIVATE_KEY,
+        phloPrice: 'auto',
+        phloLimit: 10000000,
+      }
     );
   } catch (err) {
     console.log(err);

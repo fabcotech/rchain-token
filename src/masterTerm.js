@@ -1104,6 +1104,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     } |
 
     for (@("PUBLIC_DELETE_EXPIRED_PURSE", contractId, boxId, purseId, return) <= entryCh) {
+      stdout!("PUBLIC_DELETE_EXPIRED_PURSE") |
       new ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, proceeedDeleteCh, unlock in {
         for (@result <- unlock) {
           @(*self, "BOX_LOCK", boxId)!(Nil) |
@@ -1113,6 +1114,10 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
         getContractPursesThmCh!((contractId, *ch1)) |
         getBoxCh!((boxId, *ch2)) |
         for (@pursesThm <- ch1; @box <- ch2) {
+          stdout!("pursesThm") |
+          stdout!(pursesThm) |
+          stdout!("box") |
+          stdout!(box) |
           if (pursesThm != Nil and box != Nil) {
             for (
               _ <- @(*self, "CONTRACT_LOCK", contractId);
@@ -1128,11 +1133,14 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
         // RACE SAFE / RESOURCES LOCKED
         // after lock of 1 contract and 1 box
         for (_ <- proceeedDeleteCh) {
+          stdout!("proceeedDeleteCh") |
           getContractPursesThmCh!((contractId, *ch3)) |
           getContractPursesDataThmCh!((contractId, *ch4)) |
           for (@pursesThm <- ch3; @pursesDataThm <- ch4) {
             TreeHashMap!("get", pursesThm, purseId, *ch5) |
             for (@purse <- ch5) {
+              stdout!("purse") |
+              stdout!(purse) |
               if (purse != Nil) {
                 if (purse.get("boxId") == boxId) {
                   for (@config <<- @(*self, "contractConfig", contractId)) {
@@ -1140,6 +1148,8 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       (false, false, Int) => {
                         blockData!(*ch6) |
                         for (_, @timestamp, _ <- ch6) {
+                          stdout!(("timestamp", timestamp)) |
+                          stdout!(("purse.timestamp", purse.get("timestamp"))) |
                           if (timestamp - purse.get("timestamp") > config.get("expires")) {
                             TreeHashMap!("set", pursesThm, purse.get("id"), Nil, *ch7) |
                             TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil, *ch8) |

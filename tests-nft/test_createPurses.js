@@ -1,9 +1,9 @@
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 const { createPursesTerm } = require('../src/createPursesTerm');
 
 module.exports.main = async (
-  privateKey1,
+  privateKey,
   masterRegistryUri,
   contractId,
   boxId,
@@ -37,11 +37,14 @@ module.exports.main = async (
   console.log('  03 deploy is ' + Buffer.from(term).length / 1000000 + 'mb');
   const dataAtNameResponse = await rc.http.easyDeploy(
     process.env.VALIDATOR_HOST,
-    term,
-    privateKey1,
-    1,
-    1000000000,
-    400000
+    {
+      term,
+      shardId: process.env.SHARD_ID,
+      privateKey: privateKey,
+      phloPrice: 'auto',
+      phloLimit: 100000000,
+      timeout: 400000
+    }
   );
 
   const data = rc.utils.rhoValToJs(

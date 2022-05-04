@@ -1,5 +1,5 @@
 const { readBoxTerm } = require('../src/');
-const rc = require('rchain-toolkit');
+const rc = require('@fabcotech/rchain-toolkit');
 
 module.exports.main = async (boxRegistryUri) => {
   const term0 = readBoxTerm(boxRegistryUri);
