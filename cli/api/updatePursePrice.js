@@ -7,6 +7,7 @@ module.exports.updatePursePrice = async ({
   validatorHost,
   privateKey,
   contractId,
+  shardId,
   boxId,
   purseId,
   price,
@@ -30,11 +31,14 @@ module.exports.updatePursePrice = async ({
 
   const response = await rchainToolkit.http.easyDeploy(
     validatorHost,
-    term,
-    privateKey,
-    1,
-    10000000,
-    10 * 60 * 1000
+    {
+      term,
+      privateKey,
+      shardId,
+      phloPrice: 1,
+      phloLimit: 10000000,
+      timeout: 10 * 60 * 1000,
+    }
   );
 
   const data = rchainToolkit.utils.rhoValToJs(

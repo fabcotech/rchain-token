@@ -38,7 +38,6 @@ const getPursesAndData = () => {
     return [purses, pursesData];
   }
 
-<<<<<<< HEAD
   const quantity = getQuantity();
 
   if (!quantity) {
@@ -56,21 +55,6 @@ const getPursesAndData = () => {
     },
     {
       [`purse1`]: null,
-=======
-  let payload = {
-    masterRegistryUri: masterRegistryUri,
-    contractId: contractId,
-    purses: {
-      [newId || 'auto']: {
-        id: newId || 'auto',
-        price: null,
-        boxId: boxId,
-        quantity: quantity,
-      },
-    },
-    data: {
-      [newId || 'auto']: null,
->>>>>>> 3e91e12 (rchain-toolkit -> @fabcotech/rchain-toolkit@2.0.0)
     },
   ];
 };
@@ -84,11 +68,11 @@ const execCreatePurse = async () => {
 
   const [purses, pursesData] = getPursesAndData();
 
-<<<<<<< HEAD
   const rPurseId = await createPurse({
     masterRegistryUri,
     validatorHost: process.env.VALIDATOR_HOST,
     privateKey: process.env.PRIVATE_KEY,
+    shardId: process.env.SHARD_ID,
     contractId,
     purses,
     pursesData,
@@ -99,34 +83,4 @@ const execCreatePurse = async () => {
 
 module.exports = {
   execCreatePurse,
-=======
-  let dataAtNameResponse;
-  try {
-    dataAtNameResponse = await rchainToolkit.http.easyDeploy(
-      process.env.VALIDATOR_HOST,
-      {
-        term,
-        shardId: process.env.SHARD_ID,
-        privateKey: process.env.PRIVATE_KEY,
-        phloPrice: 'auto',
-        phloLimit: 10000000,
-        timeout: 10 * 60 * 1000
-      }
-    );
-  } catch (err) {
-    console.log(err);
-    throw new Error(err);
-  }
-  log('✓ deploy');
-
-  const data = rchainToolkit.utils.rhoValToJs(
-    JSON.parse(dataAtNameResponse).exprs[0].expr
-  );
-
-  if (data.status !== 'completed') {
-    throw new Error(`Error, status: ${data.status}, message: ${data.message}`);
-  }
-
-  console.log(JSON.stringify(data.results, null, 2));
->>>>>>> 3e91e12 (rchain-toolkit -> @fabcotech/rchain-toolkit@2.0.0)
 };

@@ -35,6 +35,7 @@ const execUpdatePursePrice= async () => {
     masterRegistryUri,
     validatorHost: process.env.VALIDATOR_HOST,
     privateKey: process.env.PRIVATE_KEY,
+    shardId: process.env.SHARD_ID,
     contractId,
     boxId,
     purseId,

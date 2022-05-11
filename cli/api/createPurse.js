@@ -6,6 +6,7 @@ module.exports.createPurse = async (args) => {
     masterRegistryUri,
     validatorHost,
     privateKey,
+    shardId,
     contractId,
     purses,
     pursesData,
@@ -20,11 +21,14 @@ module.exports.createPurse = async (args) => {
 
   const response = await rchainToolkit.http.easyDeploy(
     validatorHost,
-    term,
-    privateKey,
-    1,
-    10000000,
-    10 * 60 * 1000
+    {
+      term,
+      privateKey,
+      shardId,
+      phloPrice: 1,
+      phloLimit: 10000000,
+      timeout: 10 * 60 * 1000
+    }
   );
 
   const data = rchainToolkit.utils.rhoValToJs(
