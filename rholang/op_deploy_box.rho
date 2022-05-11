@@ -1,15 +1,15 @@
 new basket,
-  masterEntryCh,
+  entryCh,
   registerBoxReturnCh,
   stdout(`rho:io:stdout`),
   deployerId(`rho:rchain:deployerId`),
   registryLookup(`rho:registry:lookup`)
 in {
 
-  registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *masterEntryCh) |
+  registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
 
-  for (masterEntry <= masterEntryCh) {
-    masterEntry!(("PUBLIC_REGISTER_BOX", { "boxId": "BOX_ID", "publicKey": "PUBLIC_KEY", "revAddress": "REV_ADDRESS" }, *registerBoxReturnCh)) |
+  for (entry <- entryCh) {
+    entry!(("PUBLIC_REGISTER_BOX", { "boxId": "BOX_ID", "publicKey": "PUBLIC_KEY", "revAddress": "REV_ADDRESS" }, *registerBoxReturnCh)) |
     for (@r <- registerBoxReturnCh) {
       stdout!(r) |
       match r {

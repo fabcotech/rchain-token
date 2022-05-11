@@ -297,7 +297,6 @@ const main = async () => {
 
   await updatePurseData(
     PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
     masterRegistryUri,
     boxId2,
     contractId,
@@ -320,7 +319,6 @@ const main = async () => {
 
   await updatePursePrice(
     PRIVATE_KEY_2,
-    PUBLIC_KEY_2,
     masterRegistryUri,
     boxId2,
     contractId,

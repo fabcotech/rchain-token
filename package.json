@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
   "name": "@fabcotech/rchain-token",
   "version": "16.0.2",
+=======
+  "name": "rchain-token",
+  "version": "17.0.0",
+>>>>>>> 280e0d9 (17.0.0)
   "description": "Fungibles and non-fungibles tokens on the RChain blockchain",
   "main": "src/index.js",
   "scripts": {
@@ -10,7 +15,11 @@
     "test:ft": "node tests-ft/index",
     "test:nft": "node tests-nft/index",
     "test:credit": "node tests-credit/index",
+<<<<<<< HEAD
     "dappy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --quantity 100000000 && node cli update-purse-price --price rev,50000000 --purse-id 0",
+=======
+    "dappy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --quantity 100000000 && node cli update-purse-price --price [\\\"prefixrev\\\",50000000] --purse-id 0",
+>>>>>>> 280e0d9 (17.0.0)
     "dappy:namesystemanddefaults": "npm run dappy:namesystem && node cli create-purse --purses-file name-purses.json"
   },
   "repository": {
