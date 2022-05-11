@@ -34,7 +34,7 @@ const WRAPPED_REV_QUANTITY = 100 * 100000000;
 const PURSES_TO_CREATE = 10;
 // the goal is that step 17 fails multiple time
 // and then succeeds
-const EXPIRES = 700000;
+const EXPIRES = 600000;
 
 const PRIVATE_KEY = '28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36';
 const PUBLIC_KEY = rc.utils.publicKeyFromPrivateKey(PRIVATE_KEY);

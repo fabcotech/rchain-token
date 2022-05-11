@@ -105,19 +105,10 @@ in {
     @(*self, "CONTRACT_LOCK", contractId)!(Nil)
   } |
 
-  logsCh!("HEY 1") |
-  logsCh!("HEY 2") |
-  logsCh!("HEY 3") |
-  logsCh!("HEY 4") |
-  logsCh!("HEY 5") |
-
   for (@str <= appendLogCh) {
-    stdout!("appendLogCh") |
     new ch1 in {
       blockData!(*ch1) |
       for (_, @timestamp, _ <- ch1) {
-        stdout!("logsCh") |
-        stdout!("${ts},${str}" %% { "ts": timestamp, "str": str }) |
         logsCh!("${ts},${str}" %% { "ts": timestamp, "str": str }) |
         for (str <- logsCh) { Nil }
       }
@@ -650,6 +641,7 @@ in {
     } |
 
     for (@("PUBLIC_DELETE_EXPIRED_PURSE", contractId, boxId, purseId, return) <= entryCh) {
+      stdout!("PUBLIC_DELETE_EXPIRED_PURSE") |
       new ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, proceeedDeleteCh, unlock in {
         for (@result <- unlock) {
           @(*self, "BOX_LOCK", boxId)!(Nil) |
@@ -659,6 +651,10 @@ in {
         getContractPursesThmCh!((contractId, *ch1)) |
         getBoxCh!((boxId, *ch2)) |
         for (@pursesThm <- ch1; @box <- ch2) {
+          stdout!("pursesThm") |
+          stdout!(pursesThm) |
+          stdout!("box") |
+          stdout!(box) |
           if (pursesThm != Nil and box != Nil) {
             for (
               _ <- @(*self, "CONTRACT_LOCK", contractId);
@@ -674,11 +670,14 @@ in {
         // RACE SAFE / RESOURCES LOCKED
         // after lock of 1 contract and 1 box
         for (_ <- proceeedDeleteCh) {
+          stdout!("proceeedDeleteCh") |
           getContractPursesThmCh!((contractId, *ch3)) |
           getContractPursesDataThmCh!((contractId, *ch4)) |
           for (@pursesThm <- ch3; @pursesDataThm <- ch4) {
             TreeHashMap!("get", pursesThm, purseId, *ch5) |
             for (@purse <- ch5) {
+              stdout!("purse") |
+              stdout!(purse) |
               if (purse != Nil) {
                 if (purse.get("boxId") == boxId) {
                   for (@config <<- @(*self, "contractConfig", contractId)) {
@@ -686,6 +685,8 @@ in {
                       (false, false, Int) => {
                         blockData!(*ch6) |
                         for (_, @timestamp, _ <- ch6) {
+                          stdout!(("timestamp", timestamp)) |
+                          stdout!(("purse.timestamp", purse.get("timestamp"))) |
                           if (timestamp - purse.get("timestamp") > config.get("expires")) {
                             TreeHashMap!("set", pursesThm, purse.get("id"), Nil, *ch7) |
                             TreeHashMap!("set", pursesDataThm, purse.get("id"), Nil, *ch8) |
@@ -722,7 +723,7 @@ in {
       stdout!(payload.get("publicKey")) |
       match (payload.get("boxId"), payload.get("revAddress"), payload.get("publicKey")) {
         (String, String, String) => {
-          new ch1, ch2, ch3, ch4, ch5, ch6, ch7, registerBoxUnlock in {
+          new ch1, ch2, ch3, ch4, ch5, ch6, ch7, logsCh, registerBoxUnlock in {
             for (@result <- registerBoxUnlock) {
               @(*self, "REGISTER_BOX_LOCK")!(Nil) |
               @return!(result)
@@ -787,7 +788,7 @@ in {
 
     for (@(boxCh, boxId) <= initializeOCAPOnBoxCh) {
       for (@("REGISTER_CONTRACT", payload, return) <= @boxCh) {
-        new registerContract, ch1, ch2, ch3, ch4, ch5, ch6, registerUnlock in {
+        new registerContract, ch1, ch2, ch3, ch4, ch5, ch6, registerUnlock, logsCh in {
           for (@result <- registerUnlock) {
             @(*self, "REGISTER_CONTRACT_LOCK")!(Nil) |
             @return!(result)
@@ -841,7 +842,13 @@ in {
 
                   // config
                   @(*self, "contractConfig", contractId)!(
-                    payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", VERSION).set("fee", Nil)
+                    payload
+                      .set("contractId", contractId)
+                      .set("locked", false)
+                      .set("counter", 1)
+                      .set("version", VERSION)
+                      .set("fee", Nil)
+                      .set("logsCh", *logsCh)
                   ) |
 
                   new superKeyCh in {
@@ -1466,14 +1473,14 @@ in {
                   ch12!(payload.get("merge"))
                 } |
 
-                appendLogCh!(
+                /* appendLogCh!(
                   "w,${contractId},${toBox},${fromBox},${q}" %% {
                     "contractId": payload.get("contractId"),
                     "fromBox": boxId,
                     "toBox": payload.get("toBoxId"),
                     "q": payload.get("quantity"),
                   }
-                ) |
+                ) | */
                 for (@merge <- ch12) {
                   match (
                     purse.get("quantity") - payload.get("quantity") >= 0,
@@ -1794,9 +1801,9 @@ in {
                       }
                       (true, newPurse) => {
                         ch41!(Nil) |
-                        unlock!((purseForSale, (true, Nil))) |
-                        stdout!("OK WILL UNLOVKKVK") |
-                        appendLogCh!(
+                        unlock!((purseForSale, (true, Nil)))
+                        
+                        /* appendLogCh!(
                           "s,${contractId},${toBox},${fromBox},${q},${p1},${p2},${p3},${id},${newId};" %% {
                             "contractId": payload.get("contractId"),
                             "fromBox": boxId,
@@ -1808,7 +1815,7 @@ in {
                             "id": payload.get("purseId"),
                             "newId": newPurse.get("id")
                           }
-                        )
+                        ) */
                       }
                     } |
                     // fee reward is here to avoid dead locks issues
@@ -1884,9 +1891,9 @@ in {
                         unlock!((purseForSale, "error: CRITICAL could not make purse " ++ makeBuyerPurseResult))
                       }
                       (true, newPurse) => {
-                        unlock!((purseForSale, (true, Nil))) |
-                        appendLogCh!(
-                          "s,${contractId}${toBox},${fromBox},${q},${p1},${p2},${p3},${id},${newId};" %% {
+                        unlock!((purseForSale, (true, Nil)))
+                        /* appendLogCh!(
+                          "s,${contractId},${toBox},${fromBox},${q},${p1},${p2},${p3},${id},${newId};" %% {
                             "contractId": payload.get("contractId"),
                             "fromBox": boxId,
                             "toBox": purseForSale.get("boxId"),
@@ -1897,7 +1904,7 @@ in {
                             "newId": newPurse.get("id"),
                             "id": payload.get("purseId")
                           }
-                        )
+                        ) */
                       }
                     }
                   }

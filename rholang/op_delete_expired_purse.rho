@@ -1,20 +1,24 @@
-new basket, entryCh, lookup(`rho:registry:lookup`), stdout(`rho:io:stdout`) in {
-  lookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
+new
+  basket,
+  entryCh,
+  returnCh,
+  registryLookup(`rho:registry:lookup`),
+  stdout(`rho:io:stdout`)
+in {
+  registryLookup!(`rho:id:MASTER_REGISTRY_URI`, *entryCh) |
   for(entry <- entryCh) {
-    new x in {
-      entry!(("PUBLIC_DELETE_EXPIRED_PURSE", "CONTRACT_ID", "BOX_ID", "PURSE_ID", *x)) |
-      for (@r <- x) {
-        match r {
-          String => {
-            basket!({ "status": "failed", "message": r }) |
-            stdout!(("failed", r))
-          }
-          _ => {
-            // OP_PUBLIC_DELETE_EXPIRED_PURSE_COMPLETED_BEGIN
-            stdout!("completed, expired purses deleted") |
-            basket!({ "status": "completed" })
-            // OP_PUBLIC_DELETE_EXPIRED_PURSE_COMPLETED_END
-          }
+    entry!(("PUBLIC_DELETE_EXPIRED_PURSE", "CONTRACT_ID", "BOX_ID", "PURSE_ID", *returnCh)) |
+    for (@r <- returnCh) {
+      match r {
+        String => {
+          basket!({ "status": "failed", "message": r }) |
+          stdout!(("failed", r))
+        }
+        _ => {
+          // OP_PUBLIC_DELETE_EXPIRED_PURSE_COMPLETED_BEGIN
+          stdout!("completed, expired purses deleted") |
+          basket!({ "status": "completed" })
+          // OP_PUBLIC_DELETE_EXPIRED_PURSE_COMPLETED_END
         }
       }
     }

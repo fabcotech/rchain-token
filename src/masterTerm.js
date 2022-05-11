@@ -559,19 +559,10 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
     @(*self, "CONTRACT_LOCK", contractId)!(Nil)
   } |
 
-  logsCh!("HEY 1") |
-  logsCh!("HEY 2") |
-  logsCh!("HEY 3") |
-  logsCh!("HEY 4") |
-  logsCh!("HEY 5") |
-
   for (@str <= appendLogCh) {
-    stdout!("appendLogCh") |
     new ch1 in {
       blockData!(*ch1) |
       for (_, @timestamp, _ <- ch1) {
-        stdout!("logsCh") |
-        stdout!("\${ts},\${str}" %% { "ts": timestamp, "str": str }) |
         logsCh!("\${ts},\${str}" %% { "ts": timestamp, "str": str }) |
         for (str <- logsCh) { Nil }
       }
@@ -1186,7 +1177,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
       stdout!(payload.get("publicKey")) |
       match (payload.get("boxId"), payload.get("revAddress"), payload.get("publicKey")) {
         (String, String, String) => {
-          new ch1, ch2, ch3, ch4, ch5, ch6, ch7, registerBoxUnlock in {
+          new ch1, ch2, ch3, ch4, ch5, ch6, ch7, logsCh, registerBoxUnlock in {
             for (@result <- registerBoxUnlock) {
               @(*self, "REGISTER_BOX_LOCK")!(Nil) |
               @return!(result)
@@ -1251,7 +1242,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
     for (@(boxCh, boxId) <= initializeOCAPOnBoxCh) {
       for (@("REGISTER_CONTRACT", payload, return) <= @boxCh) {
-        new registerContract, ch1, ch2, ch3, ch4, ch5, ch6, registerUnlock in {
+        new registerContract, ch1, ch2, ch3, ch4, ch5, ch6, registerUnlock, logsCh in {
           for (@result <- registerUnlock) {
             @(*self, "REGISTER_CONTRACT_LOCK")!(Nil) |
             @return!(result)
@@ -1305,7 +1296,13 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
 
                   // config
                   @(*self, "contractConfig", contractId)!(
-                    payload.set("contractId", contractId).set("locked", false).set("counter", 1).set("version", "17.0.0").set("fee", Nil)
+                    payload
+                      .set("contractId", contractId)
+                      .set("locked", false)
+                      .set("counter", 1)
+                      .set("version", "17.0.0")
+                      .set("fee", Nil)
+                      .set("logsCh", *logsCh)
                   ) |
 
                   new superKeyCh in {
@@ -1930,14 +1927,14 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                   ch12!(payload.get("merge"))
                 } |
 
-                appendLogCh!(
+                /* appendLogCh!(
                   "w,\${contractId},\${toBox},\${fromBox},\${q}" %% {
                     "contractId": payload.get("contractId"),
                     "fromBox": boxId,
                     "toBox": payload.get("toBoxId"),
                     "q": payload.get("quantity"),
                   }
-                ) |
+                ) | */
                 for (@merge <- ch12) {
                   match (
                     purse.get("quantity") - payload.get("quantity") >= 0,
@@ -2258,9 +2255,9 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       }
                       (true, newPurse) => {
                         ch41!(Nil) |
-                        unlock!((purseForSale, (true, Nil))) |
-                        stdout!("OK WILL UNLOVKKVK") |
-                        appendLogCh!(
+                        unlock!((purseForSale, (true, Nil)))
+                        
+                        /* appendLogCh!(
                           "s,\${contractId},\${toBox},\${fromBox},\${q},\${p1},\${p2},\${p3},\${id},\${newId};" %% {
                             "contractId": payload.get("contractId"),
                             "fromBox": boxId,
@@ -2272,7 +2269,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                             "id": payload.get("purseId"),
                             "newId": newPurse.get("id")
                           }
-                        )
+                        ) */
                       }
                     } |
                     // fee reward is here to avoid dead locks issues
@@ -2348,9 +2345,9 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                         unlock!((purseForSale, "error: CRITICAL could not make purse " ++ makeBuyerPurseResult))
                       }
                       (true, newPurse) => {
-                        unlock!((purseForSale, (true, Nil))) |
-                        appendLogCh!(
-                          "s,\${contractId}\${toBox},\${fromBox},\${q},\${p1},\${p2},\${p3},\${id},\${newId};" %% {
+                        unlock!((purseForSale, (true, Nil)))
+                        /* appendLogCh!(
+                          "s,\${contractId},\${toBox},\${fromBox},\${q},\${p1},\${p2},\${p3},\${id},\${newId};" %% {
                             "contractId": payload.get("contractId"),
                             "fromBox": boxId,
                             "toBox": purseForSale.get("boxId"),
@@ -2361,7 +2358,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                             "newId": newPurse.get("id"),
                             "id": payload.get("purseId")
                           }
-                        )
+                        ) */
                       }
                     }
                   }
