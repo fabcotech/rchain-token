@@ -1018,7 +1018,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
         "logsCh": *logsCh,
         "depth": ${payload.depth || 3},
         "depthContract": ${payload.contractDepth || 2},
-        "version": "17.0.3",
+        "version": "17.0.6",
       })
     } |
 
@@ -1031,7 +1031,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           } else {
             for (@superKeys <<- @(*self, "boxesSuperKeys", boxId)) {
               for (@config <<- @(*self, "boxConfig", boxId)) {
-                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "17.0.3" }))
+                @return!(config.union({ "superKeys": superKeys, "purses": box, "version": "17.0.6" }))
               }
             }
           }
@@ -1300,7 +1300,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
                       .set("contractId", contractId)
                       .set("locked", false)
                       .set("counter", 1)
-                      .set("version", "17.0.3")
+                      .set("version", "17.0.6")
                       .set("fee", Nil)
                       .set("logsCh", *logsCh)
                   ) |
@@ -2434,7 +2434,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
           {
             "locked": true,
             "counter": 1,
-            "version": "17.0.3",
+            "version": "17.0.6",
             "fee": Nil,
             "expires": Nil,
             "contractId": prefix ++ "rev",
