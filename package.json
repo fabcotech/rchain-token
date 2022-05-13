@@ -3,6 +3,11 @@
   "version": "17.0.6",
   "description": "Fungibles and non-fungibles tokens on the RChain blockchain",
   "main": "src/index.js",
+  "files": [
+    "src",
+    "cli",
+    "*.js"
+  ],
   "scripts": {
     "generate": "node generateJavascripts",
     "build:browser": "npx rollup -c",
