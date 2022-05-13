@@ -1,7 +1,7 @@
 /* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.masterTerm = (payload) => {
     return `new 
-  basket,
+  deployId(\`rho:rchain:deployId\`),
 
   prefixCh,
   entryCh,
@@ -2450,7 +2450,7 @@ new MakeNode, ByteArrayToNybbleList, TreeHashMapSetter, TreeHashMapGetter, TreeH
   insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
-    basket!({
+    deployId!({
       "status": "completed",
       "registryUri": *entryUri
     }) |

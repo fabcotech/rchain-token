@@ -2,7 +2,7 @@
 module.exports.updatePurseDataTerm = (
   payload
 ) => {
-  return `new basket,
+  return `new deployId(\`rho:rchain:deployId\`),
   returnCh,
   boxCh,
   stdout(\`rho:io:stdout\`),
@@ -15,12 +15,12 @@ in {
     for (@r <- returnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         _ => {
           // OP_UPDATE_PURSE_DATA_COMPLETED_BEGIN
-          basket!({ "status": "completed" }) |
+          deployId!({ "status": "completed" }) |
           stdout!("completed, data updated")
           // OP_UPDATE_PURSE_DATA_COMPLETED_END
         }

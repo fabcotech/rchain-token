@@ -1,4 +1,4 @@
-new basket,
+new deployId(`rho:rchain:deployId`),
   masterEntryCh,
   registerContractReturnCh,
   boxCh,
@@ -14,13 +14,13 @@ in {
     for (@r <- registerContractReturnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         (true, p) => {
           @(*deployerId, "rchain-token-contract", "MASTER_REGISTRY_URI", p.get("contractId"))!(p.get("superKey")) |
           // OP_REGISTER_CONTRACT_COMPLETED_BEGIN
-          basket!({
+          deployId!({
             "status": "completed",
             "masterRegistryUri": "MASTER_REGISTRY_URI",
             "contractId": p.get("contractId"),

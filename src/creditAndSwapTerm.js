@@ -13,7 +13,7 @@ module.exports.creditAndSwapTerm = (
 
   const term2 = term1.slice(0, indexStart) + term1.slice(indexEnd).replace(
     `// OP_CREDIT_COMPLETED_END`,
-    `${swapTerm(payloadSwap).replace('basket,', '')}`
+    `${swapTerm(payloadSwap).replace('deployId(`rho:rchain:deployId`),', '')}`
   );
 
   return term2;

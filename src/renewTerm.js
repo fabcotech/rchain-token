@@ -4,10 +4,9 @@ module.exports.renewTerm = (
 ) => {
   return `
 new
-  basket,
+  deployId(\`rho:rchain:deployId\`),
   boxCh,
   returnCh,
-
   deployerId(\`rho:rchain:deployerId\`),
   stdout(\`rho:io:stdout\`)
 in {
@@ -25,12 +24,12 @@ in {
     for (@r <- returnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         (true, Nil) => {
           // OP_RENEW_COMPLETED_BEGIN
-          basket!({ "status": "completed" }) |
+          deployId!({ "status": "completed" }) |
           stdout!("completed, renew successful")
           // OP_RENEW_COMPLETED_END
         }

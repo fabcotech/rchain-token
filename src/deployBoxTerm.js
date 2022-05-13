@@ -2,7 +2,7 @@
 module.exports.deployBoxTerm = (
   payload
 ) => {
-  return `new basket,
+  return `new deployId(\`rho:rchain:deployId\`),
   entryCh,
   registerBoxReturnCh,
   stdout(\`rho:io:stdout\`),
@@ -18,13 +18,13 @@ in {
       stdout!(r) |
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         (true, p) => {
           @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", p.get("boxId"))!(p.get("boxCh")) |
           // OP_PUBLIC_REGISTER_BOX_COMPLETED_BEGIN
-          basket!({ "status": "completed", "boxId": p.get("boxId") }) |
+          deployId!({ "status": "completed", "boxId": p.get("boxId") }) |
           stdout!("completed, box registered")
           // OP_PUBLIC_REGISTER_BOX_COMPLETED_END
         }

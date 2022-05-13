@@ -2,7 +2,7 @@
 module.exports.lockTerm = (
   payload
 ) => {
-  return `new basket,
+  return `new deployId(\`rho:rchain:deployId\`),
   returnCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
@@ -17,13 +17,13 @@ in {
     for (@r <- returnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         _ => {
           // OP_LOCK_COMPLETED_BEGIN
           stdout!("completed, contract locked") |
-          basket!({ "status": "completed" })
+          deployId!({ "status": "completed" })
           // OP_LOCK_COMPLETED_END
         }
       }

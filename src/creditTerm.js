@@ -4,7 +4,7 @@ module.exports.creditTerm = (
 ) => {
   return `
 new
-  basket,
+  deployId(\`rho:rchain:deployId\`),
   revVaultCh,
   boxCh,
 
@@ -86,7 +86,7 @@ in {
                                       (true, Nil) => {
                                         match "error: purchase failed but was able to refund \${balance} " %% { "balance": balance } ++ r {
                                           s => {
-                                            basket!({ "status": "failed", "message": s }) |
+                                            deployId!({ "status": "failed", "message": s }) |
                                             stdout!(s)
                                           }
                                         }
@@ -95,7 +95,7 @@ in {
                                         stdout!(result) |
                                         match "error: CRITICAL purchase failed and was NOT ABLE to refund \${balance} " %% { "balance": balance } ++ r {
                                           s => {
-                                            basket!({ "status": "failed", "message": s }) |
+                                            deployId!({ "status": "failed", "message": s }) |
                                             stdout!(s)
                                           }
                                         }
@@ -107,7 +107,7 @@ in {
                             }
                             _ => {
                               // OP_CREDIT_COMPLETED_BEGIN
-                              basket!({ "status": "completed" }) |
+                              deployId!({ "status": "completed" }) |
                               stdout!("completed, credit successful")
                               // OP_CREDIT_COMPLETED_END
                             }
@@ -115,7 +115,7 @@ in {
                         }
                       }
                       _ => {
-                        basket!({ "status": "failed", "message": result }) |
+                        deployId!({ "status": "failed", "message": result }) |
                         stdout!(("failed", result))
                       }
                     }

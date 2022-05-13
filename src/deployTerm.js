@@ -1,6 +1,6 @@
 /* GENERATED CODE, only edit rholang/*.rho files*/
 module.exports.deployTerm = (payload) => {
-    return `new basket,
+    return `new deployId(\`rho:rchain:deployId\`),
   masterEntryCh,
   registerContractReturnCh,
   boxCh,
@@ -16,13 +16,13 @@ in {
     for (@r <- registerContractReturnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         (true, p) => {
           @(*deployerId, "rchain-token-contract", "${payload.masterRegistryUri}", p.get("contractId"))!(p.get("superKey")) |
           // OP_REGISTER_CONTRACT_COMPLETED_BEGIN
-          basket!({
+          deployId!({
             "status": "completed",
             "masterRegistryUri": "${payload.masterRegistryUri}",
             "contractId": p.get("contractId"),

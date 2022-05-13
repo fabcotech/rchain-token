@@ -1,5 +1,5 @@
 new 
-  basket,
+  deployId(`rho:rchain:deployId`),
 
   prefixCh,
   entryCh,
@@ -1996,7 +1996,7 @@ in {
   insertArbitrary!(bundle+{*entryCh}, *entryUriCh) |
 
   for (entryUri <- entryUriCh) {
-    basket!({
+    deployId!({
       "status": "completed",
       "registryUri": *entryUri
     }) |

@@ -2,7 +2,7 @@
 module.exports.withdrawTerm = (
   payload
 ) => {
-  return `new basket,
+  return `new deployId(\`rho:rchain:deployId\`),
   withdrawReturnCh,
   boxCh,
   stdout(\`rho:io:stdout\`),
@@ -15,12 +15,12 @@ in {
     for (@r <- withdrawReturnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         _ => {
           // OP_WITHDRAW_COMPLETED_BEGIN
-          basket!({ "status": "completed" }) |
+          deployId!({ "status": "completed" }) |
           stdout!("completed, withdraw successful")
           // OP_WITHDRAW_COMPLETED_END
         }

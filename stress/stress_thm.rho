@@ -1,5 +1,5 @@
 new 
-basket,
+  deployId(`rho:rchain:deployId`),
 
   entryCh,
   entryUriCh,
@@ -57,7 +57,7 @@ in {
 
     for (entryUri <- entryUriCh) {
       stdout!({ "registryUri": *entryUri }) |
-      basket!({ "registryUri": *entryUri })
+      deployId!({ "registryUri": *entryUri })
     }
   }
 }

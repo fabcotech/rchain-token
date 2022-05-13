@@ -2,7 +2,7 @@
 module.exports.updateFeeTerm = (
   payload
 ) => {
-  return `new basket,
+  return `new deployId(\`rho:rchain:deployId\`),
   returnCh,
   stdout(\`rho:io:stdout\`),
   deployerId(\`rho:rchain:deployerId\`),
@@ -19,13 +19,13 @@ in {
       stdout!(r) |
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         _ => {
           // OP_UPDATE_FEE_COMPLETED_BEGIN
           stdout!("completed, fee updated") |
-          basket!({ "status": "completed" })
+          deployId!({ "status": "completed" })
           // OP_UPDATE_FEE_COMPLETED_END
         }
       }

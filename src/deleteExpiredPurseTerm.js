@@ -3,7 +3,7 @@ module.exports.deleteExpiredPurseTerm = (
   payload
 ) => {
   return `new
-  basket,
+  deployId(\`rho:rchain:deployId\`),
   entryCh,
   returnCh,
   registryLookup(\`rho:registry:lookup\`),
@@ -15,13 +15,13 @@ in {
     for (@r <- returnCh) {
       match r {
         String => {
-          basket!({ "status": "failed", "message": r }) |
+          deployId!({ "status": "failed", "message": r }) |
           stdout!(("failed", r))
         }
         _ => {
           // OP_PUBLIC_DELETE_EXPIRED_PURSE_COMPLETED_BEGIN
           stdout!("completed, expired purses deleted") |
-          basket!({ "status": "completed" })
+          deployId!({ "status": "completed" })
           // OP_PUBLIC_DELETE_EXPIRED_PURSE_COMPLETED_END
         }
       }
