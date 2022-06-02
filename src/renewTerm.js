@@ -12,7 +12,6 @@ new
 in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "${payload.masterRegistryUri}", "${payload.boxId}")) {
-    stdout!("boxCh") |
     boxCh!((
       "RENEW",
       {

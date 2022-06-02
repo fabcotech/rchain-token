@@ -184,8 +184,9 @@ Have a local rnode instance running with the following bonds and wallets file. A
 wallets.txt
 
 ```
-0x3769b4e68650bdfc7b55375034be6ee52978a14f,1000000000000,0
-0x7f847d40c3ec604fe3d4263bfdd04111eb9b4e32,1000000000000,0
+1111Wbd8KLeWBVsxByF9iksJ4QRRjEF3nq1ScgAw7bMbtomxHsqqd,100000000000,0
+1111Fw75V1rzXzk6djeTs85peRVBHS84eM3vvM4RmezjGAuv5gxax,100000000000,0
+1111NLFxg5UjGXDscDvE1mHctz6zKPhoS1sVRfLQnxjhGjkpFAtUo,100000000000,0
 ```
 
 bonds.txt

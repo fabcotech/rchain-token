@@ -59,7 +59,7 @@ in {
                   @deployerVault!("transfer", purseRevAddr, quantity, deployerAuthKey, *resultCh) |
                   for (@result <- resultCh) {
 
-                    stdout!(("Finished transfer of ", quantity, "dust to", purseRevAddr, "result was:", result)) |
+                    stdout!(("Finished transfer of  ", quantity, "dust to  ", purseRevAddr, "result was:", result)) |
                     match result {
                       (true, Nil) => {
                         boxCh!((

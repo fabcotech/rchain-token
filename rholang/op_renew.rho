@@ -8,7 +8,6 @@ new
 in {
 
   for (boxCh <<- @(*deployerId, "rchain-token-box", "MASTER_REGISTRY_URI", "BOX_ID")) {
-    stdout!("boxCh") |
     boxCh!((
       "RENEW",
       {

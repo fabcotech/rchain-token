@@ -717,10 +717,6 @@ in {
     } |
 
     for (@("PUBLIC_REGISTER_BOX", payload, return) <= entryCh) {
-      stdout!("PUBLIC_REGISTER_BOX") |
-      stdout!(payload.get("boxId")) |
-      stdout!(payload.get("revAddress")) |
-      stdout!(payload.get("publicKey")) |
       match (payload.get("boxId"), payload.get("revAddress"), payload.get("publicKey")) {
         (String, String, String) => {
           new ch1, ch2, ch3, ch4, ch5, ch6, ch7, logsCh, registerBoxUnlock in {
@@ -1584,42 +1580,42 @@ in {
             new ch2, ch3, ch4, ch5, ch6, ch7, ch9,
               step2Ch, ch20, ch21, ch22, ch23, ch24, ch25,
               step3aCh, step3bCh, ch30, ch31, ch32, ch33, ch34, ch35, ch36, ch37, ch38, ch39, ch40, ch41, ch42,
-              removeOrAjustQuantityCh, unlock, lock in {
+              removeOrAjustQuantityCh, unlock, lock, lockBoxes in {
               // Lock 2 contracts or 1 (if SWAP is in same contract)
               // Lock 2 boxes or 1 (if SWAP is between same box)
               for (@(purseForSale, ret) <- lock) {
-                new lockBoxes in {
-                  for (_ <- @(*self, "CONTRACT_LOCK", payload.get("contractId"))) {
-                    if (payload.get("contractId") != purseForSale.get("price").nth(0)) {
-                      for (_ <- @(*self, "CONTRACT_LOCK", purseForSale.get("price").nth(0))) {
-                        lockBoxes!(Nil)
-                      }
-                    } else {
+                for (_ <- @(*self, "CONTRACT_LOCK", payload.get("contractId"))) {
+                  if (payload.get("contractId") != purseForSale.get("price").nth(0)) {
+                    for (_ <- @(*self, "CONTRACT_LOCK", purseForSale.get("price").nth(0))) {
                       lockBoxes!(Nil)
                     }
-                  } |
-                  for (_ <- lockBoxes) {
-                    for (_ <- @(*self, "BOX_LOCK", boxId)) {
-                      if (boxId != purseForSale.get("boxId")) {
-                        for (_ <- @(*self, "BOX_LOCK", purseForSale.get("boxId"))) {
-                          @ret!(Nil)
-                        }
-                      } else {
+                  } else {
+                    lockBoxes!(Nil)
+                  }
+                } |
+                for (_ <- lockBoxes) {
+                  for (_ <- @(*self, "BOX_LOCK", boxId)) {
+                    if (boxId != purseForSale.get("boxId")) {
+                      for (_ <- @(*self, "BOX_LOCK", purseForSale.get("boxId"))) {
                         @ret!(Nil)
                       }
+                    } else {
+                      @ret!(Nil)
                     }
                   }
-                }
-              } |
-              for (@(purseForSale, result) <- unlock) {
-                @return!(result) |
-                @(*self, "CONTRACT_LOCK", payload.get("contractId"))!(Nil) |
-                if (payload.get("contractId") != purseForSale.get("price").nth(0)) {
-                  @(*self, "CONTRACT_LOCK", purseForSale.get("price").nth(0))!(Nil)
                 } |
-                @(*self, "BOX_LOCK", boxId)!(Nil) |
-                if (boxId != purseForSale.get("boxId")) {
-                  @(*self, "BOX_LOCK", purseForSale.get("boxId"))!(Nil)
+                // unlock shares context of lock to
+                // avoid deadlocks
+                for (@result <- unlock) {
+                  @return!(result) |
+                  @(*self, "CONTRACT_LOCK", payload.get("contractId"))!(Nil) |
+                  if (payload.get("contractId") != purseForSale.get("price").nth(0)) {
+                    @(*self, "CONTRACT_LOCK", purseForSale.get("price").nth(0))!(Nil)
+                  } |
+                  @(*self, "BOX_LOCK", boxId)!(Nil) |
+                  if (boxId != purseForSale.get("boxId")) {
+                    @(*self, "BOX_LOCK", purseForSale.get("boxId"))!(Nil)
+                  }
                 }
               } |
 
@@ -1663,70 +1659,74 @@ in {
                 for (@pursesThm <- ch21; @box <- ch23) {
                   TreeHashMap!("get", pursesThm, payload.get("purseId"), *ch22) |
                   for (@purseForSale <- ch22) {
-                    match purseForSale.get("price") {
-                      Nil => {
-                        unlock!((purseForSale, "error: no sell order found"))
-                      }
-                      _ => {
-                        for (@contractConfig <<- @(*self, "contractConfig", purseForSale.get("price").nth(0))) {
-                          match (purseForSale.get("price"), contractConfig.get("fungible")) {
-                            // purseForSale is FT or NFT
-                            // purseForSale asks FT in return
-                            // seller's purse   <->   buyer's purse
-                            // NFT or FT        <->   FT
-                            ((String, Int), true) => {
-                              if (payload.get("quantity") > purseForSale.get("quantity")) {
-                                unlock!((purseForSale, "error: quantity not available"))
-                              } else {
-                                getPurseWithAtLeastQuantityCh!((box, purseForSale.get("price").nth(0), purseForSale.get("price").nth(1) * payload.get("quantity"), *ch20)) |
-                                for (@purseForTransfer <- ch20) {
-                                  if (purseForTransfer != Nil) {
-                                    getContractPursesDataThmCh!((payload.get("contractId"), *ch24)) |
-                                    for (@pursesDataThm <- ch24) {
-                                      TreeHashMap!("get", pursesDataThm, purseForSale.get("id"), *ch25)
-                                    } |
-                                    for (@purseForSaleData <- ch25) {
-                                      step3aCh!((box, pursesThm, purseForSale, purseForSaleData, contractConfig, purseForTransfer))
-                                    }
-                                  } else {
-                                    unlock!((purseForSale, "error: box cannot fulfil order"))
-                                  }
-                                }
-                              }
-                            }
-                            // purseForSale is FT or NFT
-                            // purseForSale asks NFT in return
-                            // seller's purse   <->   buyer's purse
-                            // NFT or FT        <->   NFT
-                            ((String, String), false) => {
-                              if (box.get(purseForSale.get("price").nth(0)) != Nil) {
-                                if (box.get(purseForSale.get("price").nth(0)).contains(purseForSale.get("price").nth(1)) == true) {
-                                  getContractPursesThmCh!((purseForSale.get("price").nth(0), *ch21)) |
-                                  for (@purseForTransferThm <- ch21) {
-                                    TreeHashMap!("get", purseForTransferThm, purseForSale.get("price").nth(1), *ch20) |
-                                    for (@purseForTransfer <- ch20) {
+                    if (purseForSale != Nil) {
+                      match purseForSale.get("price") {
+                        Nil => {
+                          unlock!("error: no sell order found")
+                        }
+                        _ => {
+                          for (@contractConfig <<- @(*self, "contractConfig", purseForSale.get("price").nth(0))) {
+                            match (purseForSale.get("price"), contractConfig.get("fungible")) {
+                              // purseForSale is FT or NFT
+                              // purseForSale asks FT in return
+                              // seller's purse   <->   buyer's purse
+                              // NFT or FT        <->   FT
+                              ((String, Int), true) => {
+                                if (payload.get("quantity") > purseForSale.get("quantity")) {
+                                  unlock!("error: quantity not available")
+                                } else {
+                                  getPurseWithAtLeastQuantityCh!((box, purseForSale.get("price").nth(0), purseForSale.get("price").nth(1) * payload.get("quantity"), *ch20)) |
+                                  for (@purseForTransfer <- ch20) {
+                                    if (purseForTransfer != Nil) {
                                       getContractPursesDataThmCh!((payload.get("contractId"), *ch24)) |
                                       for (@pursesDataThm <- ch24) {
-                                        TreeHashMap!("get", pursesDataThm, purseForTransfer.get("id"), *ch25)
+                                        TreeHashMap!("get", pursesDataThm, purseForSale.get("id"), *ch25)
                                       } |
-                                      for (@purseForTransferData <- ch25) {
-                                        step3bCh!((box, pursesThm, purseForSale, purseForTransferData, contractConfig, purseForTransfer))
+                                      for (@purseForSaleData <- ch25) {
+                                        step3aCh!((box, pursesThm, purseForSale, purseForSaleData, contractConfig, purseForTransfer))
                                       }
+                                    } else {
+                                      unlock!("error: box cannot fulfil order")
                                     }
                                   }
-                                } else {
-                                  unlock!((purseForSale, "error: box cannot fulfil order"))
                                 }
-                              } else {
-                                unlock!((purseForSale, "error: box cannot fulfil order"))
                               }
-                            }
-                            _ => {
-                              unlock!((purseForSale, "error: no sell order found"))
+                              // purseForSale is FT or NFT
+                              // purseForSale asks NFT in return
+                              // seller's purse   <->   buyer's purse
+                              // NFT or FT        <->   NFT
+                              ((String, String), false) => {
+                                if (box.get(purseForSale.get("price").nth(0)) != Nil) {
+                                  if (box.get(purseForSale.get("price").nth(0)).contains(purseForSale.get("price").nth(1)) == true) {
+                                    getContractPursesThmCh!((purseForSale.get("price").nth(0), *ch21)) |
+                                    for (@purseForTransferThm <- ch21) {
+                                      TreeHashMap!("get", purseForTransferThm, purseForSale.get("price").nth(1), *ch20) |
+                                      for (@purseForTransfer <- ch20) {
+                                        getContractPursesDataThmCh!((payload.get("contractId"), *ch24)) |
+                                        for (@pursesDataThm <- ch24) {
+                                          TreeHashMap!("get", pursesDataThm, purseForTransfer.get("id"), *ch25)
+                                        } |
+                                        for (@purseForTransferData <- ch25) {
+                                          step3bCh!((box, pursesThm, purseForSale, purseForTransferData, contractConfig, purseForTransfer))
+                                        }
+                                      }
+                                    }
+                                  } else {
+                                    unlock!("error: box cannot fulfil order")
+                                  }
+                                } else {
+                                  unlock!("error: box cannot fulfil order")
+                                }
+                              }
+                              _ => {
+                                unlock!("error: no sell order found")
+                              }
                             }
                           }
                         }
                       }
+                    } else {
+                      unlock!("error: no sell order found")
                     }
                   }
                 }
@@ -1797,11 +1797,11 @@ in {
                   for (@makeBuyerPurseResult <- ch36; _ <- ch40) {
                     match makeBuyerPurseResult {
                       String => {
-                        unlock!((purseForSale, "error: CRITICAL could not make purse " ++ makeBuyerPurseResult))
+                        unlock!("error: CRITICAL could not make purse " ++ makeBuyerPurseResult)
                       }
                       (true, newPurse) => {
                         ch41!(Nil) |
-                        unlock!((purseForSale, (true, Nil)))
+                        unlock!((true, Nil))
                         
                         /* appendLogCh!(
                           "s,${contractId},${toBox},${fromBox},${q},${p1},${p2},${p3},${id},${newId};" %% {
@@ -1888,10 +1888,10 @@ in {
                   for (@makeBuyerPurseResult <- ch36; @makeSellerPurseResult <- ch38) {
                     match makeBuyerPurseResult {
                       String => {
-                        unlock!((purseForSale, "error: CRITICAL could not make purse " ++ makeBuyerPurseResult))
+                        unlock!("error: CRITICAL could not make purse " ++ makeBuyerPurseResult)
                       }
                       (true, newPurse) => {
-                        unlock!((purseForSale, (true, Nil)))
+                        unlock!((true, Nil))
                         /* appendLogCh!(
                           "s,${contractId},${toBox},${fromBox},${q},${p1},${p2},${p3},${id},${newId};" %% {
                             "contractId": payload.get("contractId"),
