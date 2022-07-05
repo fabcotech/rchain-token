@@ -1,6 +1,6 @@
 {
   "name": "@fabcotech/rchain-token",
-  "version": "17.0.7",
+  "version": "18.0.0",
   "description": "Fungibles and non-fungibles tokens on the RChain blockchain",
   "main": "src/index.js",
   "files": [
@@ -12,13 +12,14 @@
     "generate": "node generateJavascripts",
     "build:browser": "npx rollup -c",
     "test": "npm run test test:fungibles && npm run test:non-fungibles",
-    "test:ft": "node tests-ft/index",
-    "test:nft": "node tests-nft/index",
-    "test:parallelwithdraws": "node tests-parallel-withdraws/index",
-    "test:parallelswaps": "node tests-parallel-swaps/index",
-    "test:credit": "node tests-credit/index",
-    "test:all": "npm run test:ft && npm run test:nft && npm run test:parallelwithdraws && npm run test:parallelswaps && npm run test:credit",
-    "dappy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --quantity 100000000 && node cli update-purse-price --price 6ycrev,50000000 --purse-id 0",
+    "test:credit": "node tests/credit/index",
+    "test:ft": "node tests/ft/index",
+    "test:nft": "node tests/nft/index",
+    "test:parallelcreatetokens": "node tests/parallel-create-tokens/index",
+    "test:parallelswaps": "node tests/parallel-swaps/index",
+    "test:parallelwithdraws": "node tests/parallel-withdraws/index",
+    "test:all": "npm run test:ft && npm run test:nft && npm run test:parallelwithdraws && npm run test:parallelswaps && npm run test:credit && npm run test:parallelcreatetokens",
+    "dappy:namesystem": "node cli deploy --fungible false --contract-id dappynamesystem && node cli create-purse --new-id 0 --quantity 100000000 && node cli update-purse-price --price ahgrev,50000000 --purse-id 0",
     "dappy:namesystemanddefaults": "npm run dappy:namesystem && node cli create-purse --purses-file name-purses.json"
   },
   "repository": {
