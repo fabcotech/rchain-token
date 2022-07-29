@@ -14,6 +14,7 @@ const { updateBagData } = require('./updateBagData');
 const { viewData } = require('./viewData');
 const { renew } = require('./renew');
 const { viewLogs } = require('./viewLogs');
+const { credit } = require('./credit');
 
 const { log } = require('./utils');
 
