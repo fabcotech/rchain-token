@@ -1,13 +1,13 @@
 const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const fs = require('fs');
 
-const { getProcessArgv, getRegistryUri } = require('./utils');
+const { getProcessArgv, getMasterRegistryUri } = require('./utils');
 const { readPursesDataTerm } = require('../src');
 
 module.exports.viewData = async () => {
   const purseId = getProcessArgv('--purse');
   const tokenId = getProcessArgv('--token');
-  const registryUri = getRegistryUri();
+  const registryUri = getMasterRegistryUri();
 
   if (typeof purseId === 'undefined' && typeof tokenId === 'undefined') {
     console.log('Please provide one of options --purse or --token');
@@ -16,11 +16,10 @@ module.exports.viewData = async () => {
 
   rchainToolkit.http
     .exploreDeploy(process.env.READ_ONLY_HOST, {
-      term: readPursesDataTerm(registryUri, { pursesIds: [purseId] }),
+      term: readPursesDataTerm({registryUri, pursesIds: [purseId] }),
     })
     .then((results) => {
       let data = rchainToolkit.utils.rhoValToJs(JSON.parse(results).expr[0]);
-      console.log(data);
       data = decodeURI(data[tokenId || purseId]);
 
       let fileName = `./data-token-${tokenId}.txt`;
